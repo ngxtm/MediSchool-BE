@@ -24,7 +24,6 @@ public class MeController {
         try {
             String userIdStr = authentication.getName();
             UUID userId = UUID.fromString(userIdStr);
-
             Optional<UserProfile> profileOpt = userProfileRepository.findById(userId);
             if (profileOpt.isPresent()) {
                 return ResponseEntity.ok(profileOpt.get());
