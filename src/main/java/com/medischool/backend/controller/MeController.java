@@ -2,6 +2,7 @@ package com.medischool.backend.controller;
 
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.repository.UserProfileRepository;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Personal Controller")
 public class MeController {
 
     @Autowired
