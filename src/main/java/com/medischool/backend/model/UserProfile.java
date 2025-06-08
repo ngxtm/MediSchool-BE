@@ -1,5 +1,6 @@
 package com.medischool.backend.model;
 
+import com.medischool.backend.model.enums.Gender;
 import com.medischool.backend.model.enums.StudentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,4 +31,7 @@ public class UserProfile {
 
     @Enumerated(EnumType.STRING)
     private StudentStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 }
