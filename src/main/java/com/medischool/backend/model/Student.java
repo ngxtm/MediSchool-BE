@@ -1,10 +1,10 @@
 package com.medischool.backend.model;
 
+import com.medischool.backend.model.enums.StudentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -30,7 +30,6 @@ public class Student {
     private String classCode;
 
     private Integer grade;
-    private String gender;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
@@ -47,7 +46,7 @@ public class Student {
     private String emergencyPhone;
 
     @Enumerated(EnumType.STRING)
-    private String status;
+    private StudentStatus status;
 
     @Column(name = "health_profile_id")
     private UUID healthProfileId;
