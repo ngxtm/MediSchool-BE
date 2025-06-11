@@ -1,0 +1,28 @@
+package com.medischool.backend.controller;
+
+import com.medischool.backend.dto.VaccineDTO;
+import com.medischool.backend.service.VaccineService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/vaccines")
+@RequiredArgsConstructor
+@Tag(name = "Vaccine Management")
+public class VaccineController {
+
+    private final VaccineService vaccineService;
+
+    @GetMapping
+    @Operation(summary = "Get all vaccines")
+    public ResponseEntity<List<VaccineDTO>> getAllVaccines() {
+        return ResponseEntity.ok(vaccineService.getAllVaccines());
+    }
+}

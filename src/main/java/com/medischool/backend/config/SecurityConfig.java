@@ -52,7 +52,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/manager/**").hasRole("MANAGER")
                         .requestMatchers("/api/nurse/**").hasRole("NURSE")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
-                        .anyRequest().denyAll())
+                        .requestMatchers("/api/vaccines/**").permitAll()
+                        .anyRequest().permitAll())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> {
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
