@@ -3,6 +3,7 @@ package com.medischool.backend.service.impl;
 import com.medischool.backend.dto.StudentDetailDTO;
 import com.medischool.backend.model.ParentStudentLink;
 import com.medischool.backend.model.Student;
+import com.medischool.backend.model.enums.Relationship;
 import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.repository.UserProfileRepository;
@@ -32,11 +33,11 @@ public class StudentServiceImpl implements StudentService {
         for (ParentStudentLink link : links) {
             var profile = userProfileRepository.findById(link.getParentId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy phụ huynh"));
-            if ("Bố".equalsIgnoreCase(link.getRelationship())) {
+            if ("FATHER".equalsIgnoreCase(link.getRelationship().toString())) {
                 fatherName = profile.getFullName();
                 fatherPhone = profile.getPhone();
             }
-            if ("Mẹ".equalsIgnoreCase(link.getRelationship())) {
+            if ("MOTHER".equalsIgnoreCase(link.getRelationship().toString())) {
                 motherName = profile.getFullName();
                 motherPhone = profile.getPhone();
             }

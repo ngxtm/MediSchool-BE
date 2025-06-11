@@ -30,8 +30,5 @@ public class UserProfile {
     private LocalDate dateOfBirth;
 
     @Enumerated(EnumType.STRING)
-    private StudentStatus status;
-
-    @Enumerated(EnumType.STRING)
     private Gender gender;
 }

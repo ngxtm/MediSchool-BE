@@ -1,5 +1,6 @@
 package com.medischool.backend.dto;
 
+import com.medischool.backend.model.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,7 @@ import java.time.LocalDate;
 public class StudentDetailDTO {
     private String fullName;
     private String studentCode;
-    private String gender;
+    private Gender gender;
     private LocalDate dateOfBirth;
     private String classCode;
     private LocalDate enrollmentDate;

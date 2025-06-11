@@ -1,5 +1,6 @@
 package com.medischool.backend.model;
 
+import com.medischool.backend.model.enums.Gender;
 import com.medischool.backend.model.enums.StudentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -7,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Table(name = "student")
 @Entity
@@ -46,8 +46,9 @@ public class Student {
     private String emergencyPhone;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private StudentStatus status;
 
-    @Column(name = "health_profile_id")
-    private UUID healthProfileId;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 }
