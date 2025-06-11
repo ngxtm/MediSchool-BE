@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface VaccineService {
     List<VaccineDTO> getAllVaccines();
+    VaccineDTO getVaccineById(int id);
 }

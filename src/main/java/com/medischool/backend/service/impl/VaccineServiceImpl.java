@@ -24,6 +24,12 @@ public class VaccineServiceImpl implements VaccineService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public VaccineDTO getVaccineById(int id) {
+        var vaccineDTO = vaccineRepository.findById(id).orElse(null);
+        return convertToDTO(vaccineDTO);
+    }
+
     private VaccineDTO convertToDTO(Vaccine vaccine) {
         VaccineDTO dto = new VaccineDTO();
         dto.setVaccineId(vaccine.getVaccineId());
