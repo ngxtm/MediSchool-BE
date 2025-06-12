@@ -47,7 +47,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/students/**").permitAll()
                         .requestMatchers("/students/**").permitAll()
                         .requestMatchers("/context-path/**").permitAll()
-                        .requestMatchers("/api/me").authenticated()
+                        .requestMatchers("/api/me").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/manager/**").hasRole("MANAGER")
                         .requestMatchers("/api/nurse/**").hasRole("NURSE")
