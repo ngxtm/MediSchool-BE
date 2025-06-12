@@ -1,5 +1,6 @@
 package com.medischool.backend.dto;
 
+import com.medischool.backend.model.enums.Scope;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +14,7 @@ public class VaccineEventRequestDTO {
     private Long vaccineId;
     private String eventTitle;
     private LocalDateTime eventDate;
-    private String eventScope;
+    private Scope eventScope;
     private String location;
     private String status;
 }

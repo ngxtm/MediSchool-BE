@@ -1,10 +1,13 @@
 package com.medischool.backend.model;
 
+import com.medischool.backend.model.enums.Gender;
+import com.medischool.backend.model.enums.Scope;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "vaccine_event")
@@ -26,13 +29,14 @@ public class VaccineEvent {
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "event_scope")
-    private String eventScope;
+    private Scope eventScope;
 
     private String location;
 
     @Column(name = "created_by")
-    private String createdBy;
+    private UUID createdBy;
 
     private String status;
 

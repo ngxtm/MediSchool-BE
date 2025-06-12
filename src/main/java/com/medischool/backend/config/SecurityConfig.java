@@ -53,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/nurse/**").hasRole("NURSE")
                         .requestMatchers("/api/parent/**").hasRole("PARENT")
                         .requestMatchers("/api/vaccines/**").permitAll()
+                        //fix from here
+                        .requestMatchers("/api/vaccine-events/**").permitAll()
                         .anyRequest().permitAll())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> {

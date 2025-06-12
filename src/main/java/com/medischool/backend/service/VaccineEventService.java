@@ -27,7 +27,7 @@ public class VaccineEventService {
         event.setEventScope(requestDTO.getEventScope());
         event.setLocation(requestDTO.getLocation());
         event.setStatus(requestDTO.getStatus());
-        event.setCreatedBy(SecurityContextHolder.getContext().getAuthentication().getName());
+
         event.setCreatedAt(LocalDateTime.now());
 
         return vaccineEventRepository.save(event);
