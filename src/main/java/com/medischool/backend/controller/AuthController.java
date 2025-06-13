@@ -9,8 +9,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -67,5 +70,26 @@ public class AuthController {
             supabaseAuthService.signOut(token);
         }
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/refresh-token")
+    @Operation(summary = "Refresh authentication token")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "No valid authorization header provided"));
+            }
+
+            String token = authHeader.substring("Bearer ".length());
+
+            AuthResponse authResponse = supabaseAuthService.refreshToken(token);
+
+            return ResponseEntity.ok(authResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Failed to refresh token: " + e.getMessage()));
+        }
     }
 }

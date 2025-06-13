@@ -1,19 +1,19 @@
 package com.medischool.backend.service.impl;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.medischool.backend.dto.StudentDetailDTO;
 import com.medischool.backend.model.ParentStudentLink;
 import com.medischool.backend.model.Student;
-import com.medischool.backend.model.enums.Relationship;
 import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.service.StudentService;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

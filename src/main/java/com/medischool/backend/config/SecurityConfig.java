@@ -47,14 +47,19 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
                         .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
+                        .requestMatchers("/api/vaccines/**").hasAuthority("NURSE")
                         .requestMatchers("/api/parent/**").hasAuthority("PARENT")
-                        .requestMatchers("/api/vaccines/**").permitAll()
-                        .anyRequest().permitAll())
+                        .anyRequest().authenticated())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> {
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             res.getWriter().write("Unauthorized");
+                        })
+                        .accessDeniedHandler((req, res, ex) -> {
+                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            res.getWriter().write("Access Denied");
                         }));
+
         return http.build();
     }
 }
