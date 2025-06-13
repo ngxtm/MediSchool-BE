@@ -31,4 +31,6 @@ public class UserProfile {
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
+
+    private String role;
 }

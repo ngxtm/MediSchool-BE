@@ -22,7 +22,8 @@ public class MeController {
     private UserProfileRepository userProfileRepository;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<?> getCurrentUser(Authentication authentication)
+    {
         try {
             String userIdStr = authentication.getName();
             UUID userId = UUID.fromString(userIdStr);
