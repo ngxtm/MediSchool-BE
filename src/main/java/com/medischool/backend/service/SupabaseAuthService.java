@@ -163,13 +163,11 @@ public class SupabaseAuthService {
     }
 
     public AuthResponse refreshToken(String token) {
-        // Verify the token is not blacklisted
         if (tokenBlacklist.contains(token)) {
             throw new RuntimeException("Token has been invalidated");
         }
 
         try {
-            // Parse the token to get user ID
             Claims claims = Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
@@ -179,10 +177,8 @@ public class SupabaseAuthService {
             String userId = claims.getSubject();
             String email = claims.get("email", String.class);
 
-            // Generate a new token
             String newToken = generateJwtToken(userId, email);
 
-            // Get user info
             Optional<UserProfile> userProfileOpt = userProfileRepository.findById(UUID.fromString(userId));
             if (userProfileOpt.isEmpty()) {
                 throw new RuntimeException("User not found");

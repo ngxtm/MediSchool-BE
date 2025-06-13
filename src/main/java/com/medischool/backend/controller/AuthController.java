@@ -5,6 +5,8 @@ import com.medischool.backend.dto.AuthResponse;
 import com.medischool.backend.dto.GoogleCallbackRequest;
 import com.medischool.backend.dto.PasswordResetRequest;
 import com.medischool.backend.service.SupabaseAuthService;
+
+import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,8 +30,7 @@ public class AuthController {
         AuthResponse authResponse = supabaseAuthService.signInWithEmail(
                 request.getEmail(),
                 request.getPassword(),
-                request.isRememberMe()
-        );
+                request.isRememberMe());
         return ResponseEntity.ok(authResponse);
     }
 
@@ -42,8 +43,9 @@ public class AuthController {
 
     @PostMapping("/google-callback")
     @Operation(summary = "Handle Google Auth callback")
-    public ResponseEntity<AuthResponse> googleCallback(@RequestBody GoogleCallbackRequest  request) {
-        AuthResponse response = supabaseAuthService.handleGoogleCallback(request.getSupabaseSession(), request.isRememberMe());
+    public ResponseEntity<AuthResponse> googleCallback(@RequestBody GoogleCallbackRequest request) {
+        AuthResponse response = supabaseAuthService.handleGoogleCallback(request.getSupabaseSession(),
+                request.isRememberMe());
         return ResponseEntity.ok(response);
     }
 
@@ -84,12 +86,19 @@ public class AuthController {
 
             String token = authHeader.substring("Bearer ".length());
 
-            AuthResponse authResponse = supabaseAuthService.refreshToken(token);
-
-            return ResponseEntity.ok(authResponse);
+            try {
+                AuthResponse authResponse = supabaseAuthService.refreshToken(token);
+                return ResponseEntity.ok(authResponse);
+            } catch (ExpiredJwtException e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Token has expired"));
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Invalid token: " + e.getMessage()));
+            }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Failed to refresh token: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred"));
         }
     }
 }
