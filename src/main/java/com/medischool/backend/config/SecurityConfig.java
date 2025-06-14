@@ -1,7 +1,9 @@
 package com.medischool.backend.config;
 
+import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.security.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,11 +20,14 @@ public class SecurityConfig {
     @Value("${supabase.jwt.secret}")
     private String jwtSecret;
 
+    @Autowired
+    private UserProfileRepository userProfileRepository;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new JwtAuthenticationFilter(jwtSecret), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthenticationFilter(jwtSecret, userProfileRepository), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // Allow Swagger UI and API docs
                         .requestMatchers(
@@ -38,17 +43,24 @@ public class SecurityConfig {
                         .requestMatchers("/api/medications").permitAll()
                         // Existing security rules
                         .requestMatchers("/context-path/**").permitAll()
-                        .requestMatchers("/api/me").authenticated()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/manager/**").hasRole("MANAGER")
-                        .requestMatchers("/api/nurse/**").hasRole("NURSE")
-                        .requestMatchers("/api/parent/**").hasRole("PARENT")
-                        .anyRequest().denyAll())
+                        .requestMatchers("/api/me").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
+                        .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
+                        .requestMatchers("/api/vaccines/**").hasAuthority("NURSE")
+                        .requestMatchers("/api/parent/**").hasAuthority("PARENT")
+                        .anyRequest().authenticated())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> {
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             res.getWriter().write("Unauthorized");
+                        })
+                        .accessDeniedHandler((req, res, ex) -> {
+                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            res.getWriter().write("Access Denied");
                         }));
+
         return http.build();
     }
 }
