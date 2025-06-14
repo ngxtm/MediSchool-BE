@@ -1,12 +1,19 @@
 package com.medischool.backend.model;
 
-import com.medischool.backend.model.enums.Gender;
-import com.medischool.backend.model.enums.StudentStatus;
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.util.UUID;
+
+import com.medischool.backend.model.enums.Gender;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "user_profile")
@@ -31,4 +38,6 @@ public class UserProfile {
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
+
+    private String role;
 }

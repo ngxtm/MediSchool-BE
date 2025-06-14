@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface MedicationService {
-    List<MedicationRequest> getRequestsByStudent(Integer studentId) throws AccessDeniedException;
+    List<MedicationRequest> getRequestsByStudent(Integer studentId, UUID parentId) throws AccessDeniedException;
 
     MedicationRequest createRequest(MedicationRequest request);
 

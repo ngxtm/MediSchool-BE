@@ -26,9 +26,9 @@ public class MedicationServiceImpl implements MedicationService {
     private ParentStudentLinkRepository parentStudentRepo;
 
     //Xem đơn dặn thuốc của học sinh
-    public List<MedicationRequest> getRequestsByStudent(Integer studentId) throws AccessDeniedException {
-        List<ParentStudentLink> linked = parentStudentRepo.findByStudentId(studentId);
-        if (linked == null) {
+    public List<MedicationRequest> getRequestsByStudent(Integer studentId, UUID parentId) throws AccessDeniedException {
+        boolean linked = parentStudentRepo.existsByParentIdAndStudentId(parentId, studentId);
+        if (!linked) {
             throw new AccessDeniedException("Đã có lỗi xảy ra, vui lòng thử lại.");
         }
         return requestRepo.findByStudentStudentId(studentId);

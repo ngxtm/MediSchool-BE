@@ -25,6 +25,7 @@ public class MedicationRequest {
     private Parent parent;
 
     @ManyToOne
+    @JoinColumn(name="student_id")
     private Student student;
 
     @Column(name = "reason")
