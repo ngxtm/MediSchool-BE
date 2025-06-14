@@ -1,5 +1,6 @@
 package com.medischool.backend.model;
 
+import com.medischool.backend.model.enums.Gender;
 import com.medischool.backend.model.enums.StudentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -35,7 +36,9 @@ public class Student {
     private LocalDate dateOfBirth;
 
     private String address;
-    private String gender;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     @Column(name = "enrollment_date")
     private LocalDate enrollmentDate;

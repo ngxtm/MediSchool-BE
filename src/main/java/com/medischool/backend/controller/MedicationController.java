@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/medications")
+@RequestMapping("/api")
 @Tag(name = "Medication Controller")
 class MedicationController {
     @Autowired
@@ -30,7 +30,7 @@ class MedicationController {
         UUID parentId = UUID.fromString(userIdStr);
 
         List<MedicationRequest> requests =
-                service.getRequestsByStudent(studentId);
+                service.getRequestsByStudent(studentId, parentId);
 
         return ResponseEntity.ok(requests);
     }

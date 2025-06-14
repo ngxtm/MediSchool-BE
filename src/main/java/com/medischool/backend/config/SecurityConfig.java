@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
+
     @Value("${supabase.jwt.secret}")
     private String jwtSecret;
 
@@ -29,7 +30,6 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new JwtAuthenticationFilter(jwtSecret, userProfileRepository), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        // Allow Swagger UI and API docs
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -40,10 +40,11 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/swagger-ui/index.html"
                         ).permitAll()
-                        .requestMatchers("/api/medications").permitAll()
-                        // Existing security rules
+                        .requestMatchers("/api/students/**").permitAll()
+                        .requestMatchers("/students/**").permitAll()
                         .requestMatchers("/context-path/**").permitAll()
                         .requestMatchers("/api/me").permitAll()
+                        .requestMatchers("/api/medications/**").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
