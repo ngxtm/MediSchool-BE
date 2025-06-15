@@ -1,24 +1,17 @@
 package com.medischool.backend.config;
 
+import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.security.JwtAuthenticationFilter;
-import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -28,11 +21,14 @@ public class SecurityConfig {
     @Value("${supabase.jwt.secret}")
     private String jwtSecret;
 
+    @Autowired
+    private UserProfileRepository userProfileRepository;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(new JwtAuthenticationFilter(jwtSecret), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthenticationFilter(jwtSecret, userProfileRepository), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -48,18 +44,29 @@ public class SecurityConfig {
                         .requestMatchers("/students/**").permitAll()
                         .requestMatchers("/context-path/**").permitAll()
                         .requestMatchers("/api/me").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/manager/**").hasRole("MANAGER")
-                        .requestMatchers("/api/nurse/**").hasRole("NURSE")
-                        .requestMatchers("/api/parent/**").hasRole("PARENT")
+
                         .requestMatchers("/api/vaccines/**").permitAll()
                         .requestMatchers("/api/vaccine-events/**").permitAll()
+                        
+
+                        .requestMatchers("/api/medications/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
+                        .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
+                        .requestMatchers("/api/vaccines/**").hasAuthority("NURSE")
+                        .requestMatchers("/api/parent/**").hasAuthority("PARENT")
                         .anyRequest().permitAll())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> {
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             res.getWriter().write("Unauthorized");
+                        })
+                        .accessDeniedHandler((req, res, ex) -> {
+                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            res.getWriter().write("Access Denied");
                         }));
+
         return http.build();
     }
 }

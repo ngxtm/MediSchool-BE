@@ -2,6 +2,7 @@ package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.StudentDetailDTO;
 import com.medischool.backend.service.StudentService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ public class StudentController {
     private final StudentService studentService;
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get student information")
     public ResponseEntity<StudentDetailDTO> getStudentDetail(@PathVariable Integer id) {
         return ResponseEntity.ok(studentService.getStudentDetail(id));
     }
