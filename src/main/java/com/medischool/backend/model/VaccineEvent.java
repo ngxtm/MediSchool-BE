@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "vaccine_event")
@@ -17,7 +18,7 @@ public class VaccineEvent {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "vaccine_id")
+    @JoinColumn(name = "vaccine_id", nullable = false)
     private Vaccine vaccine;
 
     @Column(name = "event_title")
@@ -32,7 +33,7 @@ public class VaccineEvent {
     private String location;
 
     @Column(name = "created_by")
-    private String createdBy;
+    private UUID createdBy;
 
     private String status;
 
