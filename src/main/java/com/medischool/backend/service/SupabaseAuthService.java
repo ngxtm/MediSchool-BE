@@ -1,7 +1,7 @@
 package com.medischool.backend.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.medischool.backend.dto.AuthResponse;
+import com.medischool.backend.dto.auth.AuthResponse;
 import com.medischool.backend.dto.UserDTO;
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.repository.UserProfileRepository;

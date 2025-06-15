@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
                         .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
-                        .requestMatchers("/api/vaccines/**").hasAuthority("NURSE")
+                        .requestMatchers("/api/vaccines/**").permitAll()
                         .requestMatchers("/api/parent/**").hasAuthority("PARENT")
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e

@@ -1,9 +1,9 @@
 package com.medischool.backend.controller;
 
-import com.medischool.backend.dto.AuthRequest;
-import com.medischool.backend.dto.AuthResponse;
-import com.medischool.backend.dto.GoogleCallbackRequest;
-import com.medischool.backend.dto.PasswordResetRequest;
+import com.medischool.backend.dto.auth.AuthRequest;
+import com.medischool.backend.dto.auth.AuthResponse;
+import com.medischool.backend.dto.auth.GoogleCallbackRequest;
+import com.medischool.backend.dto.auth.PasswordResetRequest;
 import com.medischool.backend.service.SupabaseAuthService;
 
 import io.jsonwebtoken.ExpiredJwtException;
