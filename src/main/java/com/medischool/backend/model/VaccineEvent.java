@@ -34,7 +34,7 @@ public class VaccineEvent {
     private String location;
 
     @Column(name = "created_by")
-    private String createdBy;
+    private UUID createdBy;
 
     private String status;
 

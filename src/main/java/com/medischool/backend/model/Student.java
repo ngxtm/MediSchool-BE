@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Table(name = "student")
 @Entity
@@ -36,6 +37,9 @@ public class Student {
 
     private String address;
 
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
     @Column(name = "enrollment_date")
     private LocalDate enrollmentDate;
 
@@ -46,9 +50,5 @@ public class Student {
     private String emergencyPhone;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
     private StudentStatus status;
-
-    @Enumerated(EnumType.STRING)
-    private Gender gender;
 }

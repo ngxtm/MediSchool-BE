@@ -44,13 +44,19 @@ public class SecurityConfig {
                         .requestMatchers("/students/**").permitAll()
                         .requestMatchers("/context-path/**").permitAll()
                         .requestMatchers("/api/me").permitAll()
+
+                        .requestMatchers("/api/vaccines/**").permitAll()
+                        .requestMatchers("/api/vaccine-events/**").permitAll()
+                        
+
+                        .requestMatchers("/api/medications/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
                         .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
                         .requestMatchers("/api/vaccines/**").permitAll()
                         .requestMatchers("/api/parent/**").hasAuthority("PARENT")
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> {
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
