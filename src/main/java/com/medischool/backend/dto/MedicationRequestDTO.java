@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MedicationRequestDTO {
-    private Integer requestId; // optional when editing
+    private Integer requestId;
     private UUID parentId;
     private Integer studentId;
 
