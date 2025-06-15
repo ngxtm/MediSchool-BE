@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Set;
 
 
 @Entity
@@ -19,7 +20,7 @@ import java.time.LocalDate;
 public class StudentProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer studentId;
+    Long studentId;
 
     @Column(nullable = false,unique = true)
     String studentCode;
@@ -51,6 +52,14 @@ public class StudentProfile {
     @OneToOne
     @JoinColumn(name = "health_profile_id", referencedColumnName = "healthProfileId")
     HealthProfile healthProfile;
+
+    @ManyToMany
+    @JoinTable(
+            name = "patient_student",
+            joinColumns = @JoinColumn(name="student_id"),
+            inverseJoinColumns = @JoinColumn(name="parent_id")
+    )
+    Set<ParentProfile> parents;
 
     @PrePersist
     public void healthProfileBeforeCreated() {

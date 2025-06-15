@@ -36,6 +36,7 @@ public class HealthProfileService {
         currentHealthProfile.setTreatmentHistory(healthProfileRequest.getTreatmentHistory());
         currentHealthProfile.setVisionGrade(healthProfileRequest.getVisionGrade());
         this.healthProfileRepository.save(currentHealthProfile);
+
         HealthProfileResponse healthProfileResponse=this.healthProfileServiceHelper.convertToHealthProfileResponse(currentHealthProfile);
         return healthProfileResponse;
 
