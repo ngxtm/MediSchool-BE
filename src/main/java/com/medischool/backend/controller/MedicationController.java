@@ -16,19 +16,16 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/medications")
 @Tag(name = "Medication Controller")
 class MedicationController {
     @Autowired
     private MedicationService service;
 
-    @GetMapping("/medications")
+    @GetMapping
     public ResponseEntity<List<MedicationRequest>> getRequestsByStudent(
-            @RequestParam Integer studentId,
-            Authentication authentication) throws AccessDeniedException {
-        String userIdStr = authentication.getName();
-        UUID parentId = UUID.fromString(userIdStr);
-
+            @RequestParam Integer studentId) throws AccessDeniedException {
+        UUID parentId = UUID.fromString("b7b608eb-bcf7-4ed7-86d2-1e82753d35e2");
         List<MedicationRequest> requests =
                 service.getRequestsByStudent(studentId, parentId);
 
