@@ -1,6 +1,7 @@
 package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.VaccineDTO;
+import com.medischool.backend.dto.student.VaccinationGroupDTO;
 import com.medischool.backend.service.VaccineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,5 +33,10 @@ public class VaccineController {
             return ResponseEntity.ok(vaccineService.getVaccineById(id));
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/vaccinations")
+    public ResponseEntity<List<VaccinationGroupDTO>> get(@PathVariable Long id) {
+        return ResponseEntity.ok(vaccineService.getHistoryByStudent(id));
     }
 }

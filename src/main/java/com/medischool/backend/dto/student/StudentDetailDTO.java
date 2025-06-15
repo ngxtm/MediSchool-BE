@@ -1,4 +1,4 @@
-package com.medischool.backend.dto;
+package com.medischool.backend.dto.student;
 
 import com.medischool.backend.model.enums.Gender;
 import lombok.AllArgsConstructor;
