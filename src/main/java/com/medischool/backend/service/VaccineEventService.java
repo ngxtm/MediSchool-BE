@@ -6,6 +6,7 @@ import com.medischool.backend.model.Vaccine;
 import com.medischool.backend.repository.VaccineEventRepository;
 import com.medischool.backend.repository.VaccineRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -27,8 +28,9 @@ public class VaccineEventService {
         event.setEventScope(requestDTO.getEventScope());
         event.setLocation(requestDTO.getLocation());
         event.setStatus(requestDTO.getStatus());
-        event.setCreatedBy(SecurityContextHolder.getContext().getAuthentication().getName());
         event.setCreatedAt(LocalDateTime.now());
+        // createdBy is left as null
+        //event.setCreatedBy(  get user id and i dont know how)
 
         return vaccineEventRepository.save(event);
     }
