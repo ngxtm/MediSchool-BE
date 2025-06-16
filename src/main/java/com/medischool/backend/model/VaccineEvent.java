@@ -1,16 +1,13 @@
 package com.medischool.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.medischool.backend.model.enums.EventScope;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -22,7 +19,6 @@ public class VaccineEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "event_id")
-
     private Long id;
 
     @ManyToOne
@@ -32,12 +28,11 @@ public class VaccineEvent {
     @Column(name = "event_title")
     private String eventTitle;
 
-    @Column(name = "event_date", nullable = false)
+    @Column(name = "event_date")
     private LocalDate eventDate;
 
-
-    @Column(name = "event_scope")
     @Enumerated(EnumType.STRING)
+    @Column(name = "event_scope")
     private EventScope eventScope;
 
     private String location;
