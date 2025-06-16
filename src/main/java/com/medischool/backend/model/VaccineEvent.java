@@ -5,8 +5,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
-import java.util.UUID;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "vaccine_event")
@@ -15,18 +16,18 @@ import java.util.UUID;
 @AllArgsConstructor
 public class VaccineEvent {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "event_id")
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "vaccine_id", nullable = false)
-    private Vaccine vaccine;
+    @Column(name = "vaccine_id", nullable = false)
+    private Integer vaccineId;
 
     @Column(name = "event_title")
     private String eventTitle;
 
-    @Column(name = "event_date")
-    private LocalDateTime eventDate;
+    @Column(name = "event_date", nullable = false)
+    private LocalDate eventDate;
 
     @Column(name = "event_scope")
     @Enumerated(EnumType.STRING)
@@ -40,5 +41,5 @@ public class VaccineEvent {
     private String status;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 }

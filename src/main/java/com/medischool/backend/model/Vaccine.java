@@ -16,7 +16,7 @@ public class Vaccine {
     @Column(name = "vaccine_id")
     private Long vaccineId;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "description")
@@ -39,4 +39,7 @@ public class Vaccine {
 
     @Column(name = "side_effects", length = 1000)
     private String sideEffects;
+
+    @Column(name = "category_id" , nullable = false)
+    private Integer categoryId;
 }
