@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "Vaccine Events")
 public class VaccineEventController {
-    @Autowired
+
     private final VaccineEventService vaccineEventService;
 
     @PostMapping
