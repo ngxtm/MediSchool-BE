@@ -17,9 +17,9 @@ public class VaccineEventController {
 
     private final VaccineEventService vaccineEventService;
 
-//    @PostMapping
-//    @Operation(summary = "Create a new vaccine event")
-//    public ResponseEntity<VaccineEvent> createVaccineEvent(@RequestBody VaccineEventRequestDTO requestDTO) {
-//        return ResponseEntity.ok(vaccineEventService.createVaccineEvent(requestDTO));
-//    }
+    @PostMapping
+    @Operation(summary = "Create a new vaccine event")
+    public ResponseEntity<VaccineEvent> createVaccineEvent(@RequestBody VaccineEventRequestDTO requestDTO) {
+        return ResponseEntity.ok(vaccineEventService.createVaccineEvent(requestDTO));
+    }
 }
