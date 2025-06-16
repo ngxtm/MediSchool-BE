@@ -35,8 +35,8 @@ public class VaccineController {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/{id}/vaccinations")
-    public ResponseEntity<List<VaccinationGroupDTO>> get(@PathVariable Long id) {
-        return ResponseEntity.ok(vaccineService.getHistoryByStudent(id));
-    }
+//    @GetMapping("/{id}/vaccinations")
+//    public ResponseEntity<List<VaccinationGroupDTO>> get(@PathVariable Long id) {
+//        return ResponseEntity.ok(vaccineService.getHistoryByStudent(id));
+//    }
 }
