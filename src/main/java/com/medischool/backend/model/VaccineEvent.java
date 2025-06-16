@@ -1,5 +1,6 @@
 package com.medischool.backend.model;
 
+import com.medischool.backend.model.enums.EventScope;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,7 +30,8 @@ public class VaccineEvent {
     private LocalDate eventDate;
 
     @Column(name = "event_scope")
-    private String eventScope;
+    @Enumerated(EnumType.STRING)
+    private EventScope eventScope;
 
     private String location;
 
