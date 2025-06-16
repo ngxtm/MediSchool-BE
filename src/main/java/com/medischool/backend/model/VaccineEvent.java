@@ -1,5 +1,6 @@
 package com.medischool.backend.model;
 
+import com.medischool.backend.model.enums.EventScope;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class VaccineEvent {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private Long id;
 
     @ManyToOne
@@ -28,7 +29,8 @@ public class VaccineEvent {
     private LocalDateTime eventDate;
 
     @Column(name = "event_scope")
-    private String eventScope;
+    @Enumerated(EnumType.STRING)
+    private EventScope eventScope;
 
     private String location;
 
