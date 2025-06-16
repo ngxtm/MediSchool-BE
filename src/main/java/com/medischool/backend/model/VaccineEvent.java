@@ -19,7 +19,10 @@ import java.util.UUID;
 public class VaccineEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+<<<<<<< Updated upstream
     @Column(name = "event_id")
+=======
+>>>>>>> Stashed changes
     private Long id;
 
     @ManyToOne
