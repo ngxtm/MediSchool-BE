@@ -1,10 +1,12 @@
 package com.medischool.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.medischool.backend.model.enums.EventScope;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,6 +34,7 @@ public class VaccineEvent {
 
     @Column(name = "event_date", nullable = false)
     private LocalDate eventDate;
+
 
     @Column(name = "event_scope")
     @Enumerated(EnumType.STRING)
