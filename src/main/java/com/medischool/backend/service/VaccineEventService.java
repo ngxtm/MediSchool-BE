@@ -30,4 +30,5 @@ public class VaccineEventService {
 
         return vaccineEventRepository.save(event);
     }
+
 }
