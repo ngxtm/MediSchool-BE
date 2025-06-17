@@ -8,14 +8,8 @@ import com.medischool.backend.repository.VaccineRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-<<<<<<< HEAD
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-=======
 import java.time.LocalDateTime;
 import java.util.List;
->>>>>>> origin/main
 
 @Service
 @RequiredArgsConstructor
