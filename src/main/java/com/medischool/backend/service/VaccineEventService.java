@@ -8,9 +8,14 @@ import com.medischool.backend.repository.VaccineRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+<<<<<<< HEAD
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+=======
+import java.time.LocalDateTime;
+import java.util.List;
+>>>>>>> origin/main
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +26,6 @@ public class VaccineEventService {
     public VaccineEvent createVaccineEvent(VaccineEventRequestDTO requestDTO) {
         Vaccine vaccine = vaccineRepository.findById(Math.toIntExact(requestDTO.getVaccineId()))
                 .orElseThrow(() -> new RuntimeException("Vaccine not found"));
-
         VaccineEvent event = new VaccineEvent();
         event.setVaccine(vaccine);
         event.setEventTitle(requestDTO.getEventTitle());
@@ -32,6 +36,10 @@ public class VaccineEventService {
         event.setCreatedAt(LocalDateTime.now());
 
         return vaccineEventRepository.save(event);
+    }
+
+    public List<VaccineEvent> getAllVaccineEvents() {
+        return vaccineEventRepository.findAll();
     }
 
 }
