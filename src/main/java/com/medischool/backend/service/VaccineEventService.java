@@ -49,42 +49,56 @@ public class VaccineEventService {
         VaccineEvent event = vaccineEventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Vaccine event with ID " + eventId + " not found"));
 
-        String insertSql = """
-                    INSERT INTO vaccination_consent (
-                        student_id,
-                        event_id,
-                        parent_id,
-                        consent_status,
-                        created_at,
-                        ready_to_sent
-                    )
-                    SELECT 
-                        s.student_id,
-                        ?,
-                        psl.parent_id,
-                        'APPROVE',
-                        NOW(),
-                        true
-                    FROM student s
-                    JOIN parent_student_link psl ON s.student_id = psl.student_id
-                    WHERE NOT EXISTS (
-                        SELECT 1 FROM vaccination_history vh 
-                        WHERE vh.student_id = s.student_id
-                    )
-                    AND NOT EXISTS (
-                        SELECT 1 FROM vaccination_consent c 
-                        WHERE c.student_id = s.student_id AND c.event_id = ?
-                    )
-                """;
+        int insertedCount = 0;
 
-        // Truyền eventId 2 lần vì dùng cho SELECT và WHERE
-        int insertedCount = jdbcTemplate.update(insertSql, eventId, eventId);
+        String sql;
+        if ("SCHOOL".equalsIgnoreCase(event.getEventScope().toString())) {
+            sql = """
+            INSERT INTO vaccination_consent (
+                student_id, event_id, parent_id, consent_status, created_at, ready_to_sent
+            )
+            SELECT s.student_id, ?, psl.parent_id, 'APPROVE', NOW(), true
+            FROM student s
+            JOIN parent_student_link psl ON s.student_id = psl.student_id
+            WHERE NOT EXISTS (
+                SELECT 1 FROM vaccination_history vh 
+                WHERE vh.student_id = s.student_id AND vh.event_id = ?
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM vaccination_consent c 
+                WHERE c.student_id = s.student_id AND c.event_id = ?
+            )
+        """;
+            insertedCount = jdbcTemplate.update(sql, eventId, eventId, eventId);
+
+        } else if ("CLASS".equalsIgnoreCase(event.getEventScope().toString())) {
+            sql = """
+            INSERT INTO vaccination_consent (
+                student_id, event_id, parent_id, consent_status, created_at, ready_to_sent
+            )
+            SELECT s.student_id, ?, psl.parent_id, 'APPROVE', NOW(), true
+            FROM student s
+            JOIN parent_student_link psl ON s.student_id = psl.student_id
+            JOIN vaccine_event_class vec ON TRIM(vec.class_code) = TRIM(s.class_code)
+            WHERE vec.event_id = ?
+              AND NOT EXISTS (
+                  SELECT 1 FROM vaccination_history vh 
+                  WHERE vh.student_id = s.student_id AND vh.event_id = ?
+              )
+              AND NOT EXISTS (
+                  SELECT 1 FROM vaccination_consent c 
+                  WHERE c.student_id = s.student_id AND c.event_id = ?
+              )
+        """;
+            insertedCount = jdbcTemplate.update(sql, eventId, eventId, eventId, eventId);
+        }
 
         return Map.of(
                 "success", true,
-                "message", String.format("Successfully created %d consents", insertedCount),
                 "event_id", eventId,
+                "message", "Consents created successfully",
                 "consents_sent", insertedCount
         );
     }
+
 }
