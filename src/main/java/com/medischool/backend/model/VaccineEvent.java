@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -19,10 +18,7 @@ import java.util.UUID;
 public class VaccineEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-<<<<<<< Updated upstream
     @Column(name = "event_id")
-=======
->>>>>>> Stashed changes
     private Long id;
 
     @ManyToOne
@@ -32,11 +28,11 @@ public class VaccineEvent {
     @Column(name = "event_title")
     private String eventTitle;
 
-    @Column(name = "event_date", nullable = false)
+    @Column(name = "event_date")
     private LocalDate eventDate;
 
-    @Column(name = "event_scope")
     @Enumerated(EnumType.STRING)
+    @Column(name = "event_scope")
     private EventScope eventScope;
 
     private String location;
