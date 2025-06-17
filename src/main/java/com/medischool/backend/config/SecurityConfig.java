@@ -47,6 +47,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/vaccines/**").permitAll()
                         .requestMatchers("/api/vaccine-events/**").permitAll()
+                        .requestMatchers("/api/{eventId}/send-consents/**").permitAll()
                         
 
                         .requestMatchers("/api/medications/**").permitAll()
@@ -54,7 +55,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
                         .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
-                        .requestMatchers("/api/vaccines/**").permitAll()
                         .requestMatchers("/api/parent/**").hasAuthority("PARENT")
                         .anyRequest().permitAll())
                 .exceptionHandling(e -> e

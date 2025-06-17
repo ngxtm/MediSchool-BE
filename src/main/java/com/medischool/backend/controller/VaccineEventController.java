@@ -8,7 +8,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,4 +33,12 @@ public class VaccineEventController {
         List<VaccineEvent> events = vaccineEventService.getAllVaccineEvents();
         return ResponseEntity.ok(events);
     }
+
+    @PostMapping("/{eventId}/send-consents")
+    public ResponseEntity<?> sendConsents(@PathVariable Long eventId) {
+        return ResponseEntity.ok(vaccineEventService.sendConsentsToUnvaccinatedStudents(eventId));
+    }
+
+
+
 }
