@@ -48,7 +48,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/vaccines/**").permitAll()
                         .requestMatchers("/api/vaccine-events/**").permitAll()
                         .requestMatchers("/api/{eventId}/send-consents/**").permitAll()
-                        
+
+
 
                         .requestMatchers("/api/medications/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()

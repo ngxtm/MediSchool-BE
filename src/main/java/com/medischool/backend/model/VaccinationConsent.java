@@ -33,7 +33,7 @@ public class VaccinationConsent {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "consent_status")
+    @Column(name = "consent_status", nullable = true)
     @Enumerated(EnumType.STRING)
     private ConsentStatus consentStatus;
 

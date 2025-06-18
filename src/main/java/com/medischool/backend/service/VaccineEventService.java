@@ -44,6 +44,17 @@ public class VaccineEventService {
         return vaccineEventRepository.findAll();
     }
 
+    public VaccineEvent updateEventStatus(Long eventId, String status) {
+        if (!status.equals("PENDING") && !status.equals("CANCELLED")) {
+            throw new IllegalArgumentException("Status must be either PENDING or CANCELLED");
+        }
+
+        VaccineEvent event = vaccineEventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Vaccine event not found"));
+
+        event.setStatus(status);
+        return vaccineEventRepository.save(event);
+    }
 
     public Map<String, Object> sendConsentsToUnvaccinatedStudents(Long eventId) {
         VaccineEvent event = vaccineEventRepository.findById(eventId)
@@ -54,42 +65,42 @@ public class VaccineEventService {
         String sql;
         if ("SCHOOL".equalsIgnoreCase(event.getEventScope().toString())) {
             sql = """
-            INSERT INTO vaccination_consent (
-                student_id, event_id, parent_id, consent_status, created_at, ready_to_sent
-            )
-            SELECT s.student_id, ?, psl.parent_id, 'APPROVE', NOW(), true
-            FROM student s
-            JOIN parent_student_link psl ON s.student_id = psl.student_id
-            WHERE NOT EXISTS (
-                SELECT 1 FROM vaccination_history vh 
-                WHERE vh.student_id = s.student_id AND vh.event_id = ?
-            )
-            AND NOT EXISTS (
-                SELECT 1 FROM vaccination_consent c 
-                WHERE c.student_id = s.student_id AND c.event_id = ?
-            )
-        """;
+                        INSERT INTO vaccination_consent (
+                            student_id, event_id, parent_id, consent_status, created_at, ready_to_sent
+                        )
+                        SELECT s.student_id, ?, psl.parent_id, NULL, NOW(), false
+                        FROM student s
+                        JOIN parent_student_link psl ON s.student_id = psl.student_id
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM vaccination_history vh 
+                            WHERE vh.student_id = s.student_id AND vh.event_id = ?
+                        )
+                        AND NOT EXISTS (
+                            SELECT 1 FROM vaccination_consent c 
+                            WHERE c.student_id = s.student_id AND c.event_id = ?
+                        )
+                    """;
             insertedCount = jdbcTemplate.update(sql, eventId, eventId, eventId);
 
         } else if ("CLASS".equalsIgnoreCase(event.getEventScope().toString())) {
             sql = """
-            INSERT INTO vaccination_consent (
-                student_id, event_id, parent_id, consent_status, created_at, ready_to_sent
-            )
-            SELECT s.student_id, ?, psl.parent_id, 'APPROVE', NOW(), true
-            FROM student s
-            JOIN parent_student_link psl ON s.student_id = psl.student_id
-            JOIN vaccine_event_class vec ON TRIM(vec.class_code) = TRIM(s.class_code)
-            WHERE vec.event_id = ?
-              AND NOT EXISTS (
-                  SELECT 1 FROM vaccination_history vh 
-                  WHERE vh.student_id = s.student_id AND vh.event_id = ?
-              )
-              AND NOT EXISTS (
-                  SELECT 1 FROM vaccination_consent c 
-                  WHERE c.student_id = s.student_id AND c.event_id = ?
-              )
-        """;
+                        INSERT INTO vaccination_consent (
+                            student_id, event_id, parent_id, consent_status, created_at, ready_to_sent
+                        )
+                        SELECT s.student_id, ?, psl.parent_id, NULL, NOW(), false
+                        FROM student s
+                        JOIN parent_student_link psl ON s.student_id = psl.student_id
+                        JOIN vaccine_event_class vec ON TRIM(vec.class_code) = TRIM(s.class_code)
+                        WHERE vec.event_id = ?
+                          AND NOT EXISTS (
+                              SELECT 1 FROM vaccination_history vh 
+                              WHERE vh.student_id = s.student_id AND vh.event_id = ?
+                          )
+                          AND NOT EXISTS (
+                              SELECT 1 FROM vaccination_consent c 
+                              WHERE c.student_id = s.student_id AND c.event_id = ?
+                          )
+                    """;
             insertedCount = jdbcTemplate.update(sql, eventId, eventId, eventId, eventId);
         }
 
@@ -100,5 +111,6 @@ public class VaccineEventService {
                 "consents_sent", insertedCount
         );
     }
+
 
 }
