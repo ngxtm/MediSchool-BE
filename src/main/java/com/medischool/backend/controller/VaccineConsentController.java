@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/consents")
+@RequestMapping("/api/vaccine-consents")
 @RequiredArgsConstructor
 @Tag(name = "Vaccination Consents")
 public class VaccineConsentController {

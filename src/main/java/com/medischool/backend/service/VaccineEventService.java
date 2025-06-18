@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -113,4 +114,14 @@ public class VaccineEventService {
     }
 
 
+    public List<VaccineEvent> getVaccineEventsByYear(int year) {
+        if (year < 1900 || year > 9999) {
+            throw new IllegalArgumentException("Invalid year");
+        }
+
+        LocalDate startDate = LocalDate.of(year, 1, 1);
+        LocalDate endDate = LocalDate.of(year, 12, 31);
+
+        return vaccineEventRepository.findAllByEventDateBetween(startDate, endDate);
+    }
 }

@@ -58,5 +58,15 @@ public class VaccineEventController {
         }
     }
 
+    @GetMapping("/year/{year}")
+    @Operation(summary = "Get vaccine events by year")
+    public ResponseEntity<List<VaccineEvent>> getVaccineEventsByYear(@PathVariable int year) {
+        try {
+            List<VaccineEvent> events = vaccineEventService.getVaccineEventsByYear(year);
+            return ResponseEntity.ok(events);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
 }
