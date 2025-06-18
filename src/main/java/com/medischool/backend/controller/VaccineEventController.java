@@ -1,7 +1,9 @@
 package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.VaccineEventRequestDTO;
+import com.medischool.backend.model.VaccinationConsent;
 import com.medischool.backend.model.VaccineEvent;
+import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.service.VaccineEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,5 +42,31 @@ public class VaccineEventController {
     }
 
 
+    @PutMapping("/{eventId}/status")
+    @Operation(summary = "Update vaccine event status")
+    public ResponseEntity<VaccineEvent> updateEventStatus(
+            @PathVariable Long eventId,
+            @RequestParam String status
+    ) {
+        try {
+            VaccineEvent updatedEvent = vaccineEventService.updateEventStatus(eventId, status);
+            return ResponseEntity.ok(updatedEvent);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/year/{year}")
+    @Operation(summary = "Get vaccine events by year")
+    public ResponseEntity<List<VaccineEvent>> getVaccineEventsByYear(@PathVariable int year) {
+        try {
+            List<VaccineEvent> events = vaccineEventService.getVaccineEventsByYear(year);
+            return ResponseEntity.ok(events);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
 }
