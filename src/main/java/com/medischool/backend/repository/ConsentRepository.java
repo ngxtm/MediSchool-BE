@@ -14,4 +14,6 @@ public interface ConsentRepository extends JpaRepository<VaccinationConsent, Lon
     boolean existsByStudentIdAndEventId(Integer studentId, Long eventId);
 
     List<VaccinationConsent> findAllByStudentId(Integer studentId);
+
+    List<VaccinationConsent> findAllByEventId(Long eventId);
 }

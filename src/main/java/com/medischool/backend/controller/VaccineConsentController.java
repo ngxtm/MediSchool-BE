@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vaccine-consents")
@@ -40,4 +41,16 @@ public class VaccineConsentController {
         List<VaccinationConsent> consents = consentService.getConsentsByStudentId(studentId);
         return ResponseEntity.ok(consents);
     }
+
+    @GetMapping("/event/{eventId}/results")
+    @Operation(summary = "Get consent results count for an event")
+    public ResponseEntity<Map<String, Object>> getConsentResultsByEvent(@PathVariable Long eventId) {
+        try {
+            Map<String, Object> results = consentService.getConsentResultsByEvent(eventId);
+            return ResponseEntity.ok(results);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }
