@@ -42,6 +42,4 @@ public class VaccinationConsent {
 
     private String note;
 
-    @Column(name = "ready_to_sent")
-    private boolean readyToSent;
 }
