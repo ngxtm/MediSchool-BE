@@ -15,4 +15,5 @@ public class VaccineEventRequestDTO {
     private EventScope eventScope;
     private String location;
     private String status;
+    private LocalDateTime createdAt;
 }
