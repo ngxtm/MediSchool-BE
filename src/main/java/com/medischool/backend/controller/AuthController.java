@@ -85,9 +85,14 @@ public class AuthController {
             }
 
             String token = authHeader.substring("Bearer ".length());
-
+            boolean isSupabaseToken = token.contains(".");
             try {
-                AuthResponse authResponse = supabaseAuthService.refreshToken(token);
+                AuthResponse authResponse;
+                if (token.contains(".")) {
+                    authResponse = supabaseAuthService.refreshSupabaseToken(token);
+                } else {
+                    authResponse = supabaseAuthService.refreshToken(token);
+                }
                 return ResponseEntity.ok(authResponse);
             } catch (ExpiredJwtException e) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
