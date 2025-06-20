@@ -28,12 +28,6 @@ public class Vaccine {
     @Column(name = "doses_required")
     private Integer dosesRequired;
 
-    @Column(name = "min_age_months")
-    private Integer minAgeMonths;
-
-    @Column(name = "max_age_months")
-    private Integer maxAgeMonths;
-
     @Column(name = "storage_temperature")
     private String storageTemperature;
 
