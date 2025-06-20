@@ -14,6 +14,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import com.medischool.backend.model.Vaccine.VaccineEventClass;
+import com.medischool.backend.repository.VaccineEventClassRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ public class VaccineEventService {
     private final VaccineRepository vaccineRepository;
     private final ConsentRepository consentRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final VaccineEventClassRepository vaccineEventClassRepository;
 
     public VaccineEvent createVaccineEvent(VaccineEventRequestDTO requestDTO) {
         Vaccine vaccine = vaccineRepository.findById(Math.toIntExact(requestDTO.getVaccineId()))
@@ -35,7 +38,18 @@ public class VaccineEventService {
         event.setStatus(requestDTO.getStatus());
         event.setCreatedAt(LocalDateTime.now());
 
-        return vaccineEventRepository.save(event);
+
+        event = vaccineEventRepository.save(event);
+
+        for (String classCode : requestDTO.getClasses()) {
+            if (!vaccineEventClassRepository.existsByEventIdAndClassCode(event.getId(), classCode)) {
+                VaccineEventClass link = new VaccineEventClass();
+                link.setEventId(event.getId());
+                link.setClassCode(classCode);
+                vaccineEventClassRepository.save(link);
+            }
+        }
+        return event;
     }
 
     public List<VaccineEvent> getAllVaccineEvents() {
