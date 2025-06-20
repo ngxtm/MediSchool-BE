@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/classes")
 @RequiredArgsConstructor
-@Tag(name = "Class Controller", description = "Class endpoints")
+@Tag(name = "Class", description = "Class endpoints")
 public class ClassController {
 
     private final ClassesServiceImpl classesService;
