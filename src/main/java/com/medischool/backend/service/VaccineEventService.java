@@ -1,10 +1,8 @@
 package com.medischool.backend.service;
 
 import com.medischool.backend.dto.VaccineEventRequestDTO;
-import com.medischool.backend.model.VaccinationConsent;
-import com.medischool.backend.model.Vaccine;
-import com.medischool.backend.model.VaccineEvent;
-import com.medischool.backend.model.enums.ConsentStatus;
+import com.medischool.backend.model.Vaccine.Vaccine;
+import com.medischool.backend.model.Vaccine.VaccineEvent;
 import com.medischool.backend.repository.ConsentRepository;
 import com.medischool.backend.repository.VaccineEventRepository;
 import com.medischool.backend.repository.VaccineRepository;
@@ -16,7 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

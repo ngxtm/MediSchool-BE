@@ -1,11 +1,8 @@
-package com.medischool.backend.model;
+package com.medischool.backend.model.Medication;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 @Table(name = "medication_request_item")

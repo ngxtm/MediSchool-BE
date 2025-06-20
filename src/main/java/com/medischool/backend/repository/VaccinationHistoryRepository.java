@@ -1,6 +1,6 @@
 package com.medischool.backend.repository;
 
-import com.medischool.backend.model.VaccinationHistory;
+import com.medischool.backend.model.Vaccine.VaccinationHistory;
 import com.medischool.backend.projection.VaccinationRow;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

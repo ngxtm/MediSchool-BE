@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.medischool.backend.dto.student.StudentDetailDTO;
-import com.medischool.backend.model.ParentStudentLink;
-import com.medischool.backend.model.Student;
+import com.medischool.backend.model.ParentStudent.ParentStudentLink;
+import com.medischool.backend.model.ParentStudent.Student;
 import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.repository.UserProfileRepository;

@@ -1,6 +1,6 @@
 package com.medischool.backend.repository;
 
-import com.medischool.backend.model.Student;
+import com.medischool.backend.model.ParentStudent.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

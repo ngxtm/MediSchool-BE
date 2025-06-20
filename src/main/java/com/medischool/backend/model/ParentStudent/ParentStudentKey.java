@@ -1,4 +1,4 @@
-package com.medischool.backend.model;
+package com.medischool.backend.model.ParentStudent;
 
 import jakarta.persistence.Embeddable;
 

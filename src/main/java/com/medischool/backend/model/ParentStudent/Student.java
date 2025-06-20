@@ -1,4 +1,4 @@
-package com.medischool.backend.model;
+package com.medischool.backend.model.ParentStudent;
 
 import com.medischool.backend.model.enums.Gender;
 import com.medischool.backend.model.enums.StudentStatus;
@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Table(name = "student")
 @Entity

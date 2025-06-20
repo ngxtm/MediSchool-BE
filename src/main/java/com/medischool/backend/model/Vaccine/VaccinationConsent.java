@@ -1,4 +1,4 @@
-package com.medischool.backend.model;
+package com.medischool.backend.model.Vaccine;
 
 import com.medischool.backend.model.enums.ConsentStatus;
 import jakarta.persistence.*;
@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -41,5 +40,4 @@ public class VaccinationConsent {
     private UUID parentId;
 
     private String note;
-
 }

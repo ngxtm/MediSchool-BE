@@ -1,12 +1,11 @@
 package com.medischool.backend.service;
 
-import com.medischool.backend.model.VaccinationConsent;
+import com.medischool.backend.model.Vaccine.VaccinationConsent;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.repository.ConsentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +23,6 @@ public class VaccineConsentService {
                 .orElseThrow(() -> new RuntimeException("Consent not found"));
 
         consent.setConsentStatus(status);
-
 
         return consentRepository.save(consent);
     }

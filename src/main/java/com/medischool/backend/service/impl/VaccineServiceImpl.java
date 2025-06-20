@@ -3,7 +3,7 @@ package com.medischool.backend.service.impl;
 import com.medischool.backend.dto.VaccineDTO;
 import com.medischool.backend.dto.student.VaccinationDoseDTO;
 import com.medischool.backend.dto.student.VaccinationGroupDTO;
-import com.medischool.backend.model.Vaccine;
+import com.medischool.backend.model.Vaccine.Vaccine;
 import com.medischool.backend.projection.VaccinationRow;
 import com.medischool.backend.repository.VaccinationHistoryRepository;
 import com.medischool.backend.repository.VaccineRepository;

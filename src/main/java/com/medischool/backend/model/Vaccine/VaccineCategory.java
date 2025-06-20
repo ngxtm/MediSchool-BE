@@ -1,4 +1,4 @@
-package com.medischool.backend.model;
+package com.medischool.backend.model.Vaccine;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

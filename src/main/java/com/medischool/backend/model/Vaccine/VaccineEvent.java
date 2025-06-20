@@ -1,4 +1,4 @@
-package com.medischool.backend.model;
+package com.medischool.backend.model.Vaccine;
 
 import com.medischool.backend.model.enums.EventScope;
 import jakarta.persistence.*;
