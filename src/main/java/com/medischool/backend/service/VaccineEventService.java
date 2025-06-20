@@ -64,9 +64,9 @@ public class VaccineEventService {
         if ("SCHOOL".equalsIgnoreCase(event.getEventScope().toString())) {
             sql = """
                         INSERT INTO vaccination_consent (
-                            student_id, event_id, parent_id, consent_status, created_at, ready_to_sent
+                            student_id, event_id, parent_id, consent_status, created_at
                         )
-                        SELECT s.student_id, ?, psl.parent_id, NULL, NOW(), false
+                        SELECT s.student_id, ?, psl.parent_id, NULL, NOW()
                         FROM student s
                         JOIN parent_student_link psl ON s.student_id = psl.student_id
                         WHERE NOT EXISTS (
@@ -83,9 +83,9 @@ public class VaccineEventService {
         } else if ("CLASS".equalsIgnoreCase(event.getEventScope().toString())) {
             sql = """
                         INSERT INTO vaccination_consent (
-                            student_id, event_id, parent_id, consent_status, created_at, ready_to_sent
+                            student_id, event_id, parent_id, consent_status, created_at
                         )
-                        SELECT s.student_id, ?, psl.parent_id, NULL, NOW(), false
+                        SELECT s.student_id, ?, psl.parent_id, NULL, NOW()
                         FROM student s
                         JOIN parent_student_link psl ON s.student_id = psl.student_id
                         JOIN vaccine_event_class vec ON TRIM(vec.class_code) = TRIM(s.class_code)
@@ -121,4 +121,6 @@ public class VaccineEventService {
 
         return vaccineEventRepository.findAllByEventDateBetween(startDate, endDate);
     }
+
+
 }
