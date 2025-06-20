@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/students")
-@Tag(name = "Student Controller")
+@Tag(name = "Student", description = "Student endpoints")
 public class StudentController {
 
     private final VaccineService service;

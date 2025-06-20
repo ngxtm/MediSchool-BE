@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/vaccine-consents")
 @RequiredArgsConstructor
-@Tag(name = "Vaccination Consents")
+@Tag(name = "Vaccination Consents", description = "Vaccine consents endpoints")
 public class VaccineConsentController {
     private final VaccineConsentService consentService;
     private final VaccinationConsentService vaccinationConsentService;

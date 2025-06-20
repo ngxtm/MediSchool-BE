@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
-@Tag(name = "Personal Controller")
+@Tag(name = "Personal", description = "Information about user")
 public class MeController {
 
     @Autowired

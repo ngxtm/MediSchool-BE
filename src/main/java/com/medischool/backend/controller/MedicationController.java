@@ -17,7 +17,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/medications")
-@Tag(name = "Medication Controller")
+@Tag(name = "Medication", description = "Medication endpoints")
 class MedicationController {
     @Autowired
     private MedicationService service;
