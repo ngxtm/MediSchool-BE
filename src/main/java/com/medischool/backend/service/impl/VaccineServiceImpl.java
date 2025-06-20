@@ -49,7 +49,7 @@ public class VaccineServiceImpl implements VaccineService {
         dto.setDosesRequired(vaccine.getDosesRequired());
         dto.setSideEffects(vaccine.getSideEffects());
         dto.setStorageTemperature(vaccine.getStorageTemperature());
-
+        dto.setCategoryId(vaccine.getCategoryId());
         return dto;
     }
 
@@ -89,5 +89,29 @@ public class VaccineServiceImpl implements VaccineService {
                 r.getVaccinationDate(),
                 r.getLocation(),
                 r.getVaccineName());
+    }
+
+    @Override
+    public VaccineDTO createVaccine(VaccineDTO vaccineDTO) {
+        Vaccine vaccine = new Vaccine();
+        vaccine.setName(vaccineDTO.getName());
+        vaccine.setDescription(vaccineDTO.getDescription());
+        vaccine.setManufacturer(vaccineDTO.getManufacturer());
+        vaccine.setDosesRequired(vaccineDTO.getDosesRequired());
+        vaccine.setSideEffects(vaccineDTO.getSideEffects());
+        vaccine.setStorageTemperature(vaccineDTO.getStorageTemperature());
+        vaccine.setCategoryId(vaccineDTO.getCategoryId());
+
+        Vaccine saved = vaccineRepository.save(vaccine);
+        return convertToDTO(saved);
+    }
+
+    @Override
+    public boolean deleteVaccine(int id) {
+        if (vaccineRepository.existsById(id)) {
+            vaccineRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }

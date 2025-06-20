@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,6 +34,22 @@ public class VaccineController {
         return ResponseEntity.notFound().build();
     }
 
+    @PostMapping
+    @Operation(summary = "Create a new vaccine")
+    public ResponseEntity<VaccineDTO> createVaccine(@RequestBody VaccineDTO vaccineDTO) {
+        VaccineDTO created = vaccineService.createVaccine(vaccineDTO);
+        return ResponseEntity.ok(created);
+    }
+
+    @DeleteMapping("{id}")
+    @Operation(summary = "Delete a vaccine by id")
+    public ResponseEntity<Void> deleteVaccine(@PathVariable int id) {
+        boolean deleted = vaccineService.deleteVaccine(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 
 
 //    @GetMapping("/{id}/vaccinations")
