@@ -11,6 +11,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,6 +31,9 @@ public class SupabaseAuthService {
 
     @Value("${supabase.jwt.secret}")
     private String jwtSecret;
+
+    @Value("${app.frontend.url}")
+    private String frontEndUrl;
 
     @Value("${app.jwt.expiration.minutes}")
     private long jwtExpirationMinutes;
@@ -112,7 +116,6 @@ public class SupabaseAuthService {
 
         String customToken = generateJwtToken(userProfile.getId().toString(), userProfile.getEmail());
 
-        // Build response
         UserDTO userDto = UserDTO.builder()
                 .id(userProfile.getId())
                 .email(userProfile.getEmail())
@@ -134,6 +137,7 @@ public class SupabaseAuthService {
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("email", email);
+        requestBody.put("redirectTo", frontEndUrl + "/update-password#recovery=true");
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
         restTemplate.exchange(
@@ -145,10 +149,11 @@ public class SupabaseAuthService {
     }
 
     public void updatePassword(String newPassword) {
+        String userToken = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("apikey", supabaseApiKey);
-        headers.set("Authorization", "Bearer " + "current-user-token"); // This should be the user's token
+        headers.set("Authorization", "Bearer " + userToken);
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("password", newPassword);
@@ -202,25 +207,47 @@ public class SupabaseAuthService {
         }
     }
 
+    public AuthResponse refreshSupabaseToken(String token) {
+        Map<String, Object> userInfo = extractUserInfoFromToken(token);
+
+        if (userInfo == null) {
+            throw new RuntimeException("Failed to extract user info token");
+        }
+
+        String userId = userInfo.get("id").toString();
+        String email = userInfo.get("email").toString();
+
+        UserProfile userProfile = syncUserProfile(userInfo);
+
+        String customToken = generateJwtToken(userId, email);
+        UserDTO userDTO = UserDTO.builder()
+                .id(userProfile.getId())
+                .email(userProfile.getEmail())
+                .fullName(userProfile.getFullName())
+                .role(userProfile.getRole())
+                .build();
+
+        return AuthResponse.builder()
+                .token(customToken)
+                .session(userInfo)
+                .user(userDTO)
+                .build();
+    }
+
     public void signOut(String token) {
-        // Add the token to the blacklist
         tokenBlacklist.add(token);
     }
 
     private AuthResponse processAuthResponse(Map<String, Object> supabaseResponse, boolean rememberMe) {
         try {
-            // Extract user data from Supabase response
             Map<String, Object> userData = (Map<String, Object>) supabaseResponse.get("user");
             String userId = (String) userData.get("id");
             String email = (String) userData.get("email");
 
-            // Sync user with our database
             UserProfile userProfile = syncUserProfile(userData);
 
-            // Generate our custom JWT
             String customToken = generateJwtToken(userId, email);
 
-            // Build response
             UserDTO userDto = UserDTO.builder()
                     .id(userProfile.getId())
                     .email(userProfile.getEmail())
@@ -240,8 +267,6 @@ public class SupabaseAuthService {
     }
 
     private Map<String, Object> extractUserInfoFromToken(String token) {
-        // In a real implementation, you would decode the JWT token
-        // For simplicity, we'll make a request to Supabase to get user info
         HttpHeaders headers = new HttpHeaders();
         headers.set("apikey", supabaseApiKey);
         headers.set("Authorization", "Bearer " + token);
