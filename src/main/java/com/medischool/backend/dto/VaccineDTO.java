@@ -13,8 +13,7 @@ public class VaccineDTO {
     private String description;
     private String manufacturer;
     private Integer dosesRequired;
-    private Integer minAgeMonths;
-    private Integer maxAgeMonths;
     private String storageTemperature;
     private String sideEffects;
+    private Integer categoryId;
 }
