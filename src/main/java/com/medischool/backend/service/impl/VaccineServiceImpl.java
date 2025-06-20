@@ -36,7 +36,8 @@ public class VaccineServiceImpl implements VaccineService {
     @Override
     public VaccineDTO getVaccineById(int id) {
         var vaccineDTO = vaccineRepository.findById(id).orElse(null);
-        return convertToDTO(vaccineDTO);
+        if (vaccineDTO != null) convertToDTO(vaccineDTO);
+        return null;
     }
 
     private VaccineDTO convertToDTO(Vaccine vaccine) {
@@ -47,8 +48,6 @@ public class VaccineServiceImpl implements VaccineService {
         dto.setManufacturer(vaccine.getManufacturer());
         dto.setDosesRequired(vaccine.getDosesRequired());
         dto.setSideEffects(vaccine.getSideEffects());
-        dto.setMaxAgeMonths(vaccine.getMaxAgeMonths());
-        dto.setMinAgeMonths(vaccine.getMinAgeMonths());
         dto.setStorageTemperature(vaccine.getStorageTemperature());
 
         return dto;
