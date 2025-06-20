@@ -2,6 +2,7 @@ package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.VaccineDTO;
 import com.medischool.backend.dto.student.VaccinationGroupDTO;
+import com.medischool.backend.service.VaccinationConsentService;
 import com.medischool.backend.service.VaccineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,7 @@ import java.util.List;
 public class VaccineController {
 
     private final VaccineService vaccineService;
+    private final VaccinationConsentService vaccinationConsentService;
 
     @GetMapping
     public ResponseEntity<List<VaccineDTO>> getAllVaccines() {
@@ -34,6 +36,8 @@ public class VaccineController {
         }
         return ResponseEntity.notFound().build();
     }
+
+
 
 //    @GetMapping("/{id}/vaccinations")
 //    public ResponseEntity<List<VaccinationGroupDTO>> get(@PathVariable Long id) {

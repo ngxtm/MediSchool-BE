@@ -1,7 +1,8 @@
 package com.medischool.backend.controller;
 
-import com.medischool.backend.model.VaccinationConsent;
+import com.medischool.backend.model.Vaccine.VaccinationConsent;
 import com.medischool.backend.model.enums.ConsentStatus;
+import com.medischool.backend.service.VaccinationConsentService;
 import com.medischool.backend.service.VaccineConsentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,6 +19,7 @@ import java.util.Map;
 @Tag(name = "Vaccination Consents")
 public class VaccineConsentController {
     private final VaccineConsentService consentService;
+    private final VaccinationConsentService vaccinationConsentService;
 
     @PutMapping("/{consentId}/status")
     @Operation(summary = "Update consent status")
@@ -53,4 +55,8 @@ public class VaccineConsentController {
         }
     }
 
+    @GetMapping
+    public ResponseEntity<Long> getTotalVaccinationConsent() {
+        return ResponseEntity.ok(vaccinationConsentService.getTotalConsents());
+    }
 }
