@@ -6,6 +6,7 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class VaccineEventRequestDTO {
@@ -16,4 +17,5 @@ public class VaccineEventRequestDTO {
     private String location;
     private String status;
     private LocalDateTime createdAt;
+    private List<String> classes;
 }
