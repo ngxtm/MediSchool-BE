@@ -36,7 +36,7 @@ public class VaccineServiceImpl implements VaccineService {
     @Override
     public VaccineDTO getVaccineById(int id) {
         var vaccineDTO = vaccineRepository.findById(id).orElse(null);
-        if (vaccineDTO != null) convertToDTO(vaccineDTO);
+        if (vaccineDTO != null) return convertToDTO(vaccineDTO);
         return null;
     }
 
@@ -53,19 +53,6 @@ public class VaccineServiceImpl implements VaccineService {
         return dto;
     }
 
-    @Transactional(readOnly = true)
-    public Page<VaccinationGroupDTO> getHistoryPage(
-            Integer studentId, int page, int size) {
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by("categoryName").ascending());
-
-        Page<VaccinationRow> raw = repo.findRowsByStudentId(studentId, pageable);
-
-        // group rows => List<VaccinationGroupDTO>
-        List<VaccinationGroupDTO> groups = groupRows(raw.getContent());
-
-        return new PageImpl<>(groups, pageable, raw.getTotalElements()); // PageImpl là cách gói DTO tuỳ ý :contentReference[oaicite:2]{index=2}
-    }
 
     private List<VaccinationGroupDTO> groupRows(List<VaccinationRow> rows) {
 

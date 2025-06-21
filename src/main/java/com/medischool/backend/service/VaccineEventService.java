@@ -1,11 +1,12 @@
 package com.medischool.backend.service;
 
 import com.medischool.backend.dto.VaccineEventRequestDTO;
+import com.medischool.backend.model.Vaccine.VaccinationHistory;
 import com.medischool.backend.model.Vaccine.Vaccine;
 import com.medischool.backend.model.Vaccine.VaccineEvent;
-import com.medischool.backend.repository.ConsentRepository;
-import com.medischool.backend.repository.VaccineEventRepository;
-import com.medischool.backend.repository.VaccineRepository;
+import com.medischool.backend.model.enums.EventStatus;
+import com.medischool.backend.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -14,8 +15,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
 import com.medischool.backend.model.Vaccine.VaccineEventClass;
-import com.medischool.backend.repository.VaccineEventClassRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,7 @@ public class VaccineEventService {
     private final ConsentRepository consentRepository;
     private final JdbcTemplate jdbcTemplate;
     private final VaccineEventClassRepository vaccineEventClassRepository;
+    private final VaccinationHistoryRepository vaccinationHistoryRepository;
 
     public VaccineEvent createVaccineEvent(VaccineEventRequestDTO requestDTO) {
         Vaccine vaccine = vaccineRepository.findById(Math.toIntExact(requestDTO.getVaccineId()))
@@ -57,14 +60,17 @@ public class VaccineEventService {
     }
 
     public VaccineEvent updateEventStatus(Long eventId, String status) {
-        if (!status.equals("PENDING") && !status.equals("CANCELLED")) {
-            throw new IllegalArgumentException("Status must be either PENDING or CANCELLED");
+        EventStatus newStatus;
+        try {
+            newStatus = EventStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Status must be one of: PENDING, APPROVED, COMPLETED, CANCELLED");
         }
 
         VaccineEvent event = vaccineEventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Vaccine event not found"));
 
-        event.setStatus(status);
+        event.setStatus(newStatus);
         return vaccineEventRepository.save(event);
     }
 

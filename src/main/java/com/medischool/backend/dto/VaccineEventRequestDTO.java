@@ -1,11 +1,11 @@
 package com.medischool.backend.dto;
 
 import com.medischool.backend.model.enums.EventScope;
+import com.medischool.backend.model.enums.EventStatus;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -15,7 +15,7 @@ public class VaccineEventRequestDTO {
     private LocalDate eventDate;
     private EventScope eventScope;
     private String location;
-    private String status;
+    private EventStatus status;
     private LocalDateTime createdAt;
     private List<String> classes;
 }

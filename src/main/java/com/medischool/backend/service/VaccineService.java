@@ -9,7 +9,6 @@ import java.util.List;
 public interface VaccineService {
     List<VaccineDTO> getAllVaccines();
     VaccineDTO getVaccineById(int id);
-    Page<VaccinationGroupDTO> getHistoryPage(Integer studentId, int page, int size);
     VaccineDTO createVaccine(VaccineDTO vaccineDTO);
 
     boolean deleteVaccine(int id);

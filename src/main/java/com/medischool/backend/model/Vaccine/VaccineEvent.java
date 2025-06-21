@@ -1,6 +1,7 @@
 package com.medischool.backend.model.Vaccine;
 
 import com.medischool.backend.model.enums.EventScope;
+import com.medischool.backend.model.enums.EventStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -40,7 +41,9 @@ public class VaccineEvent {
     @Column(name = "created_by")
     private UUID createdBy;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private EventStatus status;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

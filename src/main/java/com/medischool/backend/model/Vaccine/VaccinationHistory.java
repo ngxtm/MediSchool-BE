@@ -1,29 +1,26 @@
 package com.medischool.backend.model.Vaccine;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "vaccination_history")
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class VaccinationHistory {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "history_id")
-    private Integer id;
+    private Integer historyId;
 
     @Column(name = "student_id")
     private Integer studentId;
+
+    @Column(name = "event_id")
+    private Long eventId;
 
     @Column(name = "vaccine_name")
     private String vaccineName;
@@ -34,15 +31,15 @@ public class VaccinationHistory {
     @Column(name = "vaccination_date")
     private LocalDate vaccinationDate;
 
+    @Column(name = "location")
     private String location;
+
+    @Column(name = "note")
     private String note;
 
     @Column(name = "created_by")
     private UUID createdBy;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
-    private OffsetDateTime createdAt;
-
-    @Column(name = "event_id")
-    private Integer eventId;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }
