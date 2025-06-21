@@ -26,11 +26,5 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentDetail(id));
     }
 
-    @GetMapping("/{id}/vaccinations")
-    public Page<VaccinationGroupDTO> page(
-            @PathVariable Integer id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return service.getHistoryPage(id, page, size);
-    }
+
 }
