@@ -70,4 +70,15 @@ public class VaccineEventController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<VaccineEvent> getVaccineEventByEventId(@PathVariable("id") Long eventId) {
+        try {
+            if (vaccineEventService.getVaccineEventById(eventId).isPresent()) {
+                return ResponseEntity.ok(vaccineEventService.getVaccineEventById(eventId).get());
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 }

@@ -7,7 +7,6 @@ import com.medischool.backend.model.Vaccine.Vaccine;
 import com.medischool.backend.model.Vaccine.VaccineEvent;
 import com.medischool.backend.model.enums.EventStatus;
 import com.medischool.backend.repository.*;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 
 import com.medischool.backend.model.Vaccine.VaccineEventClass;
 
@@ -149,5 +148,8 @@ public class VaccineEventService {
         return vaccineEventRepository.findAllByEventDateBetween(startDate, endDate);
     }
 
+    public Optional<VaccineEvent> getVaccineEventById(Long eventId) {
+        return vaccineEventRepository.findById(eventId);
+    }
 
 }
