@@ -1,6 +1,7 @@
 package com.medischool.backend.service;
 
 import com.medischool.backend.dto.VaccineEventRequestDTO;
+import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.Vaccine.VaccinationHistory;
 import com.medischool.backend.model.Vaccine.Vaccine;
 import com.medischool.backend.model.Vaccine.VaccineEvent;
@@ -28,11 +29,16 @@ public class VaccineEventService {
     private final JdbcTemplate jdbcTemplate;
     private final VaccineEventClassRepository vaccineEventClassRepository;
     private final VaccinationHistoryRepository vaccinationHistoryRepository;
+    private final UserProfileRepository userProfileRepository;
 
     public VaccineEvent createVaccineEvent(VaccineEventRequestDTO requestDTO) {
         Vaccine vaccine = vaccineRepository.findById(Math.toIntExact(requestDTO.getVaccineId()))
                 .orElseThrow(() -> new RuntimeException("Vaccine not found"));
         VaccineEvent event = new VaccineEvent();
+
+        UserProfile creator = userProfileRepository.findById(requestDTO.getCreatedBy())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         event.setVaccine(vaccine);
         event.setEventTitle(requestDTO.getEventTitle());
         event.setEventDate(requestDTO.getEventDate());
@@ -40,6 +46,7 @@ public class VaccineEventService {
         event.setLocation(requestDTO.getLocation());
         event.setStatus(requestDTO.getStatus());
         event.setCreatedAt(LocalDateTime.now());
+        event.setCreatedBy(creator);
 
 
         event = vaccineEventRepository.save(event);
