@@ -1,5 +1,6 @@
 package com.medischool.backend.model.Vaccine;
 
+import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.EventScope;
 import com.medischool.backend.model.enums.EventStatus;
 import jakarta.persistence.*;
@@ -38,8 +39,9 @@ public class VaccineEvent {
 
     private String location;
 
-    @Column(name = "created_by")
-    private UUID createdBy;
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    private UserProfile createdBy;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
