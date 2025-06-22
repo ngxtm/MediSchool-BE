@@ -1,4 +1,4 @@
-package com.medischool.backend.model.ParentStudent;
+package com.medischool.backend.model.parentstudent;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

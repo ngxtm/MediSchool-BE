@@ -1,6 +1,6 @@
 package com.medischool.backend.service;
 
-import com.medischool.backend.model.ParentStudent.Classes;
+import com.medischool.backend.model.parentstudent.Classes;
 
 import java.util.List;
 

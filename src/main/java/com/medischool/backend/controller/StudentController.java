@@ -1,13 +1,11 @@
 package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.student.StudentDetailDTO;
-import com.medischool.backend.dto.student.VaccinationGroupDTO;
 import com.medischool.backend.service.StudentService;
 import com.medischool.backend.service.VaccineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

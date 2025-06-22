@@ -1,6 +1,6 @@
 package com.medischool.backend.repository;
 
-import com.medischool.backend.model.Medication.MedicationRequest;
+import com.medischool.backend.model.medication.MedicationRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

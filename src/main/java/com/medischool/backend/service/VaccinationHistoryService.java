@@ -1,7 +1,7 @@
 package com.medischool.backend.service;
 
 import com.medischool.backend.dto.VaccinationHistoryRequestDTO;
-import com.medischool.backend.model.Vaccine.VaccinationHistory;
+import com.medischool.backend.model.vaccine.VaccinationHistory;
 import com.medischool.backend.repository.VaccinationHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

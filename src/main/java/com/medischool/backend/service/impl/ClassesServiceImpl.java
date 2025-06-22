@@ -1,6 +1,6 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.model.ParentStudent.Classes;
+import com.medischool.backend.model.parentstudent.Classes;
 import com.medischool.backend.repository.ClassesRepository;
 import com.medischool.backend.service.ClassesService;
 import lombok.RequiredArgsConstructor;

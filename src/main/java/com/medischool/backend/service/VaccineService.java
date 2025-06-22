@@ -1,8 +1,6 @@
 package com.medischool.backend.service;
 
 import com.medischool.backend.dto.VaccineDTO;
-import com.medischool.backend.dto.student.VaccinationGroupDTO;
-import org.springframework.data.domain.Page;
 
 import java.util.List;
 

@@ -1,7 +1,8 @@
 package com.medischool.backend.controller;
 
-import com.medischool.backend.model.Vaccine.VaccinationConsent;
+import com.medischool.backend.dto.vaccine.VaccineConsentInEvent;
 import com.medischool.backend.model.enums.ConsentStatus;
+import com.medischool.backend.model.vaccine.VaccinationConsent;
 import com.medischool.backend.service.VaccinationConsentService;
 import com.medischool.backend.service.VaccineConsentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +29,7 @@ public class VaccineConsentController {
             @RequestParam ConsentStatus status
     ) {
         try {
-            VaccinationConsent updated = consentService.updateConsentStatus(consentId, status);
+            com.medischool.backend.model.vaccine.VaccinationConsent updated = consentService.updateConsentStatus(consentId, status);
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -58,5 +59,11 @@ public class VaccineConsentController {
     @GetMapping
     public ResponseEntity<Long> getTotalVaccinationConsent() {
         return ResponseEntity.ok(vaccinationConsentService.getTotalConsents());
+    }
+
+    @GetMapping("/vaccine-events/{id}/students")
+    @Operation(summary = "Get all vaccine consents of a specific vaccine event")
+    public ResponseEntity<List<VaccineConsentInEvent>> getVaccinationConsentsByEventId(@PathVariable("id") Long eventId) {
+        return ResponseEntity.ok(vaccinationConsentService.getVaccinationConsentsByEventId(eventId));
     }
 }

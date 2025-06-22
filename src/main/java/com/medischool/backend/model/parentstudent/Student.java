@@ -1,4 +1,4 @@
-package com.medischool.backend.model.ParentStudent;
+package com.medischool.backend.model.parentstudent;
 
 import com.medischool.backend.model.enums.Gender;
 import com.medischool.backend.model.enums.StudentStatus;

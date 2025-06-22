@@ -1,4 +1,4 @@
-package com.medischool.backend.model.Checkup;
+package com.medischool.backend.model.checkup;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

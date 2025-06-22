@@ -1,7 +1,7 @@
 package com.medischool.backend.service;
 
-import com.medischool.backend.model.Medication.MedicationDispensation;
-import com.medischool.backend.model.Medication.MedicationRequest;
+import com.medischool.backend.model.medication.MedicationDispensation;
+import com.medischool.backend.model.medication.MedicationRequest;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.medischool.backend.model.Vaccine;
+package com.medischool.backend.model.vaccine;
 
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.EventScope;
@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "vaccine_event")

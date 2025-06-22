@@ -1,6 +1,6 @@
 package com.medischool.backend.controller;
 
-import com.medischool.backend.model.ParentStudent.Classes;
+import com.medischool.backend.model.parentstudent.Classes;
 import com.medischool.backend.service.impl.ClassesServiceImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

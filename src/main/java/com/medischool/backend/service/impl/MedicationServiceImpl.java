@@ -1,8 +1,8 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.model.Medication.MedicationDispensation;
-import com.medischool.backend.model.Medication.MedicationRequest;
-import com.medischool.backend.model.Medication.MedicationRequestItem;
+import com.medischool.backend.model.medication.MedicationDispensation;
+import com.medischool.backend.model.medication.MedicationRequest;
+import com.medischool.backend.model.medication.MedicationRequestItem;
 import com.medischool.backend.repository.MedicationDispensationRepository;
 import com.medischool.backend.repository.MedicationRequestRepository;
 import com.medischool.backend.repository.ParentStudentLinkRepository;

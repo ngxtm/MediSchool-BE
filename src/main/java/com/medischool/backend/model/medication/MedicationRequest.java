@@ -1,7 +1,7 @@
-package com.medischool.backend.model.Medication;
+package com.medischool.backend.model.medication;
 
-import com.medischool.backend.model.ParentStudent.Parent;
-import com.medischool.backend.model.ParentStudent.Student;
+import com.medischool.backend.model.parentstudent.Parent;
+import com.medischool.backend.model.parentstudent.Student;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

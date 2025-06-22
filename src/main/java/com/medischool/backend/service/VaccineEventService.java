@@ -2,9 +2,8 @@ package com.medischool.backend.service;
 
 import com.medischool.backend.dto.VaccineEventRequestDTO;
 import com.medischool.backend.model.UserProfile;
-import com.medischool.backend.model.Vaccine.VaccinationHistory;
-import com.medischool.backend.model.Vaccine.Vaccine;
-import com.medischool.backend.model.Vaccine.VaccineEvent;
+import com.medischool.backend.model.vaccine.Vaccine;
+import com.medischool.backend.model.vaccine.VaccineEvent;
 import com.medischool.backend.model.enums.EventStatus;
 import com.medischool.backend.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.medischool.backend.model.Vaccine.VaccineEventClass;
+import com.medischool.backend.model.vaccine.VaccineEventClass;
 
 @Service
 @RequiredArgsConstructor

@@ -1,7 +1,7 @@
 package com.medischool.backend.repository;
 
-import com.medischool.backend.model.ParentStudent.ParentStudentLink;
-import com.medischool.backend.model.ParentStudent.ParentStudentLinkId;
+import com.medischool.backend.model.parentstudent.ParentStudentLink;
+import com.medischool.backend.model.parentstudent.ParentStudentLinkId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

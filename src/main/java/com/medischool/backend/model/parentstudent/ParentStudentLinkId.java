@@ -1,4 +1,4 @@
-package com.medischool.backend.model.ParentStudent;
+package com.medischool.backend.model.parentstudent;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

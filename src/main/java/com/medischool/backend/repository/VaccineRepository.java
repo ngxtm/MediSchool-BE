@@ -1,6 +1,6 @@
 package com.medischool.backend.repository;
 
-import com.medischool.backend.model.Vaccine.Vaccine;
+import com.medischool.backend.model.vaccine.Vaccine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package com.medischool.backend.model.Medication;
+package com.medischool.backend.model.medication;
 
 import jakarta.persistence.*;
 import lombok.Getter;

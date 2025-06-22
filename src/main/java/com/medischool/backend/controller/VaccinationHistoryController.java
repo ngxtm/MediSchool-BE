@@ -1,7 +1,7 @@
 package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.VaccinationHistoryRequestDTO;
-import com.medischool.backend.model.Vaccine.VaccinationHistory;
+import com.medischool.backend.model.vaccine.VaccinationHistory;
 import com.medischool.backend.service.VaccinationHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;

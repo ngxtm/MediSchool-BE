@@ -1,4 +1,4 @@
-package com.medischool.backend.dto.Medication;
+package com.medischool.backend.dto.medication;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

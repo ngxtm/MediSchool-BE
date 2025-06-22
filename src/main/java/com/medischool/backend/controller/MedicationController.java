@@ -1,7 +1,7 @@
 package com.medischool.backend.controller;
 
-import com.medischool.backend.model.Medication.MedicationDispensation;
-import com.medischool.backend.model.Medication.MedicationRequest;
+import com.medischool.backend.model.medication.MedicationDispensation;
+import com.medischool.backend.model.medication.MedicationRequest;
 import com.medischool.backend.service.MedicationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

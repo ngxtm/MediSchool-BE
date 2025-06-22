@@ -1,7 +1,6 @@
 package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.VaccineDTO;
-import com.medischool.backend.dto.student.VaccinationGroupDTO;
 import com.medischool.backend.service.VaccinationConsentService;
 import com.medischool.backend.service.VaccineService;
 import io.swagger.v3.oas.annotations.Operation;

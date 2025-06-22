@@ -1,17 +1,13 @@
 package com.medischool.backend.service.impl;
 
 import com.medischool.backend.dto.VaccineDTO;
-import com.medischool.backend.dto.student.VaccinationDoseDTO;
-import com.medischool.backend.dto.student.VaccinationGroupDTO;
-import com.medischool.backend.model.Vaccine.Vaccine;
+import com.medischool.backend.model.vaccine.Vaccine;
 import com.medischool.backend.projection.VaccinationRow;
 import com.medischool.backend.repository.VaccinationHistoryRepository;
 import com.medischool.backend.repository.VaccineRepository;
 import com.medischool.backend.service.VaccineService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -51,31 +47,6 @@ public class VaccineServiceImpl implements VaccineService {
         dto.setStorageTemperature(vaccine.getStorageTemperature());
         dto.setCategoryId(vaccine.getCategoryId());
         return dto;
-    }
-
-
-    private List<VaccinationGroupDTO> groupRows(List<VaccinationRow> rows) {
-
-        Map<String, List<VaccinationDoseDTO>> grouped =
-                rows.stream().collect(Collectors.groupingBy(
-                        VaccinationRow::getCategoryName,
-                        LinkedHashMap::new,
-                        Collectors.mapping(this::toDose, Collectors.toList())
-                ));
-
-        return grouped.entrySet()
-                .stream()
-                .map(e -> new VaccinationGroupDTO(e.getKey(), e.getValue()))
-                .toList();
-    }
-
-    private VaccinationDoseDTO toDose(VaccinationRow r) {
-        return new VaccinationDoseDTO(
-                r.getDoseNumber(),
-                "Mũi " + r.getDoseNumber(),
-                r.getVaccinationDate(),
-                r.getLocation(),
-                r.getVaccineName());
     }
 
     @Override

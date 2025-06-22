@@ -1,6 +1,6 @@
 package com.medischool.backend.service;
 
-import com.medischool.backend.model.Vaccine.VaccinationConsent;
+import com.medischool.backend.model.vaccine.VaccinationConsent;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.repository.ConsentRepository;
 import lombok.RequiredArgsConstructor;
