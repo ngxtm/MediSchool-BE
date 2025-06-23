@@ -52,8 +52,15 @@ public class VaccineController {
     }
 
 
-//    @GetMapping("/{id}/vaccinations")
-//    public ResponseEntity<List<VaccinationGroupDTO>> get(@PathVariable Long id) {
-//        return ResponseEntity.ok(vaccineService.getHistoryByStudent(id));
-//    }
+    @PutMapping("{id}")
+    @Operation(summary = "Update a vaccine by id")
+    public ResponseEntity<VaccineDTO> updateVaccine(
+            @PathVariable int id,
+            @RequestBody VaccineDTO vaccineDTO) {
+        VaccineDTO updated = vaccineService.updateVaccine(id, vaccineDTO);
+        if (updated != null) {
+            return ResponseEntity.ok(updated);
+        }
+        return ResponseEntity.notFound().build();
+    }
 }
