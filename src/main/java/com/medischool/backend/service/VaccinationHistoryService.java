@@ -37,37 +37,5 @@ public class VaccinationHistoryService {
         return vaccinationHistoryRepository.findByEventId(eventId);
     }
     
-    public VaccinationHistory update(Integer historyId, VaccinationHistoryUpdateDTO dto) {
-        VaccinationHistory history = vaccinationHistoryRepository.findById(historyId)
-            .orElseThrow(() -> new EntityNotFoundException("Vaccination history not found with id: " + historyId));
-            
-        if (dto.getAbnormal() != null) {
-            history.setAbnormal(dto.getAbnormal());
-        }
-        
-        if (dto.getFollowUpNote() != null) {
-            history.setFollowUpNote(dto.getFollowUpNote());
-        }
-        
-        history.setUpdatedBy(dto.getUpdatedBy());
-        history.setUpdatedAt(dto.getUpdatedAt() != null ? dto.getUpdatedAt() : java.time.LocalDateTime.now());
-        
-        return vaccinationHistoryRepository.save(history);
-    }
-    
-    public List<VaccinationHistory> batchUpdate(List<VaccinationHistoryUpdateDTO> updates) {
-        List<VaccinationHistory> results = new ArrayList<>();
-        
-        for (VaccinationHistoryUpdateDTO dto : updates) {
-            try {
-                VaccinationHistory updated = update(dto.getHistoryId(), dto);
-                results.add(updated);
-            } catch (Exception e) {
-                // Log error but continue processing other records
-                log.error("Error updating vaccination history ID {}: {}", dto.getHistoryId(), e.getMessage());
-            }
-        }
-        
-        return results;
-    }
+
 }

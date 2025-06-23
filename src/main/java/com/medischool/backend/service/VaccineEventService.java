@@ -2,8 +2,8 @@ package com.medischool.backend.service;
 
 import com.medischool.backend.dto.VaccineEventRequestDTO;
 import com.medischool.backend.model.UserProfile;
-import com.medischool.backend.model.vaccine.Vaccine;
-import com.medischool.backend.model.vaccine.VaccineEvent;
+import com.medischool.backend.model.enums.ConsentStatus;
+import com.medischool.backend.model.vaccine.*;
 import com.medischool.backend.model.enums.EventStatus;
 import com.medischool.backend.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-
-import com.medischool.backend.model.vaccine.VaccineEventClass;
 
 @Service
 @RequiredArgsConstructor
@@ -159,5 +157,41 @@ public class VaccineEventService {
 
     public List<VaccineEvent> getUpcomingVaccineEvent() {
         return vaccineEventRepository.findAllByEventDateAfter(LocalDate.now());
+    }
+
+
+    public int createVaccinationHistoryForAgreedConsents(Long eventId) {
+        List<VaccinationConsent> agreedConsents = consentRepository.findAllByEventIdAndConsentStatus(eventId, ConsentStatus.APPROVE);
+        Optional<VaccineEvent> eventOpt = vaccineEventRepository.findById(eventId);
+        if (eventOpt.isEmpty()) return 0;
+        VaccineEvent event = eventOpt.get();
+        Vaccine vaccine = event.getVaccine();
+
+        int count = 0;
+        for (VaccinationConsent consent : agreedConsents) {
+            boolean exists = vaccinationHistoryRepository.existsByStudentIdAndEventId(consent.getStudentId(), eventId);
+            if (!exists) {
+                VaccinationHistory history = new VaccinationHistory();
+                history.setStudentId(consent.getStudentId());
+                history.setEventId(eventId);
+                history.setVaccine(vaccine); // Lấy vaccine từ event
+                history.setDoseNumber(1);
+
+                // Lấy các trường theo yêu cầu
+                history.setVaccinationDate(event.getEventDate()); // lấy từ event_date
+                history.setLocation(event.getLocation());         // lấy từ location trong event
+                history.setNote(consent.getNote());
+                history.setAbnormal(false);
+                history.setFollowUpNote(null);
+
+                // Hardcode created_by và lấy thời gian hiện tại cho created_at
+                history.setCreatedBy(UUID.fromString("00000000-0000-0000-0000-000000000001")); // thay bằng UUID phù hợp nếu cần
+                history.setCreatedAt(LocalDateTime.now());
+
+                vaccinationHistoryRepository.save(history);
+                count++;
+            }
+        }
+        return count;
     }
 }

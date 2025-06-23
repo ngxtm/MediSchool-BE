@@ -31,20 +31,5 @@ public class VaccinationHistoryController {
         return ResponseEntity.ok(histories);
     }
     
-    @PatchMapping("/{historyId}")
-    @Operation(summary = "Update a vaccination history record")
-    public ResponseEntity<VaccinationHistory> updateHistory(
-            @PathVariable Integer historyId,
-            @RequestBody VaccinationHistoryUpdateDTO dto) {
-        VaccinationHistory updated = vaccinationHistoryService.update(historyId, dto);
-        return ResponseEntity.ok(updated);
-    }
-    
-    @PatchMapping("/batch")
-    @Operation(summary = "Batch update vaccination history records")
-    public ResponseEntity<List<VaccinationHistory>> batchUpdate(
-            @RequestBody List<VaccinationHistoryUpdateDTO> updates) {
-        List<VaccinationHistory> updated = vaccinationHistoryService.batchUpdate(updates);
-        return ResponseEntity.ok(updated);
-    }
+
 }

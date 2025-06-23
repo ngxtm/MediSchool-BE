@@ -15,6 +15,7 @@ import com.medischool.backend.util.ConsentStatisticsUtil;
 @RequiredArgsConstructor
 public class VaccineConsentService {
     private final ConsentRepository consentRepository;
+    private final VaccineEventService vaccineEventService;
 
     public List<VaccinationConsent> getConsentsByStudentId(Integer studentId) {
         return consentRepository.findAllByStudentId(studentId);
@@ -26,7 +27,13 @@ public class VaccineConsentService {
 
         consent.setConsentStatus(status);
 
-        return consentRepository.save(consent);
+        VaccinationConsent saved = consentRepository.save(consent);
+
+        if (status == ConsentStatus.APPROVE) {
+            vaccineEventService.createVaccinationHistoryForAgreedConsents(consent.getEventId());
+        }
+
+        return saved;
     }
 
     public Map<String, Object> getConsentResultsByEvent(Long eventId) {
