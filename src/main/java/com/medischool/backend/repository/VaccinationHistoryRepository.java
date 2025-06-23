@@ -8,4 +8,5 @@ import java.util.List;
 public interface VaccinationHistoryRepository extends JpaRepository<VaccinationHistory, Integer> {
     List<VaccinationHistory> findByEventId(Long eventId);
     boolean existsByStudentIdAndEventId(Integer studentId, Long eventId);
+    List<VaccinationHistory> findByStudentIdAndVaccine_CategoryId(Integer studentId, Integer categoryId);
 }
