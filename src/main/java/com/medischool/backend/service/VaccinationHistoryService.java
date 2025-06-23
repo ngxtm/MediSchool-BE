@@ -36,6 +36,4 @@ public class VaccinationHistoryService {
     public List<VaccinationHistory> findByEventId(Long eventId) {
         return vaccinationHistoryRepository.findByEventId(eventId);
     }
-    
-
 }
