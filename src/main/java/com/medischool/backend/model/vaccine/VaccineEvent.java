@@ -3,6 +3,7 @@ package com.medischool.backend.model.vaccine;
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.EventScope;
 import com.medischool.backend.model.enums.EventStatus;
+import com.medischool.backend.model.vaccine.Vaccine;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
