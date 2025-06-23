@@ -8,14 +8,13 @@ import com.medischool.backend.model.enums.EventStatus;
 import com.medischool.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import com.medischool.backend.model.vaccine.VaccineEventClass;
 
@@ -35,8 +34,14 @@ public class VaccineEventService {
                 .orElseThrow(() -> new RuntimeException("Vaccine not found"));
         VaccineEvent event = new VaccineEvent();
 
-        UserProfile creator = userProfileRepository.findById(requestDTO.getCreatedBy())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+//        UserProfile creator = userProfileRepository.findById(requestDTO.getCreatedBy())
+//                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userIdStr = auth.getName();
+        UUID userId = UUID.fromString(userIdStr);
+
+        UserProfile profileOpt = userProfileRepository.findSingleById(userId);
 
         event.setVaccine(vaccine);
         event.setEventTitle(requestDTO.getEventTitle());
@@ -45,7 +50,7 @@ public class VaccineEventService {
         event.setLocation(requestDTO.getLocation());
         event.setStatus(requestDTO.getStatus());
         event.setCreatedAt(LocalDateTime.now());
-        event.setCreatedBy(creator);
+        event.setCreatedBy(profileOpt);
 
 
         event = vaccineEventRepository.save(event);
