@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -151,4 +152,7 @@ public class VaccineEventService {
         return vaccineEventRepository.findById(eventId);
     }
 
+    public List<VaccineEvent> getUpcomingVaccineEvent() {
+        return vaccineEventRepository.findAllByEventDateAfter(LocalDate.now());
+    }
 }

@@ -3,13 +3,15 @@ package com.medischool.backend.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import com.medischool.backend.model.vaccine.Vaccine;
 import lombok.Data;
 
 @Data
 public class VaccinationHistoryRequestDTO {
     private Integer studentId;
     private Long eventId;
-    private String vaccineName;
+    private Vaccine vaccine;
     private Integer doseNumber;
     private LocalDate vaccinationDate;
     private String location;

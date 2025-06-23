@@ -57,13 +57,19 @@ public class VaccineConsentController {
     }
 
     @GetMapping
-    public ResponseEntity<Long> getTotalVaccinationConsent() {
-        return ResponseEntity.ok(vaccinationConsentService.getTotalConsents());
+    @Operation(summary = "Get consent results count for all event")
+    public ResponseEntity<Map<String, Object>> getConsentResult() {
+        try {
+            Map<String, Object> results = vaccinationConsentService.getConsentResult();
+            return ResponseEntity.ok(results);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
-    @GetMapping("/vaccine-events/{id}/students")
+    @GetMapping("/{eventId}/students")
     @Operation(summary = "Get all vaccine consents of a specific vaccine event")
-    public ResponseEntity<List<VaccineConsentInEvent>> getVaccinationConsentsByEventId(@PathVariable("id") Long eventId) {
+    public ResponseEntity<List<VaccineConsentInEvent>> getVaccinationConsentsByEventId(@PathVariable("eventId") Long eventId) {
         return ResponseEntity.ok(vaccinationConsentService.getVaccinationConsentsByEventId(eventId));
     }
 }

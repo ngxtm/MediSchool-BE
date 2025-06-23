@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import com.medischool.backend.util.ConsentStatisticsUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -34,26 +36,8 @@ public class VaccineConsentService {
             throw new RuntimeException("No consents found for event ID: " + eventId);
         }
 
-        long totalConsents = consents.size();
-        long respondedConsents = consents.stream()
-                .filter(c -> c.getConsentStatus() != null)
-                .count();
-        long approvedConsents = consents.stream()
-                .filter(c -> ConsentStatus.APPROVE.equals(c.getConsentStatus()))
-                .count();
-        long rejectedConsents = consents.stream()
-                .filter(c -> ConsentStatus.REJECT.equals(c.getConsentStatus()))
-                .count();
-        long pendingConsents = totalConsents - respondedConsents;
-
-        return Map.of(
-                "eventId", eventId,
-                "totalConsents", totalConsents,
-                "respondedConsents", respondedConsents,
-                "approvedConsents", approvedConsents,
-                "rejectedConsents", rejectedConsents,
-                "pendingConsents", pendingConsents,
-                "responseRate", String.format("%.2f%%", (respondedConsents * 100.0) / totalConsents)
-        );
+        Map<String, Object> stats = new HashMap<>(ConsentStatisticsUtil.calculate(consents));
+        stats.put("eventId", eventId);
+        return stats;
     }
 }

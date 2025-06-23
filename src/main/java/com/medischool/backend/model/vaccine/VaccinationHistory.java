@@ -22,8 +22,9 @@ public class VaccinationHistory {
     @Column(name = "event_id")
     private Long eventId;
 
-    @Column(name = "vaccine_name")
-    private String vaccineName;
+    @ManyToOne
+    @JoinColumn(name = "vaccine_id")
+    private Vaccine vaccine;
 
     @Column(name = "dose_number")
     private Integer doseNumber;
@@ -37,9 +38,25 @@ public class VaccinationHistory {
     @Column(name = "note")
     private String note;
 
+    @Column(name = "abnormal")
+    private Boolean abnormal = false;
+
+    @Column(name = "follow_up_note")
+    private String followUpNote;
+
     @Column(name = "created_by")
     private UUID createdBy;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_by")
+    private UUID updatedBy;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 }

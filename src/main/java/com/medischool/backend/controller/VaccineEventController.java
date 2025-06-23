@@ -8,8 +8,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -75,5 +77,14 @@ public class VaccineEventController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/upcoming")
+    public ResponseEntity<List<VaccineEvent>> getUpcomingVaccineEvents() {
+        try {
+            return ResponseEntity.ok(vaccineEventService.getUpcomingVaccineEvent());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

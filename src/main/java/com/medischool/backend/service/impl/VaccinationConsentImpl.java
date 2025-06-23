@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import com.medischool.backend.util.ConsentStatisticsUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +38,16 @@ public class VaccinationConsentImpl implements VaccinationConsentService {
             result.add(consentDTO);
         }
         return result;
+    }
+
+    @Override
+    public Map<String, Object> getConsentResult() {
+        List<VaccinationConsent> consents = vaccinationConsentRepository.findAll();
+        if (consents.isEmpty()) {
+            throw new RuntimeException("No consents found");
+        }
+
+        return new HashMap<>(ConsentStatisticsUtil.calculate(consents));
     }
 
 }
