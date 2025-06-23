@@ -50,13 +50,4 @@ public class VaccinationHistory {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_by")
-    private UUID updatedBy;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Version
-    @Column(name = "version")
-    private Long version;
 }

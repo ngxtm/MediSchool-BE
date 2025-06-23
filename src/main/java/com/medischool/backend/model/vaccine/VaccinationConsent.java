@@ -17,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+//@EntityListeners(VaccinationConsentListener.class)
 public class VaccinationConsent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

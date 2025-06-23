@@ -87,4 +87,14 @@ public class VaccineEventController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @PostMapping("/{eventId}/create-vaccination-history")
+    public ResponseEntity<?> createVaccinationHistory(@PathVariable Long eventId) {
+        int count = vaccineEventService.createVaccinationHistoryForAgreedConsents(eventId);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "eventId", eventId,
+                "history_created", count
+        ));
+    }
 }
