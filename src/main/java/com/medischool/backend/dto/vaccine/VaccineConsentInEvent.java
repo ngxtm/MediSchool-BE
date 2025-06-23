@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VaccineConsentInEvent {
+    private Long consentId;
     private String studentName;
     private String classCode;
     private String parentName;
@@ -23,6 +24,7 @@ public class VaccineConsentInEvent {
 
     public static VaccineConsentInEvent converToDTO(Student student, UserProfile parent, VaccinationConsent consent) {
         return VaccineConsentInEvent.builder()
+                .consentId(consent.getId())
                 .studentName(student.getFullName())
                 .classCode(student.getClassCode())
                 .parentName(parent.getFullName())
