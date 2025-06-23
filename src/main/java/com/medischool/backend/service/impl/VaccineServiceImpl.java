@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.LinkedHashMap;
 
@@ -71,5 +72,25 @@ public class VaccineServiceImpl implements VaccineService {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public VaccineDTO updateVaccine(int id, VaccineDTO vaccineDTO) {
+        Optional<Vaccine> optionalVaccine = vaccineRepository.findById(id);
+        if (optionalVaccine.isPresent()) {
+            Vaccine vaccine = optionalVaccine.get();
+
+            vaccine.setName(vaccineDTO.getName());
+            vaccine.setDescription(vaccineDTO.getDescription());
+            vaccine.setManufacturer(vaccineDTO.getManufacturer());
+            vaccine.setDosesRequired(vaccineDTO.getDosesRequired());
+            vaccine.setSideEffects(vaccineDTO.getSideEffects());
+            vaccine.setStorageTemperature(vaccineDTO.getStorageTemperature());
+            vaccine.setCategoryId(vaccineDTO.getCategoryId());
+
+            Vaccine updated = vaccineRepository.save(vaccine);
+            return convertToDTO(updated);
+        }
+        return null;
     }
 }
