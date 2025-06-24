@@ -27,13 +27,7 @@ public class CheckupResultService {
         checkupResult.setResult(checkupResultRequest.getResult());
         checkupResult.setNote(checkupResultRequest.getNote());
         checkupResult.setIsNormal(checkupResultRequest.getIsNormal());
-
-
-        PeriodicCheckup currentPeriodicCheckup =this.periodicCheckupRepository.findById(checkupResultRequest.getPeriodicCheckupId()).get();
-        checkupResult.setPeriodicCheckup(currentPeriodicCheckup);
-        checkupResult.setNurseId(checkupResultRequest.getNurseId());
-
-
+        
         StudentProfile currentStudent=this.studentRepository.findById(Math.toIntExact(checkupResultRequest.getStudentProfileId())).get();
         checkupResult.setStudentProfile(currentStudent);
         this.checkupResultRepository.save(checkupResult);
