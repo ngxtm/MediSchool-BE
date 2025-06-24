@@ -1,9 +1,7 @@
 package com.medischool.backend.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.medischool.backend.util.constant.UserRole;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,7 +14,8 @@ import java.util.UUID;
 @Setter
 public class UserProfile {
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "full_name")
     private String fullName;
@@ -25,8 +24,18 @@ public class UserProfile {
 
     private String email;
 
+    private String password;
+
     private String address;
+
+    @ManyToOne
+    @JoinColumn(name="check_up_result")
+    CheckupResult checkupResult;
+
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
+    UserRole role;
 }

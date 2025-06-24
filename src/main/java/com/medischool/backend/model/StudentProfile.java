@@ -55,11 +55,17 @@ public class StudentProfile {
 
     @ManyToMany
     @JoinTable(
-            name = "patient_student",
+            name = "parent_student",
             joinColumns = @JoinColumn(name="student_id"),
             inverseJoinColumns = @JoinColumn(name="parent_id")
     )
     Set<ParentProfile> parents;
+
+    @OneToMany(mappedBy = "studentProfile")
+    private Set<CheckupResult> checkupResults;
+
+
+    Boolean isActive;
 
     @PrePersist
     public void healthProfileBeforeCreated() {

@@ -32,36 +32,34 @@ public class CheckupConsentServiceHelper {
         for(CheckupItemEntryRequest checkupItemEntryRequest:checkupItemEntryRequests){
 
             Long consentId=checkupItemEntryRequest.getCheckupId();
-            Optional<CheckUpConsentItem> checkUpConsent=this.checkupConsentItemRepository.findById(consentId);
+            Optional<CheckUpConsent> checkUpConsent=this.checkupConsentRepository.findById(consentId);
 
             if(checkUpConsent.isEmpty()){
                 throw new CustomException("ConsentId = "+ consentId+" not found");
             }
 
-
+            String itemText="Mục khám :";
+            Set<String> itemsNotInclude=new HashSet<>();
             for(Long itemId:checkupItemEntryRequest.getItemIds()){
                 CheckUpConsentItem checkUpConsentItem=this.checkupConsentItemRepository.findById(itemId).get();
                 if(checkUpConsentItem==null){
                     throw new CustomException("Check up consent item with id = "+itemId+" not found");
                 }
 
-                Set<PeriodicCheckup> currentPeriodics=checkUpConsent.get().getPeriodicCheckups();
-                Set<String> itemsNotInclude=new HashSet<>();
-                for(PeriodicCheckup periodicCheckup:currentPeriodics){
-                    Set<CheckUpConsentItem> checkUpConsentItems=periodicCheckup.getCheckUpConsentItems();
-                    if(!checkUpConsentItems.contains(checkUpConsentItem)){
-                       itemsNotInclude.add(checkUpConsentItem.getText());
-                    }
+                PeriodicCheckup periodic=checkUpConsent.get().getPeriodicCheckup();
+
+                if(!periodic.getCheckUpConsentItems().contains(checkUpConsentItem)){
+                    itemsNotInclude.add(checkUpConsentItem.getText());
                 }
-                String itemText="Mục khám :";
+
                 for(String itemNotInclue:itemsNotInclude){
                     itemText+=itemNotInclue+", ";
                 }
-                itemText+="không nằm trong kì khám";
-                if(itemsNotInclude.size()>0){
-                    throw new CustomException(itemText);
-                }
 
+            }
+            if(itemsNotInclude.size()>0){
+                itemText+=" không nằm trong kì khám";
+                throw new CustomException(itemText);
             }
         }
 
@@ -76,11 +74,12 @@ public class CheckupConsentServiceHelper {
            CheckUpConsent checkUpConsent=this.checkupConsentRepository.findById(checkupItemEntryRequest.getCheckupId()).get();
            StudentProfile currentStudent=this.studentRepository.findById(Math.toIntExact(checkUpConsent.getStudentId())).get();
 
-           PeriodicCheckup currentPeriodic=this.periodicCheckupRepository.findById(checkUpConsent.getPeriodicCheckup().getCheckUpId()).get();
+
 
            List<String> itemsInCheckupAccepted=new ArrayList<>();
-           Set<CheckUpConsentItem> currentCheckupItems=currentPeriodic.getCheckUpConsentItems();
-           for(CheckUpConsentItem checkUpConsentItem:currentCheckupItems){
+           List<Long> itemIds=checkupItemEntryRequest.getItemIds();
+           for(Long itemId:itemIds){
+               CheckUpConsentItem checkUpConsentItem=this.checkupConsentItemRepository.findById(itemId).get();
                itemsInCheckupAccepted.add(checkUpConsentItem.getText());
            }
 

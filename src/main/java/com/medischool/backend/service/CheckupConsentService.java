@@ -43,11 +43,13 @@ public class CheckupConsentService {
         if(checkUpConsent == null){
             throw new CustomException("ConsentId not found");
         }
+
         if(checkUpConsent.getStatus().equals(ConsentHeaderStatusType.PENDING_RESPONSE)){
             checkUpConsent.setStatus(ConsentHeaderStatusType.COMPLETED);
         }else{
             checkUpConsent.setStatus(ConsentHeaderStatusType.PENDING_RESPONSE);
         }
+
         this.checkupConsentRepository.save(checkUpConsent);
     }
 

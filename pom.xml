@@ -79,11 +79,7 @@
 <!--			<artifactId>postgresql</artifactId>-->
 <!--			<scope>runtime</scope>-->
 <!--		</dependency>-->
-		<dependency>
-			<groupId>com.microsoft.sqlserver</groupId>
-			<artifactId>mssql-jdbc</artifactId>
-			<version>11.2.1.jre17</version> <!-- hoặc phiên bản mới nhất -->
-		</dependency>
+
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>

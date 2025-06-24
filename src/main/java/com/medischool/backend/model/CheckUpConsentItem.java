@@ -32,6 +32,9 @@ public class CheckUpConsentItem {
     @ManyToMany(mappedBy = "checkUpConsentItems")
     Set<PeriodicCheckup> periodicCheckups;
 
+    @OneToMany(mappedBy = "checkUpConsentItem")
+    Set<CheckUpConsentCategory>  checkUpConsentCategory;
+
 
 
 }

@@ -57,6 +57,9 @@ public class PeriodicCheckup {
     )
     Set<CheckUpConsentItem> checkUpConsentItems;
 
+    @OneToMany(mappedBy = "periodicCheckup")
+    Set<CheckupResult> results;
+
 
 
     @PrePersist
