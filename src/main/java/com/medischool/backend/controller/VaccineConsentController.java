@@ -1,5 +1,6 @@
 package com.medischool.backend.controller;
 
+import com.medischool.backend.dto.vaccine.VaccineConsentDTO;
 import com.medischool.backend.dto.vaccine.VaccineConsentInEvent;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.vaccine.VaccinationConsent;
@@ -8,6 +9,7 @@ import com.medischool.backend.service.VaccineConsentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -71,5 +73,18 @@ public class VaccineConsentController {
     @Operation(summary = "Get all vaccine consents of a specific vaccine event")
     public ResponseEntity<List<VaccineConsentInEvent>> getVaccinationConsentsByEventId(@PathVariable("eventId") Long eventId) {
         return ResponseEntity.ok(vaccinationConsentService.getVaccinationConsentsByEventId(eventId));
+    }
+
+    @GetMapping("/{consentId}")
+    @Operation(summary = "Get detailed consent")
+    public ResponseEntity<?> getVaccineConsent(@PathVariable Long consentId) {
+        try {
+            VaccineConsentDTO dto = vaccinationConsentService.getVaccineConsent(consentId);
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 }
