@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,30 @@ public class VaccineEventService {
     private final VaccineEventClassRepository vaccineEventClassRepository;
     private final VaccinationHistoryRepository vaccinationHistoryRepository;
     private final UserProfileRepository userProfileRepository;
+    private final StudentRepository studentRepository;
+    private final ParentStudentLinkRepository parentStudentLinkRepository;
+
+    private List<Integer> getAllStudentIdsInSchool() {
+        return studentRepository.findAll()
+                .stream()
+                .map(student -> student.getStudentId())
+                .collect(Collectors.toList());
+    }
+
+    private List<Integer> getAllStudentIdsInClasses(List<String> classCodes) {
+        return studentRepository.findByClassCodeIn(classCodes)
+                .stream()
+                .map(student -> student.getStudentId())
+                .collect(Collectors.toList());
+    }
+
+    private UUID getParentIdForStudent(Integer studentId) {
+        return parentStudentLinkRepository.findByStudentId(studentId)
+                .stream()
+                .findFirst()
+                .map(link -> link.getParentId())
+                .orElse(null);
+    }
 
     public VaccineEvent createVaccineEvent(VaccineEventRequestDTO requestDTO) {
         Vaccine vaccine = vaccineRepository.findById(Math.toIntExact(requestDTO.getVaccineId()))
@@ -73,7 +98,7 @@ public class VaccineEventService {
         try {
             newStatus = EventStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Status must be one of: PENDING, APPROVED, COMPLETED, CANCELLED");
+            throw new IllegalArgumentException("Status must be one of: APPROVE, REJECT");
         }
 
         VaccineEvent event = vaccineEventRepository.findById(eventId)
@@ -87,48 +112,40 @@ public class VaccineEventService {
         VaccineEvent event = vaccineEventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Vaccine event with ID " + eventId + " not found"));
 
-        int insertedCount = 0;
+        Vaccine vaccine = event.getVaccine();
+        Integer categoryId = vaccine.getCategoryId();
+        Integer dosesRequired = vaccine.getDosesRequired();
 
-        String sql;
+        List<Integer> studentIds = new ArrayList<>();
         if ("SCHOOL".equalsIgnoreCase(event.getEventScope().toString())) {
-            sql = """
-                        INSERT INTO vaccination_consent (
-                            student_id, event_id, parent_id, consent_status, created_at
-                        )
-                        SELECT s.student_id, ?, psl.parent_id, NULL, NOW()
-                        FROM student s
-                        JOIN parent_student_link psl ON s.student_id = psl.student_id
-                        WHERE NOT EXISTS (
-                            SELECT 1 FROM vaccination_history vh 
-                            WHERE vh.student_id = s.student_id AND vh.event_id = ?
-                        )
-                        AND NOT EXISTS (
-                            SELECT 1 FROM vaccination_consent c 
-                            WHERE c.student_id = s.student_id AND c.event_id = ?
-                        )
-                    """;
-            insertedCount = jdbcTemplate.update(sql, eventId, eventId, eventId);
-
+            studentIds = getAllStudentIdsInSchool();
         } else if ("CLASS".equalsIgnoreCase(event.getEventScope().toString())) {
-            sql = """
-                        INSERT INTO vaccination_consent (
-                            student_id, event_id, parent_id, consent_status, created_at
-                        )
-                        SELECT s.student_id, ?, psl.parent_id, NULL, NOW()
-                        FROM student s
-                        JOIN parent_student_link psl ON s.student_id = psl.student_id
-                        JOIN vaccine_event_class vec ON TRIM(vec.class_code) = TRIM(s.class_code)
-                        WHERE vec.event_id = ?
-                          AND NOT EXISTS (
-                              SELECT 1 FROM vaccination_history vh 
-                              WHERE vh.student_id = s.student_id AND vh.event_id = ?
-                          )
-                          AND NOT EXISTS (
-                              SELECT 1 FROM vaccination_consent c 
-                              WHERE c.student_id = s.student_id AND c.event_id = ?
-                          )
-                    """;
-            insertedCount = jdbcTemplate.update(sql, eventId, eventId, eventId, eventId);
+            List<VaccineEventClass> eventClasses = vaccineEventClassRepository.findAllByEventId(eventId);
+            List<String> classCodes = eventClasses.stream().map(VaccineEventClass::getClassCode).toList();
+            studentIds = getAllStudentIdsInClasses(classCodes);
+        }
+
+        int insertedCount = 0;
+        for (Integer studentId : studentIds) {
+            boolean consentExists = consentRepository.existsByStudentIdAndEventId(studentId, eventId);
+            if (consentExists) continue;
+
+            List<VaccinationHistory> histories = vaccinationHistoryRepository.findByStudentIdAndVaccine_CategoryId(studentId, categoryId);
+            if (histories.size() >= dosesRequired) continue;
+
+            UUID parentId = getParentIdForStudent(studentId);
+            if (parentId == null) {
+                continue;
+            }
+
+            VaccinationConsent consent = new VaccinationConsent();
+            consent.setStudentId(studentId);
+            consent.setEventId(eventId);
+            consent.setParentId(parentId);
+            consent.setConsentStatus(null);
+            consent.setCreatedAt(LocalDateTime.now());
+            consentRepository.save(consent);
+            insertedCount++;
         }
 
         return Map.of(
@@ -171,11 +188,15 @@ public class VaccineEventService {
         for (VaccinationConsent consent : agreedConsents) {
             boolean exists = vaccinationHistoryRepository.existsByStudentIdAndEventId(consent.getStudentId(), eventId);
             if (!exists) {
+                Integer categoryId = vaccine.getCategoryId();
+                List<VaccinationHistory> histories = vaccinationHistoryRepository.findByStudentIdAndVaccine_CategoryId(consent.getStudentId(), categoryId);
+                int doseNumber = histories.size() + 1;
+
                 VaccinationHistory history = new VaccinationHistory();
                 history.setStudentId(consent.getStudentId());
                 history.setEventId(eventId);
                 history.setVaccine(vaccine); // Lấy vaccine từ event
-                history.setDoseNumber(1);
+                history.setDoseNumber(doseNumber);
 
                 // Lấy các trường theo yêu cầu
                 history.setVaccinationDate(event.getEventDate()); // lấy từ event_date
