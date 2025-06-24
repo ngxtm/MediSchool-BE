@@ -13,4 +13,5 @@ public interface StudentRepository extends JpaRepository<StudentProfile, Integer
  StudentProfile findByStudentCode(String studentCode);
  List<StudentProfile> findByClassCodeIn(List<String> classCode);
 
+    StudentProfile findById(Long studentProfileId);
 }
