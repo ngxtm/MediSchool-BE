@@ -195,18 +195,16 @@ public class VaccineEventService {
                 VaccinationHistory history = new VaccinationHistory();
                 history.setStudentId(consent.getStudentId());
                 history.setEventId(eventId);
-                history.setVaccine(vaccine); // Lấy vaccine từ event
+                history.setVaccine(vaccine);
                 history.setDoseNumber(doseNumber);
 
-                // Lấy các trường theo yêu cầu
-                history.setVaccinationDate(event.getEventDate()); // lấy từ event_date
-                history.setLocation(event.getLocation());         // lấy từ location trong event
+                history.setVaccinationDate(event.getEventDate());
+                history.setLocation(event.getLocation());
                 history.setNote(consent.getNote());
                 history.setAbnormal(false);
                 history.setFollowUpNote(null);
 
-                // Hardcode created_by và lấy thời gian hiện tại cho created_at
-                history.setCreatedBy(UUID.fromString("00000000-0000-0000-0000-000000000001")); // thay bằng UUID phù hợp nếu cần
+                history.setCreatedBy(UUID.fromString("00000000-0000-0000-0000-000000000001"));
                 history.setCreatedAt(LocalDateTime.now());
 
                 vaccinationHistoryRepository.save(history);

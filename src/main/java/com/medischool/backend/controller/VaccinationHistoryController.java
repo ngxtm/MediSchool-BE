@@ -2,6 +2,7 @@ package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.VaccinationHistoryRequestDTO;
 import com.medischool.backend.dto.VaccinationHistoryUpdateDTO;
+import com.medischool.backend.dto.VaccinationHistoryWithStudentDTO;
 import com.medischool.backend.model.vaccine.VaccinationHistory;
 import com.medischool.backend.service.VaccinationHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,11 +25,11 @@ public class VaccinationHistoryController {
         VaccinationHistory saved = vaccinationHistoryService.save(dto);
         return ResponseEntity.ok(saved);
     }
-    
+
     @GetMapping("/event/{eventId}")
-    @Operation(summary = "Get vaccination history records for an event")
-    public ResponseEntity<List<VaccinationHistory>> getByEventId(@PathVariable Long eventId) {
-        List<VaccinationHistory> histories = vaccinationHistoryService.findByEventId(eventId);
+    @Operation(summary = "Get vaccination history records for an event with student info")
+    public ResponseEntity<List<VaccinationHistoryWithStudentDTO>> getByEventId(@PathVariable Long eventId) {
+        List<VaccinationHistoryWithStudentDTO> histories = vaccinationHistoryService.findByEventIdWithStudent(eventId);
         return ResponseEntity.ok(histories);
     }
     
