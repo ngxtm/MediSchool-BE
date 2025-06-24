@@ -3,12 +3,19 @@ package com.medischool.backend.service;
 import com.medischool.backend.dto.VaccinationHistoryRequestDTO;
 import com.medischool.backend.dto.VaccinationHistoryUpdateDTO;
 import com.medischool.backend.model.vaccine.VaccinationHistory;
+import com.medischool.backend.model.vaccine.VaccineCategory;
+import com.medischool.backend.model.vaccine.Vaccine;
 import com.medischool.backend.repository.VaccinationHistoryRepository;
+import com.medischool.backend.repository.VaccineCategoryRepository;
+import com.medischool.backend.repository.VaccineRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +25,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class VaccinationHistoryService {
     private final VaccinationHistoryRepository vaccinationHistoryRepository;
+    private final VaccineCategoryRepository vaccineCategoryRepository;
+    private final VaccineRepository vaccineRepository;
 
     public VaccinationHistory save(VaccinationHistoryRequestDTO dto) {
         VaccinationHistory history = new VaccinationHistory();
@@ -35,5 +44,20 @@ public class VaccinationHistoryService {
 
     public List<VaccinationHistory> findByEventId(Long eventId) {
         return vaccinationHistoryRepository.findByEventId(eventId);
+    }
+
+    public Map<String, List<VaccinationHistory>> getStudentHistoryGroupedByCategory(Integer studentId) {
+        List<VaccinationHistory> allHistories = vaccinationHistoryRepository.findAll()
+            .stream().filter(h -> h.getStudentId().equals(studentId)).collect(Collectors.toList());
+        Map<Integer, List<VaccinationHistory>> byCategory = allHistories.stream()
+            .collect(Collectors.groupingBy(h -> h.getVaccine().getCategoryId()));
+        Map<Integer, String> categoryNames = vaccineCategoryRepository.findAll().stream()
+            .collect(Collectors.toMap(c -> c.getCategoryId(), c -> c.getCategoryName()));
+        Map<String, List<VaccinationHistory>> result = new HashMap<>();
+        for (Map.Entry<Integer, List<VaccinationHistory>> entry : byCategory.entrySet()) {
+            String catName = categoryNames.getOrDefault(entry.getKey(), "Unknown");
+            result.put(catName, entry.getValue());
+        }
+        return result;
     }
 }

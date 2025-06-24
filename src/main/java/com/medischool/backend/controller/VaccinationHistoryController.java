@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vaccination-history")
@@ -31,5 +32,11 @@ public class VaccinationHistoryController {
         return ResponseEntity.ok(histories);
     }
     
+    @GetMapping("/student/{studentId}/by-category")
+    @Operation(summary = "Get vaccination history of a student grouped by category")
+    public ResponseEntity<Map<String, List<VaccinationHistory>>> getStudentHistoryByCategory(@PathVariable Integer studentId) {
+        Map<String, List<VaccinationHistory>> result = vaccinationHistoryService.getStudentHistoryGroupedByCategory(studentId);
+        return ResponseEntity.ok(result);
+    }
 
 }
