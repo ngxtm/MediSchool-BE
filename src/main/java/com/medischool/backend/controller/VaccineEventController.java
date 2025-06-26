@@ -1,6 +1,7 @@
 package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.VaccineEventRequestDTO;
+import com.medischool.backend.dto.VaccineEventEmailNotificationDTO;
 import com.medischool.backend.model.vaccine.VaccineEvent;
 import com.medischool.backend.service.VaccineEventService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +40,16 @@ public class VaccineEventController {
         return ResponseEntity.ok(vaccineEventService.sendConsentsToUnvaccinatedStudents(eventId));
     }
 
+    @PostMapping("/{eventId}/send-email-notifications")
+    @Operation(summary = "Send bulk email notifications to parents for vaccine consent")
+    public ResponseEntity<VaccineEventEmailNotificationDTO> sendEmailNotifications(@PathVariable Long eventId) {
+        try {
+            VaccineEventEmailNotificationDTO result = vaccineEventService.sendBulkEmailNotifications(eventId);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     @PutMapping("/{eventId}/status")
     @Operation(summary = "Update vaccine event status")

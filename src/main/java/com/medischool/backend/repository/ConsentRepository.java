@@ -18,4 +18,6 @@ public interface ConsentRepository extends JpaRepository<VaccinationConsent, Lon
     List<VaccinationConsent> findAllByEventId(Long eventId);
 
     List<VaccinationConsent> findAllByEventIdAndConsentStatus(Long eventId, ConsentStatus consentStatus);
+    
+    List<VaccinationConsent> findAllByEventIdAndConsentStatusIsNull(Long eventId);
 }
