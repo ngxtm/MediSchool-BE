@@ -1,19 +1,16 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.dto.VaccineDTO;
+import com.medischool.backend.dto.vaccination.VaccineDTO;
 import com.medischool.backend.model.vaccine.Vaccine;
-import com.medischool.backend.projection.VaccinationRow;
-import com.medischool.backend.repository.VaccinationHistoryRepository;
-import com.medischool.backend.repository.VaccineRepository;
-import com.medischool.backend.service.VaccineService;
+import com.medischool.backend.repository.vaccination.VaccinationHistoryRepository;
+import com.medischool.backend.repository.vaccination.VaccineRepository;
+import com.medischool.backend.service.vaccination.VaccineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.LinkedHashMap;
 
 @Service
 @RequiredArgsConstructor

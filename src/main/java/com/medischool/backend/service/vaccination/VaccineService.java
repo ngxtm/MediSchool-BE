@@ -1,6 +1,6 @@
-package com.medischool.backend.service;
+package com.medischool.backend.service.vaccination;
 
-import com.medischool.backend.dto.VaccineDTO;
+import com.medischool.backend.dto.vaccination.VaccineDTO;
 
 import java.util.List;
 

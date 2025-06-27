@@ -1,4 +1,4 @@
-package com.medischool.backend.dto.vaccine;
+package com.medischool.backend.dto.vaccination;
 
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.ConsentStatus;
@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 
 @Data
 @Builder

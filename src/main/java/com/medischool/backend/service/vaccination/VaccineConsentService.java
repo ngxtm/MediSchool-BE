@@ -1,4 +1,4 @@
-package com.medischool.backend.service;
+package com.medischool.backend.service.vaccination;
 
 import com.medischool.backend.model.vaccine.VaccinationConsent;
 import com.medischool.backend.model.enums.ConsentStatus;

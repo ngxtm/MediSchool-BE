@@ -2,7 +2,7 @@ package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.student.StudentDetailDTO;
 import com.medischool.backend.service.StudentService;
-import com.medischool.backend.service.VaccineService;
+import com.medischool.backend.service.vaccination.VaccineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

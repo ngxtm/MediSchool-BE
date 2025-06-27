@@ -1,9 +1,9 @@
-package com.medischool.backend.controller;
+package com.medischool.backend.controller.vaccination;
 
-import com.medischool.backend.dto.VaccineEventRequestDTO;
-import com.medischool.backend.dto.VaccineEventEmailNotificationDTO;
+import com.medischool.backend.dto.vaccination.VaccineEventRequestDTO;
+import com.medischool.backend.dto.vaccination.VaccineEventEmailNotificationDTO;
 import com.medischool.backend.model.vaccine.VaccineEvent;
-import com.medischool.backend.service.VaccineEventService;
+import com.medischool.backend.service.vaccination.VaccineEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

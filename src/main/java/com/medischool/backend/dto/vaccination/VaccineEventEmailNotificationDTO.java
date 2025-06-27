@@ -1,4 +1,4 @@
-package com.medischool.backend.dto;
+package com.medischool.backend.dto.vaccination;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

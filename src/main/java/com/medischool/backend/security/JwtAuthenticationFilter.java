@@ -50,14 +50,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Optional<UserProfile> userOpt = userProfileRepository.findById(UUID.fromString(userId));
                     if (userOpt.isPresent()) {
                         UserProfile user = userOpt.get();
-                        String role = user.getRole();
+                        String role = user.getRole(); // Ví dụ: "PARENT", "NURSE", ...
 
-                        List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+                        // ✅ THÊM PREFIX "ROLE_" ĐỂ SPRING SECURITY NHẬN DIỆN ĐÚNG
+                        List<SimpleGrantedAuthority> authorities =
+                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
 
-                        Authentication authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                        Authentication authentication =
+                                new UsernamePasswordAuthenticationToken(userId, null, authorities);
+
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
+
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Invalid JWT: " + e.getMessage());
@@ -66,13 +71,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-
-        // Bỏ lọc JWT với các path test
-        return path.startsWith("/api/medications"); // hoặc dùng list để mở rộng
-    }
-
 }

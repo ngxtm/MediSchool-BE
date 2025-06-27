@@ -1,4 +1,4 @@
-package com.medischool.backend.dto;
+package com.medischool.backend.dto.vaccination;
 
 import com.medischool.backend.model.vaccine.VaccinationHistory;
 import com.medischool.backend.model.parentstudent.Student;
