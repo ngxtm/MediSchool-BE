@@ -1,19 +1,20 @@
 package com.medischool.backend.service.impl;
 
+import com.medischool.backend.dto.vaccine.VaccineConsentDTO;
 import com.medischool.backend.dto.vaccine.VaccineConsentInEvent;
 import com.medischool.backend.model.vaccine.VaccinationConsent;
-import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.repository.UserProfileRepository;
-import com.medischool.backend.repository.VaccinationConsentRepository;
+import com.medischool.backend.repository.*;
 import com.medischool.backend.service.VaccinationConsentService;
+import com.medischool.backend.util.ConsentStatisticsUtil;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import com.medischool.backend.util.ConsentStatisticsUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class VaccinationConsentImpl implements VaccinationConsentService {
     private final VaccinationConsentRepository vaccinationConsentRepository;
     private final StudentRepository studentRepository;
     private final UserProfileRepository userProfileRepository;
+    private final VaccineEventRepository vaccineEventRepository;
 
     @Override
     public Long getTotalConsents() {
@@ -48,6 +50,29 @@ public class VaccinationConsentImpl implements VaccinationConsentService {
         }
 
         return new HashMap<>(ConsentStatisticsUtil.calculate(consents));
+    }
+
+    public VaccineConsentDTO getVaccineConsent(Long consentId) {
+        VaccinationConsent consent = vaccinationConsentRepository.findById(consentId)
+                .orElseThrow(() -> new RuntimeException("Consent not found for id: " + consentId));
+
+        var event = vaccineEventRepository.findById(consent.getEventId())
+                .orElseThrow(() -> new RuntimeException("Event not found for id: " + consent.getEventId()));
+
+        var parent = userProfileRepository.findById(consent.getParentId())
+                .orElseThrow(() -> new RuntimeException("Parent not found for id: " + consent.getParentId()));
+
+        var student = studentRepository.findByStudentId(consent.getStudentId())
+                .orElseThrow(() -> new RuntimeException("Student not found for id: " + consent.getStudentId()));
+        return VaccineConsentDTO.builder()
+                .id(consent.getId())
+                .event(event)
+                .parent(parent)
+                .student(student)
+                .note(null)
+                .createdAt(consent.getCreatedAt())
+                .consentStatus(consent.getConsentStatus())
+                .build();
     }
 
 }
