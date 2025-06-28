@@ -50,9 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Optional<UserProfile> userOpt = userProfileRepository.findById(UUID.fromString(userId));
                     if (userOpt.isPresent()) {
                         UserProfile user = userOpt.get();
-                        String role = user.getRole(); // Ví dụ: "PARENT", "NURSE", ...
-
-                        // ✅ THÊM PREFIX "ROLE_" ĐỂ SPRING SECURITY NHẬN DIỆN ĐÚNG
+                        String role = user.getRole();
                         List<SimpleGrantedAuthority> authorities =
                                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
 
