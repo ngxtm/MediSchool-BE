@@ -1,6 +1,6 @@
 package com.medischool.backend.model;
 
- checkup
+ 
 import com.medischool.backend.util.constant.UserRole;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
- main
+
 
 @Entity
 @Table(name = "user_profile")
@@ -55,11 +55,11 @@ public class UserProfile {
     private LocalDate dateOfBirth;
 
     @Enumerated(EnumType.STRING)
- checkup
+
     UserRole role;
 =======
     private Gender gender;
 
     private String role;
- main
+
 }
