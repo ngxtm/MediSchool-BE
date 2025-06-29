@@ -1,5 +1,6 @@
 package com.medischool.backend.model.medication;
 
+import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.parentstudent.Parent;
 import com.medischool.backend.model.parentstudent.Student;
 import jakarta.persistence.*;
@@ -45,9 +46,6 @@ public class MedicationRequest {
     @Column(name = "confirm_by")
     private UUID confirmBy;
 
-    @Column(name = "status")
-    private String status;
-
     @Column(name = "title")
     private String title;
 
@@ -72,4 +70,16 @@ public class MedicationRequest {
 
     @OneToMany(mappedBy = "request")
     private List<MedicationDispensation> dispensations;
+
+    @Column(name = "medication_status")
+    @Enumerated(EnumType.STRING)
+    private MedicationStatus medicationStatus;
+
+    public MedicationStatus getStatus() {
+        return medicationStatus;
+    }
+
+    public void setStatus(MedicationStatus medicationStatus) {
+        this.medicationStatus = medicationStatus;
+    }
 }

@@ -1,5 +1,6 @@
 package com.medischool.backend.service;
 
+import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
 
@@ -21,4 +22,12 @@ public interface MedicationService {
     MedicationDispensation dispenseMedication(int requestId, MedicationDispensation dispensation);
 
     MedicationRequest markAsDone(Integer requestId);
+
+    List<MedicationRequest> getAllRequests();
+
+    List<MedicationRequest> getRequestsByStatus(MedicationStatus status);
+
+    List<MedicationRequest> searchRequests(String keyword);
+
+//    MedicationRequestDetailDTO getRequestDetail(Integer requestId, CustomUserDetails user);
 }

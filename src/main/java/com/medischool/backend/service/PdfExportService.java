@@ -10,7 +10,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.medischool.backend.dto.VaccinationHistoryWithStudentDTO;
+import com.medischool.backend.dto.vaccination.VaccinationHistoryWithStudentDTO;
 import com.medischool.backend.model.vaccine.VaccinationHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

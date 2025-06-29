@@ -1,16 +1,17 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.dto.vaccine.VaccineConsentDTO;
-import com.medischool.backend.dto.vaccine.VaccineConsentInEvent;
+import com.medischool.backend.dto.vaccination.VaccineConsentDTO;
+import com.medischool.backend.dto.vaccination.VaccineConsentInEvent;
 import com.medischool.backend.model.vaccine.VaccinationConsent;
 import com.medischool.backend.repository.*;
-import com.medischool.backend.service.VaccinationConsentService;
+import com.medischool.backend.repository.vaccination.VaccinationConsentRepository;
+import com.medischool.backend.repository.vaccination.VaccineEventRepository;
+import com.medischool.backend.service.vaccination.VaccinationConsentService;
 import com.medischool.backend.util.ConsentStatisticsUtil;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

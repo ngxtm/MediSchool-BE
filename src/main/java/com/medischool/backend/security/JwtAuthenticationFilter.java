@@ -51,13 +51,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (userOpt.isPresent()) {
                         UserProfile user = userOpt.get();
                         String role = user.getRole();
+                        List<SimpleGrantedAuthority> authorities =
+                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
 
-                        List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+                        Authentication authentication =
+                                new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
-                        Authentication authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
+
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Invalid JWT: " + e.getMessage());
@@ -66,13 +69,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-
-        // Bỏ lọc JWT với các path test
-        return path.startsWith("/api/medications"); // hoặc dùng list để mở rộng
-    }
-
 }

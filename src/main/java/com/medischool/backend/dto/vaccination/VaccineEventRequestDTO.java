@@ -1,4 +1,4 @@
-package com.medischool.backend.dto;
+package com.medischool.backend.dto.vaccination;
 
 import com.medischool.backend.model.enums.EventScope;
 import com.medischool.backend.model.enums.EventStatus;

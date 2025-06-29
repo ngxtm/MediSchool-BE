@@ -1,7 +1,7 @@
-package com.medischool.backend.service;
+package com.medischool.backend.service.vaccination;
 
-import com.medischool.backend.dto.vaccine.VaccineConsentDTO;
-import com.medischool.backend.dto.vaccine.VaccineConsentInEvent;
+import com.medischool.backend.dto.vaccination.VaccineConsentDTO;
+import com.medischool.backend.dto.vaccination.VaccineConsentInEvent;
 
 import java.util.List;
 import java.util.Map;

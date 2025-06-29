@@ -1,17 +1,13 @@
-package com.medischool.backend.service;
+package com.medischool.backend.service.vaccination;
 
-import com.medischool.backend.dto.VaccinationHistoryRequestDTO;
-import com.medischool.backend.dto.VaccinationHistoryUpdateDTO;
-import com.medischool.backend.dto.VaccinationHistoryWithStudentDTO;
+import com.medischool.backend.dto.vaccination.VaccinationHistoryRequestDTO;
+import com.medischool.backend.dto.vaccination.VaccinationHistoryWithStudentDTO;
 import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.model.vaccine.VaccinationHistory;
-import com.medischool.backend.model.vaccine.VaccineCategory;
-import com.medischool.backend.model.vaccine.Vaccine;
 import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.repository.VaccinationHistoryRepository;
-import com.medischool.backend.repository.VaccineCategoryRepository;
-import com.medischool.backend.repository.VaccineRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.medischool.backend.repository.vaccination.VaccinationHistoryRepository;
+import com.medischool.backend.repository.vaccination.VaccineCategoryRepository;
+import com.medischool.backend.repository.vaccination.VaccineRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;

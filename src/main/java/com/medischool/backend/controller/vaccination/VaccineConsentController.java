@@ -1,11 +1,11 @@
-package com.medischool.backend.controller;
+package com.medischool.backend.controller.vaccination;
 
-import com.medischool.backend.dto.vaccine.VaccineConsentDTO;
-import com.medischool.backend.dto.vaccine.VaccineConsentInEvent;
+import com.medischool.backend.dto.vaccination.VaccineConsentDTO;
+import com.medischool.backend.dto.vaccination.VaccineConsentInEvent;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.vaccine.VaccinationConsent;
-import com.medischool.backend.service.VaccinationConsentService;
-import com.medischool.backend.service.VaccineConsentService;
+import com.medischool.backend.service.vaccination.VaccinationConsentService;
+import com.medischool.backend.service.vaccination.VaccineConsentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

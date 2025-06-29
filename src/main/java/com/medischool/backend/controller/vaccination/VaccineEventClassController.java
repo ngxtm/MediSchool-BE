@@ -1,7 +1,6 @@
-package com.medischool.backend.controller;
+package com.medischool.backend.controller.vaccination;
 
 import com.medischool.backend.model.vaccine.VaccineEventClass;
-import com.medischool.backend.repository.VaccineEventClassRepository;
 import com.medischool.backend.service.impl.VaccineEventClassServiceImpl;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

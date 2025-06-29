@@ -1,11 +1,16 @@
-package com.medischool.backend.service;
+package com.medischool.backend.service.vaccination;
 
-import com.medischool.backend.dto.VaccineEventRequestDTO;
+import com.medischool.backend.dto.vaccination.VaccineEventRequestDTO;
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.vaccine.*;
 import com.medischool.backend.model.enums.EventStatus;
 import com.medischool.backend.repository.*;
+import com.medischool.backend.repository.vaccination.VaccinationHistoryRepository;
+import com.medischool.backend.repository.vaccination.VaccineEventClassRepository;
+import com.medischool.backend.repository.vaccination.VaccineEventRepository;
+import com.medischool.backend.repository.vaccination.VaccineRepository;
+import com.medischool.backend.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
@@ -16,7 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import com.medischool.backend.dto.VaccineEventEmailNotificationDTO;
+import com.medischool.backend.dto.vaccination.VaccineEventEmailNotificationDTO;
 import java.time.format.DateTimeFormatter;
 
 @Service

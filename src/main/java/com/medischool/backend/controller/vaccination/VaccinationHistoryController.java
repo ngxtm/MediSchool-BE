@@ -1,11 +1,10 @@
-package com.medischool.backend.controller;
+package com.medischool.backend.controller.vaccination;
 
-import com.medischool.backend.dto.VaccinationHistoryRequestDTO;
-import com.medischool.backend.dto.VaccinationHistoryUpdateDTO;
-import com.medischool.backend.dto.VaccinationHistoryWithStudentDTO;
+import com.medischool.backend.dto.vaccination.VaccinationHistoryRequestDTO;
+import com.medischool.backend.dto.vaccination.VaccinationHistoryWithStudentDTO;
 import com.medischool.backend.model.vaccine.VaccinationHistory;
 import com.medischool.backend.service.PdfExportService;
-import com.medischool.backend.service.VaccinationHistoryService;
+import com.medischool.backend.service.vaccination.VaccinationHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;

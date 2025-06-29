@@ -1,4 +1,4 @@
-package com.medischool.backend.dto;
+package com.medischool.backend.dto.vaccination;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

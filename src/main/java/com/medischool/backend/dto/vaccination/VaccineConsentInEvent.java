@@ -1,4 +1,4 @@
-package com.medischool.backend.dto.vaccine;
+package com.medischool.backend.dto.vaccination;
 
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.ConsentStatus;
