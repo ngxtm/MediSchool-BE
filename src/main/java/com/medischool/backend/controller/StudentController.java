@@ -1,6 +1,6 @@
 package com.medischool.backend.controller;
 
- checkup
+
 
 import com.medischool.backend.dto.response.StudentProfileResponse;
 import com.medischool.backend.model.StudentProfile;
@@ -48,5 +48,5 @@ public class StudentController {
     }
 
 
- main
+
 }
