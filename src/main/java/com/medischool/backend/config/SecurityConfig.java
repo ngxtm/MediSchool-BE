@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new JwtAuthenticationFilter(jwtSecret, userProfileRepository), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
- checkup
+
                         .requestMatchers("/api/me").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/manager/**").hasRole("MANAGER")
@@ -64,7 +64,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
                         .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
                         .requestMatchers("/api/parent/**").hasAuthority("PARENT")
- main
+
                         .anyRequest().permitAll())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> {
