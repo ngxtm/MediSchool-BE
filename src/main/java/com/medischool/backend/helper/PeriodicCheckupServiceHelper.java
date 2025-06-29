@@ -44,11 +44,7 @@ public class PeriodicCheckupServiceHelper {
         if(periodicCheckupRequest.getIdsCheckupConsent()==null || periodicCheckupRequest.getIdsCheckupConsent().isEmpty()){
             throw new CustomException("Ids Checkup Consent Required");
         }
-        if(periodicCheckupRequest.getScope()!=null){
-            if(periodicCheckupRequest.getScope().equals(CheckupScopeType.CLASS) && periodicCheckupRequest.getClassCode()==null){
-                throw new CustomException("Class code required");
-            }
-        }
+
     }
 
     public Instant convertScheduleDateToInstant(String scheduleDate) throws CustomException {

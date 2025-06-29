@@ -15,7 +15,7 @@ import java.util.UUID;
 public class UserProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @Column(name = "full_name")
     private String fullName;
@@ -24,7 +24,7 @@ public class UserProfile {
 
     private String email;
 
-    private String password;
+
 
     private String address;
 

@@ -60,19 +60,21 @@ public class PeriodicCheckupService {
             checkUpConsentItems.add(checkUpConsentItem);
         }
 
+        List<StudentProfile> allStudents=this.studentRepository.findAll();
+        this.checkupConsentService.saveCheckupConsent(allStudents,currentPeriodicCheckup);
 
         //set lại danh sách mục khám vào kì khám hiện tai
         currentPeriodicCheckup.setCheckUpConsentItems(checkUpConsentItems);
 
-        if(periodicCheckupRequest.getScope().equals(CheckupScopeType.CLASS)){
-            List<StudentProfile> students=this.studentRepository.findByClassCodeIn(periodicCheckupRequest.getClassCode());
-            this.checkupConsentService.saveCheckupConsent(students,currentPeriodicCheckup);
-            Set<CheckUpClass> classes=this.checkupClassService.saveCheckupClass(periodicCheckupRequest.getClassCode(),currentPeriodicCheckup);
-            currentPeriodicCheckup.setClasses(classes);
-        }else{
-            List<StudentProfile> allStudents=this.studentRepository.findAll();
-            this.checkupConsentService.saveCheckupConsent(allStudents,currentPeriodicCheckup);
-        }
+//        if(periodicCheckupRequest.getScope().equals(CheckupScopeType.CLASS)){
+//            List<StudentProfile> students=this.studentRepository.findByClassCodeIn(periodicCheckupRequest.getClassCode());
+//            this.checkupConsentService.saveCheckupConsent(students,currentPeriodicCheckup);
+//            Set<CheckUpClass> classes=this.checkupClassService.saveCheckupClass(periodicCheckupRequest.getClassCode(),currentPeriodicCheckup);
+//            currentPeriodicCheckup.setClasses(classes);
+//        }else{
+//            List<StudentProfile> allStudents=this.studentRepository.findAll();
+//            this.checkupConsentService.saveCheckupConsent(allStudents,currentPeriodicCheckup);
+//        }
 
         this.periodicCheckupRepository.save(currentPeriodicCheckup);
         PeriodicCheckupResponse periodicCheckupResponse = this.periodicCheckupServiceHelper.convertToPeriodicCheckupResponse(currentPeriodicCheckup);

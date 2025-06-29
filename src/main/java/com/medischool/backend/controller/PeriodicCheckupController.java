@@ -43,7 +43,7 @@ public class PeriodicCheckupController {
     }
 
 
-    @GetMapping("/find/{periodicId}")
+    @PostMapping("/find/{periodicId}")
     @ApiMessage("Xem chi tiết lịch khám")
     public ResponseEntity<PeriodicCheckupResponse>  getPeriodicCheckupById(@PathVariable("periodicId") Long periodicId) throws CustomException {
         return ResponseEntity.ok().body(this.periodicCheckupService.getPeriodicCheckupById(periodicId));

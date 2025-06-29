@@ -25,9 +25,9 @@ public class CheckUpConsentItem {
     @Column(columnDefinition = "TEXT")
     String text;
 
+
     @ManyToMany(mappedBy = "checkUpConsentItems")
     Set<CheckUpConsent> checkUpConsents;
-
 
     @ManyToMany(mappedBy = "checkUpConsentItems")
     Set<PeriodicCheckup> periodicCheckups;

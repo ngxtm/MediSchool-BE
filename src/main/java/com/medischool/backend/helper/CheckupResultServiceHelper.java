@@ -38,9 +38,7 @@ public class CheckupResultServiceHelper {
             throw new CustomException("StudentProfileId is null");
         }
 
-        if(this.studentRepository.findById(checkupResultRequest.getStudentProfileId())==null){
-            throw new CustomException("Student Profile Not Found");
-        }
+
 
     }
     public CheckupResultResponse convertToResultResponse(CheckupResult checkupResult) throws CustomException {

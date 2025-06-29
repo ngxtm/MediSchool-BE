@@ -25,10 +25,10 @@ public class DataLoaderConfig implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        insertStudent();
-        insertParent();
+//        insertStudent();
+//        insertParent();
 //        insertStudent_Parent();
-        insertConsent();
+//        insertConsent();
     }
     public void insertConsent(){
         if(checkupConsentRepository.findAll().size()==0){
@@ -83,17 +83,17 @@ public class DataLoaderConfig implements CommandLineRunner {
         // hàm này chạy 1 lần xong comment lại
 
 
-//    public void insertStudent_Parent() {
-//        Integer studentCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM student", Integer.class);
-//        Integer parentCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM parent", Integer.class);
-//
-//        if (studentCount != null && studentCount > 0 && parentCount != null && parentCount > 0) {
-//            jdbcTemplate.update("INSERT INTO parent_student (student_id, parent_id) VALUES " +
-//                    "(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), " +
-//                    "(6, 6), (7, 7), (8, 8), (9, 9), (10, 10);");
-//        } else {
-//            System.out.println("Insert skipped: 'student' or 'parent' table is empty.");
-//        }
-//    }
+    public void insertStudent_Parent() {
+        Integer studentCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM student_profile", Integer.class);
+        Integer parentCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM parent_profile", Integer.class);
+
+        if (studentCount != null && studentCount > 0 && parentCount != null && parentCount > 0) {
+            jdbcTemplate.update("INSERT INTO parent_student (student_id, parent_id) VALUES " +
+                    "(1, 1), (2, 2), (3, 3), (4, 4), (5, 5), " +
+                    "(6, 6), (7, 7), (8, 8), (9, 9), (10, 10);");
+        } else {
+            System.out.println("Insert skipped: 'student' or 'parent' table is empty.");
+        }
+    }
 
 }

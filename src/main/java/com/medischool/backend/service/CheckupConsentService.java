@@ -38,6 +38,7 @@ public class CheckupConsentService {
             }
         }
     }
+
     public void changeStatusOfConsent(Long consentId) throws CustomException{
         CheckUpConsent checkUpConsent=this.checkupConsentRepository.findById(consentId).orElse(null);
         if(checkUpConsent == null){
