@@ -2,6 +2,7 @@ package com.medischool.backend.controller.vaccination;
 
 import com.medischool.backend.dto.vaccination.VaccineConsentDTO;
 import com.medischool.backend.dto.vaccination.VaccineConsentInEvent;
+import com.medischool.backend.dto.vaccination.UpdateConsentStatusRequest;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.vaccine.VaccinationConsent;
 import com.medischool.backend.service.vaccination.VaccinationConsentService;
@@ -28,10 +29,10 @@ public class VaccineConsentController {
     @Operation(summary = "Update consent status")
     public ResponseEntity<?> updateConsentStatus(
             @PathVariable Long consentId,
-            @RequestParam ConsentStatus status
+            @RequestBody UpdateConsentStatusRequest request
     ) {
         try {
-            com.medischool.backend.model.vaccine.VaccinationConsent updated = consentService.updateConsentStatus(consentId, status);
+            com.medischool.backend.model.vaccine.VaccinationConsent updated = consentService.updateConsentStatus(consentId, request.getStatus(), request.getNote());
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

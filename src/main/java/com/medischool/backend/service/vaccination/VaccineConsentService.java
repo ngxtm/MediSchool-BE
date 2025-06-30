@@ -26,11 +26,14 @@ public class VaccineConsentService {
         return consentRepository.findAllByStudentId(studentId);
     }
 
-    public VaccinationConsent updateConsentStatus(Long consentId, ConsentStatus status) {
+    public VaccinationConsent updateConsentStatus(Long consentId, ConsentStatus status, String note) {
         VaccinationConsent consent = consentRepository.findById(consentId)
                 .orElseThrow(() -> new RuntimeException("Consent not found"));
 
         consent.setConsentStatus(status);
+        if (status == ConsentStatus.REJECT) {
+            consent.setNote(note);
+        }
 
         VaccinationConsent saved = consentRepository.save(consent);
 
