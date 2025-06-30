@@ -75,5 +75,4 @@ public class VaccinationConsentImpl implements VaccinationConsentService {
                 .consentStatus(consent.getConsentStatus())
                 .build();
     }
-
 }
