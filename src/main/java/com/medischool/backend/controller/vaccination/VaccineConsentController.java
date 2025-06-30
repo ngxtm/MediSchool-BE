@@ -87,4 +87,13 @@ public class VaccineConsentController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/student/{studentId}/detail_list")
+    @Operation(summary = "Get all consents with details for a specific student (same as getVaccineConsent but for list)")
+    public ResponseEntity<List<VaccineConsentDTO>> getStudentConsentDetails(
+            @PathVariable Integer studentId
+    ) {
+        List<VaccineConsentDTO> consents = vaccinationConsentService.getVaccineConsentsByStudentId(studentId);
+        return ResponseEntity.ok(consents);
+    }
 }

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface VaccinationConsentRepository extends JpaRepository<VaccinationConsent, Long> {
     List<VaccinationConsent> getVaccinationConsentByEventId(Long eventId);
+    List<VaccinationConsent> findAllByStudentId(Integer studentId);
 }
