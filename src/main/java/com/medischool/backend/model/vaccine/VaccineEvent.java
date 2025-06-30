@@ -49,4 +49,7 @@ public class VaccineEvent {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
 }

@@ -7,7 +7,7 @@
 //
 //@Data
 //@Entity
-//@Table(name = "checkup_class")
+//@Table(name = "check_up_class")
 //@NoArgsConstructor
 //@AllArgsConstructor
 //@IdClass(CheckupClassId.class)

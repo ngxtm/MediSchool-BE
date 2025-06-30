@@ -54,10 +54,11 @@ public class VaccineEventController {
     @Operation(summary = "Update vaccine event status")
     public ResponseEntity<VaccineEvent> updateEventStatus(
             @PathVariable Long eventId,
-            @RequestParam String status
+            @RequestParam String status,
+            @RequestParam(required = false) String rejectionReason
     ) {
         try {
-            VaccineEvent updatedEvent = vaccineEventService.updateEventStatus(eventId, status);
+            VaccineEvent updatedEvent = vaccineEventService.updateEventStatus(eventId, status, rejectionReason);
             return ResponseEntity.ok(updatedEvent);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
