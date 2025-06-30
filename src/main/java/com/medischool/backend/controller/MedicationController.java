@@ -1,5 +1,6 @@
 package com.medischool.backend.controller;
 
+import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
@@ -18,10 +19,17 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/medications")
+@RequestMapping("/api/medication-requests")
 class MedicationController {
     @Autowired
     private MedicationService service;
+
+    //stat
+    @GetMapping("/stats")
+    public ResponseEntity<MedicationStatsDTO> getRequestStats() {
+        MedicationStatsDTO stats = service.getRequestStats();
+        return ResponseEntity.ok(stats);
+    }
 
     //Nurse view all requests
     @GetMapping("/all")

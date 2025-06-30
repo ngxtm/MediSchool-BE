@@ -1,5 +1,6 @@
 package com.medischool.backend.model.medication;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +21,7 @@ public class MedicationDispensation {
 
     @ManyToOne
     @JoinColumn(name = "request_id")
+    @JsonBackReference
     private MedicationRequest request;
 
     @Column(name = "nurse_id")
