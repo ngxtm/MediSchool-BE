@@ -3,9 +3,11 @@ package com.medischool.backend.service.impl;
 import com.medischool.backend.dto.vaccination.VaccineConsentDTO;
 import com.medischool.backend.dto.vaccination.VaccineConsentInEvent;
 import com.medischool.backend.model.vaccine.VaccinationConsent;
+import com.medischool.backend.model.vaccine.VaccineCategory;
 import com.medischool.backend.repository.*;
 import com.medischool.backend.repository.vaccination.VaccinationConsentRepository;
 import com.medischool.backend.repository.vaccination.VaccineEventRepository;
+import com.medischool.backend.repository.vaccination.VaccineCategoryRepository;
 import com.medischool.backend.service.vaccination.VaccinationConsentService;
 import com.medischool.backend.util.ConsentStatisticsUtil;
 
@@ -24,6 +26,7 @@ public class VaccinationConsentImpl implements VaccinationConsentService {
     private final StudentRepository studentRepository;
     private final UserProfileRepository userProfileRepository;
     private final VaccineEventRepository vaccineEventRepository;
+    private final VaccineCategoryRepository vaccineCategoryRepository;
 
     @Override
     public Long getTotalConsents() {
@@ -65,15 +68,45 @@ public class VaccinationConsentImpl implements VaccinationConsentService {
 
         var student = studentRepository.findByStudentId(consent.getStudentId())
                 .orElseThrow(() -> new RuntimeException("Student not found for id: " + consent.getStudentId()));
+        VaccineCategory category = vaccineCategoryRepository.findById(event.getVaccine().getCategoryId())
+                .orElse(null);
         return VaccineConsentDTO.builder()
                 .id(consent.getId())
                 .event(event)
                 .parent(parent)
                 .student(student)
-                .note(null)
+                .note(consent.getNote())
                 .createdAt(consent.getCreatedAt())
                 .consentStatus(consent.getConsentStatus())
+                .category(category)
                 .build();
+    }
+
+    @Override
+    public List<VaccineConsentDTO> getVaccineConsentsByStudentId(Integer studentId) {
+        List<VaccinationConsent> consents = vaccinationConsentRepository.findAllByStudentId(studentId);
+        List<VaccineConsentDTO> result = new ArrayList<>();
+        for (VaccinationConsent consent : consents) {
+            var event = vaccineEventRepository.findById(consent.getEventId())
+                    .orElseThrow(() -> new RuntimeException("Event not found for id: " + consent.getEventId()));
+            var parent = userProfileRepository.findById(consent.getParentId())
+                    .orElseThrow(() -> new RuntimeException("Parent not found for id: " + consent.getParentId()));
+            var student = studentRepository.findByStudentId(consent.getStudentId())
+                    .orElseThrow(() -> new RuntimeException("Student not found for id: " + consent.getStudentId()));
+            VaccineCategory category = vaccineCategoryRepository.findById(event.getVaccine().getCategoryId())
+                    .orElse(null);
+            result.add(VaccineConsentDTO.builder()
+                    .id(consent.getId())
+                    .event(event)
+                    .parent(parent)
+                    .student(student)
+                    .note(consent.getNote())
+                    .createdAt(consent.getCreatedAt())
+                    .consentStatus(consent.getConsentStatus())
+                    .category(category)
+                    .build());
+        }
+        return result;
     }
 
 }

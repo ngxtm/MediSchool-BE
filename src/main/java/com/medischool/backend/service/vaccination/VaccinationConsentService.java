@@ -11,4 +11,5 @@ public interface VaccinationConsentService {
     List<VaccineConsentInEvent> getVaccinationConsentsByEventId(Long eventId);
     Map <String, Object> getConsentResult();
     VaccineConsentDTO getVaccineConsent(Long consentId);
+    List<VaccineConsentDTO> getVaccineConsentsByStudentId(Integer studentId);
 }

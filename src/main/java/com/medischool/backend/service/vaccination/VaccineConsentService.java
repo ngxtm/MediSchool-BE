@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import com.medischool.backend.util.ConsentStatisticsUtil;
+import com.medischool.backend.dto.student.StudentDetailDTO;
+import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.model.vaccine.VaccineEvent;
+import com.medischool.backend.repository.StudentRepository;
+import com.medischool.backend.repository.vaccination.VaccineEventRepository;
 
 @Service
 @RequiredArgsConstructor

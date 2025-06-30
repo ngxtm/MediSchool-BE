@@ -4,6 +4,7 @@ import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.model.vaccine.VaccineEvent;
+import com.medischool.backend.model.vaccine.VaccineCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,4 +24,5 @@ public class VaccineConsentDTO {
     private String note;
     private LocalDateTime createdAt;
     private ConsentStatus  consentStatus;
+    private VaccineCategory category;
 }
