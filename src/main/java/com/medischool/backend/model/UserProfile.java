@@ -57,7 +57,7 @@ public class UserProfile {
     @Enumerated(EnumType.STRING)
 
     UserRole role;
-=======
+
     private Gender gender;
 
     private String role;
