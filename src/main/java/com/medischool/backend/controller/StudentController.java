@@ -1,6 +1,7 @@
 package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.student.StudentDetailDTO;
+import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.service.StudentService;
 import com.medischool.backend.service.vaccination.VaccineService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,5 +27,14 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentDetail(id));
     }
 
+    @GetMapping
+    @Operation(summary = "Get student list")
+    public ResponseEntity<List<Student>> getAllStudents() {
+        try {
+            return ResponseEntity.ok(studentService.getAllStudents());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
 }
