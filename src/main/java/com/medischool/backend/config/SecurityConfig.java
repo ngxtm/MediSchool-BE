@@ -31,6 +31,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilterBefore(new JwtAuthenticationFilter(jwtSecret, userProfileRepository), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers("/api/me").authenticated()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/manager/**").hasRole("MANAGER")
+                        .requestMatchers("/api/nurse/**").hasRole("NURSE")
+                        .requestMatchers("/api/parent/**").hasRole("PARENT")
+
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -57,6 +64,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
                         .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
                         .requestMatchers("/api/parent/**").hasAuthority("PARENT")
+
                         .anyRequest().permitAll())
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> {
