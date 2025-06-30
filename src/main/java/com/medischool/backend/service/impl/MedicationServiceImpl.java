@@ -1,6 +1,6 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.dto.medication.MedicationStatsDTO;
+//import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
@@ -119,11 +119,11 @@ public class MedicationServiceImpl implements MedicationService {
         return requestRepo.findAll();
     }
 
-    @Override
-    public MedicationStatsDTO getRequestStats() {
-        long total = requestRepo.count();
-        long approved = requestRepo.countByMedicationStatus(MedicationStatus.APPROVED);
-        long rejected = requestRepo.countByMedicationStatus(MedicationStatus.REJECTED);
-        return new MedicationStatsDTO(total, approved, rejected);
-    }
+//    @Override
+//    public MedicationStatsDTO getRequestStats() {
+//        long total = requestRepo.count();
+//        long approved = requestRepo.countByMedicationStatus(MedicationStatus.APPROVED);
+//        long rejected = requestRepo.countByMedicationStatus(MedicationStatus.REJECTED);
+//        return new MedicationStatsDTO(total, approved, rejected);
+//    }
 }

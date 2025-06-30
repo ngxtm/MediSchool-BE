@@ -1,6 +1,6 @@
 package com.medischool.backend.service;
 
-import com.medischool.backend.dto.medication.MedicationStatsDTO;
+//import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
@@ -30,6 +30,6 @@ public interface MedicationService {
 
     List<MedicationRequest> searchRequests(String keyword);
 
-    MedicationStatsDTO getRequestStats();
+//    MedicationStatsDTO getRequestStats();
 //    MedicationRequestDetailDTO getRequestDetail(Integer requestId, CustomUserDetails user);
 }

@@ -1,11 +1,10 @@
 package com.medischool.backend.controller;
 
-import com.medischool.backend.dto.medication.MedicationStatsDTO;
+//import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
 import com.medischool.backend.service.MedicationService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -25,11 +24,11 @@ class MedicationController {
     private MedicationService service;
 
     //stat
-    @GetMapping("/stats")
-    public ResponseEntity<MedicationStatsDTO> getRequestStats() {
-        MedicationStatsDTO stats = service.getRequestStats();
-        return ResponseEntity.ok(stats);
-    }
+//    @GetMapping("/stats")
+//    public ResponseEntity<MedicationStatsDTO> getRequestStats() {
+//        MedicationStatsDTO stats = service.getRequestStats();
+//        return ResponseEntity.ok(stats);
+//    }
 
     //Nurse view all requests
     @GetMapping("/all")
