@@ -1,5 +1,6 @@
 package com.medischool.backend.service.impl;
 
+import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
@@ -36,7 +37,7 @@ public class MedicationServiceImpl implements MedicationService {
 
     //Phụ huynh tạo đơn dặn thuốc
     public MedicationRequest createRequest(MedicationRequest request) {
-        request.setStatus(MedicationStatus.PENDING);
+        request.setMedicationStatus(MedicationStatus.PENDING);
         request.setCreateAt(OffsetDateTime.now());
         return requestRepo.save(request);
     }
@@ -44,7 +45,7 @@ public class MedicationServiceImpl implements MedicationService {
     //Y tá chấp thuận đơn
     public MedicationRequest approveRequest(int id, UUID nurseId) {
         MedicationRequest req = requestRepo.findById(id).orElseThrow();
-        req.setStatus(MedicationStatus.APPROVED);
+        req.setMedicationStatus(MedicationStatus.APPROVED);
         req.setConfirmBy(nurseId);
         return requestRepo.save(req);
     }
@@ -52,7 +53,7 @@ public class MedicationServiceImpl implements MedicationService {
     //Y tá từ chối đơn
     public MedicationRequest rejectRequest(int id, UUID nurseId, String reason) {
         MedicationRequest req = requestRepo.findById(id).orElseThrow();
-        req.setStatus(MedicationStatus.REJECTED);
+        req.setMedicationStatus(MedicationStatus.REJECTED);
         req.setRejectReason(reason);
         return requestRepo.save(req);
     }
@@ -61,7 +62,7 @@ public class MedicationServiceImpl implements MedicationService {
         MedicationRequest existing = requestRepo.findById(requestId)
                 .orElseThrow(() -> new RuntimeException("ID không tồn tại, vui lòng thử lại!"));
 
-        if (!existing.getStatus().equals(MedicationStatus.REJECTED)) {
+        if (!existing.getMedicationStatus().equals(MedicationStatus.REJECTED)) {
             throw new IllegalStateException("Bạn không thể chỉnh sửa đơn dặn thuốc này. Hãy liên hệ y tá nếu cần hỗ trợ.");
         }
 
@@ -72,7 +73,7 @@ public class MedicationServiceImpl implements MedicationService {
         existing.setEndDate(updated.getEndDate());
 
         // Reset status and review fields
-        existing.setStatus(MedicationStatus.PENDING);
+        existing.setMedicationStatus(MedicationStatus.PENDING);
         existing.setRejectReason(null);
         existing.setUpdateAt(OffsetDateTime.now());
 
@@ -99,7 +100,7 @@ public class MedicationServiceImpl implements MedicationService {
     //Xác nhận đơn thuốc đã hoàn thành
     public MedicationRequest markAsDone(Integer requestId) {
         MedicationRequest request = requestRepo.findById(requestId).orElseThrow();
-        request.setStatus(MedicationStatus.DONE);
+        request.setMedicationStatus(MedicationStatus.DONE);
         return requestRepo.save(request);
     }
 
@@ -116,5 +117,13 @@ public class MedicationServiceImpl implements MedicationService {
     @Override
     public List<MedicationRequest> searchRequests(String keyword) {
         return requestRepo.findAll();
+    }
+
+    @Override
+    public MedicationStatsDTO getRequestStats() {
+        long total = requestRepo.count();
+        long approved = requestRepo.countByMedicationStatus(MedicationStatus.APPROVED);
+        long rejected = requestRepo.countByMedicationStatus(MedicationStatus.REJECTED);
+        return new MedicationStatsDTO(total, approved, rejected);
     }
 }
