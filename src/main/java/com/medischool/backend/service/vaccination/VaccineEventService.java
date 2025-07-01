@@ -322,4 +322,45 @@ public class VaccineEventService {
                 .build();
     }
 
+    public void sendBulkEmailNotificationsForConsents(VaccineEvent event, List<VaccinationConsent> consents) {
+        if (consents == null || consents.isEmpty()) return;
+        List<Map<String, Object>> notifications = new ArrayList<>();
+        for (VaccinationConsent consent : consents) {
+            try {
+                UserProfile parent = userProfileRepository.findById(consent.getParentId())
+                        .orElse(null);
+                if (parent == null || parent.getEmail() == null || parent.getEmail().trim().isEmpty()) {
+                    continue;
+                }
+                String studentName = "Học sinh";
+                try {
+                    var studentOpt = studentRepository.findByStudentId(consent.getStudentId());
+                    if (studentOpt.isPresent()) {
+                        studentName = studentOpt.get().getFullName();
+                    }
+                } catch (Exception e) {
+                    studentName = "Học sinh";
+                }
+                String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
+                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        consent.getId());
+                Map<String, Object> notification = Map.of(
+                        "email", parent.getEmail(),
+                        "parentName", parent.getFullName() != null ? parent.getFullName() : "Phụ huynh",
+                        "studentName", studentName,
+                        "vaccineName", event.getVaccine().getName(),
+                        "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        "eventLocation", event.getLocation(),
+                        "consentUrl", consentUrl
+                );
+                notifications.add(notification);
+            } catch (Exception e) {
+                // Bỏ qua lỗi từng consent
+            }
+        }
+        if (!notifications.isEmpty()) {
+            emailService.sendBulkVaccineConsentNotifications(notifications);
+        }
+    }
+
 }

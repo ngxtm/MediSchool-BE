@@ -35,5 +35,5 @@ public class HealthEvent {
     @Column(name = "record_by")
     private UUID recordBy;
 
-    private Extent extent;
+    private String extent;
 }
