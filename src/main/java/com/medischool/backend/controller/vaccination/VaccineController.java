@@ -8,8 +8,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.medischool.backend.model.vaccine.VaccineCategory;
+import com.medischool.backend.repository.vaccination.VaccineCategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/vaccines")
@@ -19,6 +22,9 @@ public class VaccineController {
 
     private final VaccineService vaccineService;
     private final VaccinationConsentService vaccinationConsentService;
+
+    @Autowired
+    private VaccineCategoryRepository categoryRepository;
 
     @GetMapping
     public ResponseEntity<List<VaccineDTO>> getAllVaccines() {
@@ -61,5 +67,20 @@ public class VaccineController {
             return ResponseEntity.ok(updated);
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/categories")
+    public List<VaccineCategory> getAllCategories() {
+        return categoryRepository.findAll();
+    }
+
+    @PutMapping("/categories/{categoryId}")
+    public VaccineCategory updateCategory(@PathVariable Integer categoryId, @RequestBody VaccineCategory update) {
+        Optional<VaccineCategory> opt = categoryRepository.findById(categoryId);
+        if (opt.isEmpty()) throw new RuntimeException("Category not found");
+        VaccineCategory category = opt.get();
+        category.setCategoryName(update.getCategoryName());
+        category.setDoseRequired(update.getDoseRequired());
+        return categoryRepository.save(category);
     }
 }
