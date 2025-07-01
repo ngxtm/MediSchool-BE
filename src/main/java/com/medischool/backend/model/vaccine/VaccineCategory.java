@@ -16,4 +16,7 @@ public class VaccineCategory {
 
     @Column(name = "name")
     private String categoryName;
+
+    @Column(name = "dose_required")
+    private Integer doseRequired;
 }

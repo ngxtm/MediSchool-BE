@@ -35,11 +35,23 @@ public class VaccinationHistoryService {
     private final StudentRepository studentRepository;
 
     public VaccinationHistory save(VaccinationHistoryRequestDTO dto) {
+        var vaccineOpt = vaccineRepository.findById(dto.getVaccine().getVaccineId().intValue());
+        if (vaccineOpt.isEmpty()) {
+            throw new RuntimeException("Vaccine not found");
+        }
+        var vaccine = vaccineOpt.get();
+        Integer categoryId = vaccine.getCategoryId();
+        Integer dosesRequired = vaccine.getDosesRequired();
+        List<VaccinationHistory> histories = vaccinationHistoryRepository.findByStudentIdAndVaccine_CategoryId(dto.getStudentId(), categoryId);
+        if (dosesRequired != null && histories.size() >= dosesRequired) {
+            throw new RuntimeException("Học sinh đã tiêm đủ mũi phòng " + vaccine.getName());
+        }
+        int doseNumber = histories.size() + 1;
         VaccinationHistory history = new VaccinationHistory();
         history.setStudentId(dto.getStudentId());
         history.setEventId(dto.getEventId());
-        history.setVaccine(dto.getVaccine());
-        history.setDoseNumber(dto.getDoseNumber());
+        history.setVaccine(vaccine);
+        history.setDoseNumber(doseNumber);
         history.setVaccinationDate(dto.getVaccinationDate());
         history.setLocation(dto.getLocation());
         history.setNote(dto.getNote());
