@@ -280,8 +280,8 @@ public class VaccineEventService {
                 }
 
 
-                String consentUrl = String.format("%s/consent/%d",
-                        System.getProperty("app.frontend.url", "http://localhost:3000"),
+                String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
+                        System.getProperty("app.frontend.url", "http://localhost:5173"),
                         consent.getId());
 
                 Map<String, Object> notification = Map.of(

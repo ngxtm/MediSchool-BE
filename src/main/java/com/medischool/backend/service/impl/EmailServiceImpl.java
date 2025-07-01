@@ -40,34 +40,104 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject("Thông báo về sự kiện tiêm chủng - " + vaccineName);
 
             String htmlContent = String.format("""
-            <html>
-            <body style="font-family: Arial, sans-serif; background: #f6f6f6; margin: 0; padding: 0;">
-                                   <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #eee; padding: 24px;">
-                                       <div style="text-align: center; margin-bottom: 24px;">
-                                           <img src="cid:logoImage" alt="Logo" style="width: 80px; border-radius: 40px;"/>
-                                           <h1 style="color: #AF42A6; font-size: 2rem; margin: 16px 0 0 0;">TRUNG TÂM Y TẾ THÀNH PHỐ NHA TRANG</h1>
-                                       </div>
-                                       <h2 style="color: #222; font-size: 1.5rem; margin-bottom: 8px;">Thông báo về sự kiện tiêm chủng</h2>
-                                       <p style="color: #444; font-size: 1rem; margin-bottom: 16px;">
-                                           Kính gửi <b>%s</b>,<br/>
-                                           Con của bạn: <b>%s</b><br/>
-                                           Vaccine: <b>%s</b><br/>
-                                           Thời gian: <b>%s</b><br/>
-                                           Địa điểm: <b>%s</b>
-                                       </p>
-                                       <div style="text-align: center; margin: 24px 0;">
-                                           <a href="%s" style="display: inline-block; background: #AF42A6; color: #fff; padding: 12px 32px; border-radius: 24px; text-decoration: none; font-weight: bold;">
-                                               Xem & xác nhận đồng ý tiêm chủng
-                                           </a>
-                                       </div>
-                                       <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 32px;">
-                                           Nếu bạn có thắc mắc, vui lòng liên hệ nhà trường để được hỗ trợ.<br/>
-                                           Trân trọng!
-                                       </p>
-                                   </div>
-                               </body>
-                    
-            </html>
+            <!DOCTYPE html>
+                                                  <html lang="vi">
+                                                    <body style="margin: 0; padding: 0; background: linear-gradient(135deg, #f5f7fa 0%%, #c3cfe2 100%%); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                                      <table align="center" cellpadding="0" cellspacing="0" width="100%%" style="max-width: 650px; margin: 20px auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                                                        <tr>
+                                                          <td style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: white; text-align: center; padding: 32px 24px;">
+                                                            <div style="display: inline-block; background: rgba(255,255,255,0.2); padding: 16px; border-radius: 50%%; margin-bottom: 16px;">
+                                                             <table width="100%%" cellpadding="0" cellspacing="0">
+                                                                                  <tr>
+                                                                                    <td align="center">
+                                                                                      <img src="cid:logoImage" alt="Logo" style="width: 100px; height: 100px; object-fit: contain; border-radius: 50%%; background: white;" />
+                                                                                    </td>
+                                                                                  </tr>
+                                                                                </table>
+                                                            </div>
+                                                            <h1 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: 0.5px;">
+                                                              HỆ THỐNG QUẢN LÝ SỨC KHỎE HỌC SINH
+                                                            </h1>
+                                                            <p style="margin: 8px 0 0; font-size: 14px; opacity: 0.9;">
+                                                              Chăm sóc sức khỏe toàn diện cho học sinh
+                                                            </p>
+                                                          </td>
+                                                        </tr>
+                                                        <tr>
+                                                          <td style="background: linear-gradient(90deg, #4facfe 0%%, #00f2fe 100%%); padding: 16px 24px; text-align: center;">
+                                                            <p style="margin: 0; color: white; font-size: 16px; font-weight: 600;">
+                                                              💉 THÔNG BÁO TIÊM CHỦNG QUAN TRỌNG
+                                                            </p>
+                                                          </td>
+                                                        </tr>
+                                                        <tr>
+                                                          <td style="padding: 32px 24px;">
+                                                            <div style="margin-bottom: 24px;">
+                                                              <h2 style="color: #2c3e50; font-size: 20px; margin: 0 0 8px; font-weight: 600;">
+                                                                Kính chào Quý phụ huynh!
+                                                              </h2>
+                                                              <p style="color: #7f8c8d; font-size: 14px; margin: 0; line-height: 1.5;">
+                                                                Chúng tôi xin gửi đến bạn thông báo về lịch tiêm chủng của con em bạn
+                                                              </p>
+                                                            </div>
+                                                            <div style="background: linear-gradient(135deg, #ffecd2 0%%, #fcb69f 100%%); border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #e67e22;">
+                                                              <h3 style="color: #d35400; font-size: 16px; margin: 0 0 12px; font-weight: 600;">
+                                                                👨‍👩‍👧‍👦 Thông tin phụ huynh & học sinh
+                                                              </h3>
+                                                              <div style="color: #8b4513; font-size: 14px; line-height: 1.6;">
+                                                                <p style="margin: 8px 0;"><strong>Phụ huynh:</strong> <span style="color: #d35400;">%s</span></p>
+                                                                <p style="margin: 8px 0;"><strong>Học sinh:</strong> <span style="color: #d35400;">%s</span></p>
+                                                              </div>
+                                                            </div>
+                                                            <div style="background: linear-gradient(135deg, #d299c2 0%%, #fef9d7 100%%); border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #9b59b6;">
+                                                              <h3 style="color: #8e44ad; font-size: 16px; margin: 0 0 12px; font-weight: 600;">
+                                                                💉 Thông tin tiêm chủng
+                                                              </h3>
+                                                              <div style="color: #6a1b9a; font-size: 14px; line-height: 1.6;">
+                                                                <p style="margin: 8px 0;"><strong>Loại vaccine:</strong> <span style="color: #8e44ad;">%s</span></p>
+                                                                <p style="margin: 8px 0;"><strong>Thời gian:</strong> <span style="color: #8e44ad;">%s</span></p>
+                                                                <p style="margin: 8px 0;"><strong>Địa điểm:</strong> <span style="color: #8e44ad;">%s</span></p>
+                                                              </div>
+                                                            </div>
+                                                            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                                                              <p style="margin: 0; color: #856404; font-size: 13px; line-height: 1.5;">
+                                                                <strong>⚠️ Lưu ý quan trọng:</strong> Vui lòng xác nhận tham gia và chuẩn bị đầy đủ giấy tờ cần thiết.\s
+                                                                Trẻ em cần được phụ huynh đưa đến đúng giờ và mang theo sổ tiêm chủng.
+                                                              </p>
+                                                            </div>
+                                                            <div style="text-align: center; margin: 32px 0;">
+                                                              <a href="%s" style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: white; padding: 16px 32px; font-size: 16px; border-radius: 50px; text-decoration: none; display: inline-block; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
+                                                                ✅ XÁC NHẬN THAM GIA TIÊM CHỦNG
+                                                              </a>
+                                                            </div>
+                                                            <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-top: 24px;">
+                                                              <h4 style="color: #495057; font-size: 14px; margin: 0 0 12px; font-weight: 600;">
+                                                                📞 Thông tin liên hệ hỗ trợ
+                                                              </h4>
+                                                              <div style="color: #6c757d; font-size: 13px; line-height: 1.6;">
+                                                                <p style="margin: 4px 0;">📧 Email: medischool@gmail.com</p>
+                                                                <p style="margin: 4px 0;">📱 Hotline: 19009999</p>
+                                                                <p style="margin: 4px 0;">🕐 Thời gian hỗ trợ: 7:00 - 17:00 (Thứ 2 - Thứ 6)</p>
+                                                              </div>
+                                                            </div>
+                                                          </td>
+                                                        </tr>
+                                                        <tr>
+                                                          <td style="background: #34495e; color: #bdc3c7; text-align: center; padding: 24px;">
+                                                            <p style="margin: 0 0 8px; font-size: 13px; line-height: 1.5;">
+                                                              Cảm ơn quý phụ huynh đã tin tương và hợp tác cùng nhà trường
+                                                            </p>
+                                                            <p style="margin: 0; font-size: 12px; opacity: 0.8;">
+                                                              © 2025 Hệ thống quản lý sức khỏe học sinh. Bảo mật thông tin theo luật định.
+                                                            </p>
+                                                            <div style="margin-top: 12px; font-size: 11px; opacity: 0.7;">
+                                                              ⚠️ Email này được gửi tự động, vui lòng không phản hồi trực tiếp
+                                                            </div>
+                                                          </td>
+                                                        </tr>
+                                                      </table>
+                                                    </body>
+                                                  </html>
         """, parentName, studentName, vaccineName, eventDate, eventLocation, consentUrl);
 
             helper.setText(htmlContent, true);
