@@ -1,6 +1,7 @@
 package com.medischool.backend.controller;
 
-//import com.medischool.backend.dto.medication.MedicationStatsDTO;
+import com.medischool.backend.dto.medication.MedicationDispensationDTO;
+import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -24,11 +26,11 @@ class MedicationController {
     private MedicationService service;
 
     //stat
-//    @GetMapping("/stats")
-//    public ResponseEntity<MedicationStatsDTO> getRequestStats() {
-//        MedicationStatsDTO stats = service.getRequestStats();
-//        return ResponseEntity.ok(stats);
-//    }
+    @GetMapping("/stats")
+    public ResponseEntity<MedicationStatsDTO> getRequestStats() {
+        MedicationStatsDTO stats = service.getRequestStats();
+        return ResponseEntity.ok(stats);
+    }
 
     //Nurse view all requests
     @GetMapping("/all")
@@ -39,7 +41,7 @@ class MedicationController {
 
     //Nurse view pending requests
     @GetMapping("/pending")
-//    @PreAuthorize("hasRole('NURSE')")
+    @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationRequest>> getPendingRequests() {
         return ResponseEntity.ok(service.getRequestsByStatus(MedicationStatus.PENDING));
     }
@@ -53,7 +55,7 @@ class MedicationController {
 
     //Parents view all their requests by student
     @GetMapping
-//    @PreAuthorize("hasRole('PARENT')")
+    @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<List<MedicationRequest>> getRequestsByStudent(
             Authentication authentication,
             @RequestParam Integer studentId) throws AccessDeniedException {
@@ -81,29 +83,35 @@ class MedicationController {
     ) {
         return ResponseEntity.ok(service.resubmitRequest(id, updatedData, parentId));
     }
-
-    //Nurse approve request
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('NURSE')")
-    public ResponseEntity<MedicationRequest> approve(@PathVariable Integer id, @RequestParam UUID nurseId) {
+    public ResponseEntity<MedicationRequest> approve(@PathVariable Integer id, Authentication authentication) {
+        UUID nurseId = UUID.fromString(authentication.getName());
         return ResponseEntity.ok(service.approveRequest(id, nurseId));
     }
 
-    //Nurse reject request
     @PutMapping("/{id}/reject")
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<MedicationRequest> reject(
             @PathVariable Integer id,
-            @RequestParam UUID nurseId,
-            @RequestParam String reason
+            @RequestParam String reason,
+            Authentication authentication
     ) {
+        UUID nurseId = UUID.fromString(authentication.getName());
         return ResponseEntity.ok(service.rejectRequest(id, nurseId, reason));
     }
 
+
     //Nurse dispense medicine
-    @PostMapping("/{id}/dispense")
-    public ResponseEntity<MedicationDispensation> dispense(@RequestParam Integer requestId, @RequestBody MedicationDispensation disp) {
-        return ResponseEntity.ok(service.dispenseMedication(requestId, disp));
+    @PostMapping("/{requestId}/dispense")
+    public ResponseEntity<?> dispenseMedication(
+            @PathVariable Integer requestId,
+            @RequestBody MedicationDispensationDTO dto,
+            Authentication authentication
+    ) {
+        UUID nurseId = UUID.fromString(authentication.getName());
+        service.dispenseMedication(dto, nurseId);
+        return ResponseEntity.ok().build();
     }
 
     //Nurse mark done request
@@ -119,6 +127,15 @@ class MedicationController {
     public ResponseEntity<List<MedicationRequest>> searchByKeyword(@RequestParam String keyword) {
         return ResponseEntity.ok(service.searchRequests(keyword));
     }
+
+    //View dispen history
+    @GetMapping("/dispensations/by-request/{requestId}")
+    @PreAuthorize("hasRole('NURSE')")
+    public ResponseEntity<List<MedicationDispensation>> getDispensationsByRequest(@PathVariable Integer requestId) {
+        List<MedicationDispensation> result = service.getDispensationsByRequestId(requestId);
+        return ResponseEntity.ok(result);
+    }
+
 
 //    //View detail
 //    @GetMapping("/{id}/detail")
