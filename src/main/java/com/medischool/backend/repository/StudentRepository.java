@@ -18,8 +18,7 @@ public interface StudentRepository extends JpaRepository<StudentProfile, Integer
  StudentProfile findByStudentCode(String studentCode);
  List<StudentProfile> findByClassCodeIn(List<String> classCode);
 
-    StudentProfile findByStudentId(Long studentProfileId);
-
+  
 import java.util.Optional;
 
 @Repository
