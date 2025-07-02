@@ -1,5 +1,7 @@
 package com.medischool.backend.controller.healthevent;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,8 +25,18 @@ public class HealthEventController {
     public ResponseEntity<?> getHealthEventStatus() {
         try {
             return ResponseEntity.ok(healthEventService.getTotalHealthEventStatusResDTO());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping
+    @Operation(summary = "Get all health event", description = "Retrieve a list of all health event")
+    public ResponseEntity<?> getAllHealthEvent() {
+        try {
+            return ResponseEntity.ok(healthEventService.getAllHealthEvent());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }

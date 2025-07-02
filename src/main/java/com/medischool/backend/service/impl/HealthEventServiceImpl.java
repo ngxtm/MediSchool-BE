@@ -1,8 +1,11 @@
 package com.medischool.backend.service.impl;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.medischool.backend.dto.healthevent.response.TotalHealthEventStatusResDTO;
+import com.medischool.backend.model.healthevent.HealthEvent;
 import com.medischool.backend.repository.healthevent.HealthEventRepository;
 import com.medischool.backend.service.healthevent.HealthEventService;
 
@@ -24,5 +27,10 @@ public class HealthEventServiceImpl implements HealthEventService {
                 .totalNormalCase(normalEvent)
                 .totalDangerousCase(dangerousEvent)
                 .build();
+    }
+
+    @Override
+    public List<HealthEvent> getAllHealthEvent() {
+        return healthEventRepository.findAll();
     }
 }
