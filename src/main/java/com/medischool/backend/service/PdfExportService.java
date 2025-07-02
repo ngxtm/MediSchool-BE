@@ -19,8 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.model.parentstudent.Student;
+import com.itextpdf.io.font.PdfEncodings;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,19 @@ public class PdfExportService {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(baos);
             PdfDocument pdf = new PdfDocument(writer);
+            java.io.InputStream fontStream = getClass().getClassLoader().getResourceAsStream("fonts/DejaVuSans.ttf");
+            if (fontStream == null) throw new RuntimeException("Font DejaVuSans.ttf not found in resources/fonts");
+            java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+            int nRead;
+            byte[] data = new byte[16384];
+            while ((nRead = fontStream.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+            byte[] fontBytes = buffer.toByteArray();
+            PdfFont unicodeFont = PdfFontFactory.createFont(fontBytes, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
             Document document = new Document(pdf);
+            document.setFont(unicodeFont);
 
             String eventTitle = "";
             VaccineEvent event = vaccineEventRepository.findById(eventId).orElse(null);
@@ -48,10 +62,6 @@ public class PdfExportService {
             } else {
                 eventTitle = "(Unknown Event)";
             }
-
-            // Use default font instead of Vietnamese font to avoid issues
-            // PdfFont font = PdfFontFactory.createFont("STSong-Light", "UniGB-UCS2-H");
-            // document.setFont(font);
 
             // Add title
             Paragraph title = new Paragraph("VACCINATION HISTORY REPORT - " + eventTitle)
@@ -89,12 +99,12 @@ public class PdfExportService {
                 table.addCell(new Cell().add(new Paragraph(history.getHistoryId().toString())));
                 table.addCell(new Cell().add(new Paragraph(history.getStudentId().toString())));
                 table.addCell(new Cell().add(new Paragraph(dto.getStudent() != null ?
-                        sanitizeText(dto.getStudent().getFullName()) : "N/A")));
+                        dto.getStudent().getFullName() : "N/A")));
                 table.addCell(new Cell().add(new Paragraph(history.getVaccine().getName())));
                 table.addCell(new Cell().add(new Paragraph(history.getDoseNumber().toString())));
                 table.addCell(new Cell().add(new Paragraph(history.getVaccinationDate().format(dateFormatter))));
                 table.addCell(new Cell().add(new Paragraph(history.getLocation() != null ?
-                        sanitizeText(history.getLocation()) : "N/A")));
+                        history.getLocation() : "N/A")));
                 table.addCell(new Cell().add(new Paragraph(history.getAbnormal() != null && history.getAbnormal() ? "Yes" : "No")));
             }
 
@@ -120,7 +130,7 @@ public class PdfExportService {
 
                 detailTable.addCell(new Cell().add(new Paragraph("Student Name")).setBold());
                 detailTable.addCell(new Cell().add(new Paragraph(dto.getStudent() != null ?
-                        sanitizeText(dto.getStudent().getFullName()) : "N/A")));
+                        dto.getStudent().getFullName() : "N/A")));
 
                 detailTable.addCell(new Cell().add(new Paragraph("Event")).setBold());
                 detailTable.addCell(new Cell().add(new Paragraph(eventTitle)));
@@ -136,18 +146,18 @@ public class PdfExportService {
 
                 detailTable.addCell(new Cell().add(new Paragraph("Location")).setBold());
                 detailTable.addCell(new Cell().add(new Paragraph(history.getLocation() != null ?
-                        sanitizeText(history.getLocation()) : "N/A")));
+                        history.getLocation() : "N/A")));
 
                 detailTable.addCell(new Cell().add(new Paragraph("Note")).setBold());
                 detailTable.addCell(new Cell().add(new Paragraph(history.getNote() != null ?
-                        sanitizeText(history.getNote()) : "N/A")));
+                        history.getNote() : "N/A")));
 
                 detailTable.addCell(new Cell().add(new Paragraph("Abnormal")).setBold());
                 detailTable.addCell(new Cell().add(new Paragraph(history.getAbnormal() != null && history.getAbnormal() ? "Yes" : "No")));
 
                 detailTable.addCell(new Cell().add(new Paragraph("Follow-up Note")).setBold());
                 detailTable.addCell(new Cell().add(new Paragraph(history.getFollowUpNote() != null ?
-                        sanitizeText(history.getFollowUpNote()) : "N/A")));
+                        history.getFollowUpNote() : "N/A")));
 
                 detailTable.addCell(new Cell().add(new Paragraph("Created At")).setBold());
                 detailTable.addCell(new Cell().add(new Paragraph(history.getCreatedAt() != null ?
@@ -176,7 +186,19 @@ public class PdfExportService {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(baos);
             PdfDocument pdf = new PdfDocument(writer);
+            java.io.InputStream fontStream = getClass().getClassLoader().getResourceAsStream("fonts/DejaVuSans.ttf");
+            if (fontStream == null) throw new RuntimeException("Font DejaVuSans.ttf not found in resources/fonts");
+            java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+            int nRead;
+            byte[] data = new byte[16384];
+            while ((nRead = fontStream.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+            byte[] fontBytes = buffer.toByteArray();
+            PdfFont unicodeFont = PdfFontFactory.createFont(fontBytes, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
             Document document = new Document(pdf);
+            document.setFont(unicodeFont);
 
             // Lấy map eventId -> eventTitle
             Set<Long> eventIds = historyByCategory.values().stream()
@@ -218,7 +240,7 @@ public class PdfExportService {
                 List<VaccinationHistory> histories = entry.getValue();
 
                 // Add category title
-                Paragraph categoryTitle = new Paragraph("Category: " + sanitizeText(categoryName))
+                Paragraph categoryTitle = new Paragraph("Category: " + categoryName)
                         .setFontSize(14)
                         .setBold();
                 document.add(categoryTitle);
@@ -245,8 +267,8 @@ public class PdfExportService {
                     summaryTable.addCell(new Cell().add(new Paragraph(history.getVaccine().getName())));
                     summaryTable.addCell(new Cell().add(new Paragraph(history.getDoseNumber().toString())));
                     summaryTable.addCell(new Cell().add(new Paragraph(history.getVaccinationDate().format(dateFormatter))));
-                    summaryTable.addCell(new Cell().add(new Paragraph(history.getLocation() != null ? 
-                        sanitizeText(history.getLocation()) : "N/A")));
+                    summaryTable.addCell(new Cell().add(new Paragraph(history.getLocation() != null ?
+                        history.getLocation() : "N/A")));
                     summaryTable.addCell(new Cell().add(new Paragraph(history.getAbnormal() != null && history.getAbnormal() ? "Yes" : "No")));
                 }
 
@@ -283,19 +305,19 @@ public class PdfExportService {
                     detailTable.addCell(new Cell().add(new Paragraph(history.getVaccinationDate().format(dateFormatter))));
                     
                     detailTable.addCell(new Cell().add(new Paragraph("Location")).setBold());
-                    detailTable.addCell(new Cell().add(new Paragraph(history.getLocation() != null ? 
-                        sanitizeText(history.getLocation()) : "N/A")));
+                    detailTable.addCell(new Cell().add(new Paragraph(history.getLocation() != null ?
+                        history.getLocation() : "N/A")));
                     
                     detailTable.addCell(new Cell().add(new Paragraph("Note")).setBold());
-                    detailTable.addCell(new Cell().add(new Paragraph(history.getNote() != null ? 
-                        sanitizeText(history.getNote()) : "N/A")));
+                    detailTable.addCell(new Cell().add(new Paragraph(history.getNote() != null ?
+                        history.getNote() : "N/A")));
                     
                     detailTable.addCell(new Cell().add(new Paragraph("Abnormal")).setBold());
                     detailTable.addCell(new Cell().add(new Paragraph(history.getAbnormal() != null && history.getAbnormal() ? "Yes" : "No")));
                     
                     detailTable.addCell(new Cell().add(new Paragraph("Follow-up Note")).setBold());
-                    detailTable.addCell(new Cell().add(new Paragraph(history.getFollowUpNote() != null ? 
-                        sanitizeText(history.getFollowUpNote()) : "N/A")));
+                    detailTable.addCell(new Cell().add(new Paragraph(history.getFollowUpNote() != null ?
+                        history.getFollowUpNote() : "N/A")));
                     
                     detailTable.addCell(new Cell().add(new Paragraph("Created At")).setBold());
                     detailTable.addCell(new Cell().add(new Paragraph(history.getCreatedAt() != null ?
@@ -324,30 +346,5 @@ public class PdfExportService {
             log.error("Error generating PDF for student {}: {}", studentId, e.getMessage(), e);
             throw new RuntimeException("Failed to generate PDF", e);
         }
-    }
-
-    /**
-     * Sanitize text to remove or replace problematic characters
-     */
-    private String sanitizeText(String text) {
-        if (text == null) {
-            return "N/A";
-        }
-        
-        // Replace Vietnamese characters with ASCII equivalents or remove them
-        return text.replaceAll("[àáạảãâầấậẩẫăằắặẳẵ]", "a")
-                   .replaceAll("[èéẹẻẽêềếệểễ]", "e")
-                   .replaceAll("[ìíịỉĩ]", "i")
-                   .replaceAll("[òóọỏõôồốộổỗơờớợởỡ]", "o")
-                   .replaceAll("[ùúụủũưừứựửữ]", "u")
-                   .replaceAll("[ỳýỵỷỹ]", "y")
-                   .replaceAll("[đ]", "d")
-                   .replaceAll("[ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴ]", "A")
-                   .replaceAll("[ÈÉẸẺẼÊỀẾỆỂỄ]", "E")
-                   .replaceAll("[ÌÍỊỈĨ]", "I")
-                   .replaceAll("[ÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠ]", "O")
-                   .replaceAll("[ÙÚỤỦŨƯỪỨỰỬỮ]", "U")
-                   .replaceAll("[ỲÝỴỶỸ]", "Y")
-                   .replaceAll("[Đ]", "D");
     }
 } 
