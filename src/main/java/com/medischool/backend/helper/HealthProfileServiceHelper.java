@@ -34,7 +34,7 @@ public class HealthProfileServiceHelper {
             throw new CustomException("Treatment History is required");
         }
     }
-
+/* abc */
     public HealthProfileResponse convertToHealthProfileResponse(HealthProfile healthProfile) throws CustomException {
         HealthProfileResponse healthProfileResponse = new HealthProfileResponse();
         healthProfileResponse.setStudentCode(healthProfile.getStudentProfile().getStudentCode());
