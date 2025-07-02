@@ -204,6 +204,12 @@ public class VaccineEventService {
         VaccineEvent event = eventOpt.get();
         Vaccine vaccine = event.getVaccine();
 
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String userIdStr = auth.getName();
+        UUID userId = UUID.fromString(userIdStr);
+
+        UserProfile profileOpt = userProfileRepository.findSingleById(userId);
+
         int count = 0;
         for (VaccinationConsent consent : agreedConsents) {
             boolean exists = vaccinationHistoryRepository.existsByStudentIdAndEventId(consent.getStudentId(), eventId);
@@ -224,7 +230,7 @@ public class VaccineEventService {
                 history.setAbnormal(false);
                 history.setFollowUpNote(null);
 
-                history.setCreatedBy(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+                history.setCreatedBy(profileOpt.getId());
                 history.setCreatedAt(LocalDateTime.now());
 
                 vaccinationHistoryRepository.save(history);
