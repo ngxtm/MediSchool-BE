@@ -1,18 +1,19 @@
 package com.medischool.backend.config;
 
-import com.medischool.backend.repository.UserProfileRepository;
-import com.medischool.backend.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.medischool.backend.repository.UserProfileRepository;
+import com.medischool.backend.security.JwtAuthenticationFilter;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -46,8 +47,11 @@ public class SecurityConfig {
                         .requestMatchers("/context-path/**").permitAll()
                         .requestMatchers("/api/me").permitAll()
 
+                        .requestMatchers("/api/health-event/**").permitAll()
                         .requestMatchers("/api/vaccines/**").permitAll()
                         .requestMatchers("/api/vaccine-events/**").permitAll()
+                        .requestMatchers("/api/vaccine-consents/**").permitAll()
+                        .requestMatchers("/api/vaccine-event-class/**").permitAll()
                         .requestMatchers("/api/{eventId}/send-consents/**").permitAll()
                         .requestMatchers("/api/{eventId}/status/**").permitAll()
                         .requestMatchers("/api/consents/**").permitAll()

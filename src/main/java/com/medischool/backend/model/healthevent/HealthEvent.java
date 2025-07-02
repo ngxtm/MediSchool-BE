@@ -1,6 +1,5 @@
 package com.medischool.backend.model.healthevent;
 
-import com.medischool.backend.model.enums.Extent;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
