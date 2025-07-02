@@ -10,6 +10,7 @@ import com.medischool.backend.repository.vaccination.VaccinationHistoryRepositor
 import com.medischool.backend.repository.vaccination.VaccineEventClassRepository;
 import com.medischool.backend.repository.vaccination.VaccineEventRepository;
 import com.medischool.backend.repository.vaccination.VaccineRepository;
+import com.medischool.backend.service.AsyncEmailService;
 import com.medischool.backend.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -37,6 +38,7 @@ public class VaccineEventService {
     private final StudentRepository studentRepository;
     private final ParentStudentLinkRepository parentStudentLinkRepository;
     private final EmailService emailService;
+    private final AsyncEmailService asyncEmailService;
 
     private List<Integer> getAllStudentIdsInSchool() {
         return studentRepository.findAll()
@@ -304,7 +306,7 @@ public class VaccineEventService {
 
 
         if (!notifications.isEmpty()) {
-            emailService.sendBulkVaccineConsentNotifications(notifications);
+            asyncEmailService.sendBulkEmailsAsync(notifications);
         }
 
         return VaccineEventEmailNotificationDTO.builder()
@@ -359,7 +361,7 @@ public class VaccineEventService {
             }
         }
         if (!notifications.isEmpty()) {
-            emailService.sendBulkVaccineConsentNotifications(notifications);
+            asyncEmailService.sendBulkEmailsAsync(notifications);
         }
     }
 

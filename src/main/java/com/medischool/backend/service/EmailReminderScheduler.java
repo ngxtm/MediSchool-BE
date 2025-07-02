@@ -30,8 +30,7 @@ public class EmailReminderScheduler {
     private final StudentRepository studentRepository;
     private final VaccineEventService vaccineEventService;
 
-    // Chạy mỗi ngày lúc 8h sáng
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 0 8 * * *")
     public void sendRemindLaterEmails() {
         List<VaccineEvent> activeEvents = vaccineEventRepository.findAllByEventDateAfter(LocalDate.now().minusDays(1));
         for (VaccineEvent event : activeEvents) {
