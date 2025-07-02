@@ -53,7 +53,7 @@ public class HealthEventServiceImpl implements HealthEventService {
         healthEvent.setExtent(requestDTO.getExtent());
         
         HealthEvent savedEvent = healthEventRepository.save(healthEvent);
-        
+
         if (requestDTO.getMedicines() != null && !requestDTO.getMedicines().isEmpty()) {
             for (HealthEventRequestDTO.EventMedicineDTO medicineDTO : requestDTO.getMedicines()) {
                 EventMedicine eventMedicine = new EventMedicine();
