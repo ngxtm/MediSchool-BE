@@ -58,4 +58,21 @@ public class MedicineServiceImpl implements MedicineService {
                         && medicine.getQuantityOnHand() <= medicine.getReorderThreshold())
                 .toList();
     }
+
+    @Override
+    public boolean updateMedicineQuantity(Long medicineId, Integer quantityUsed) {
+        Medicine medicine = medicineRepository.findById(medicineId).orElse(null);
+        if (medicine == null) {
+            return false;
+        }
+        
+        if (medicine.getQuantityOnHand() == null || medicine.getQuantityOnHand() < quantityUsed) {
+            return false;
+        }
+        
+        medicine.setQuantityOnHand(medicine.getQuantityOnHand() - quantityUsed);
+        medicineRepository.save(medicine);
+        
+        return true;
+    }
 } 
