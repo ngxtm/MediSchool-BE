@@ -50,4 +50,6 @@ public class Student {
 
     @Enumerated(EnumType.STRING)
     private StudentStatus status;
+
+    private String avatar;
 }
