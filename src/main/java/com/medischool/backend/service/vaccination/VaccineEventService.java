@@ -10,6 +10,7 @@ import com.medischool.backend.repository.vaccination.VaccinationHistoryRepositor
 import com.medischool.backend.repository.vaccination.VaccineEventClassRepository;
 import com.medischool.backend.repository.vaccination.VaccineEventRepository;
 import com.medischool.backend.repository.vaccination.VaccineRepository;
+import com.medischool.backend.service.AsyncEmailService;
 import com.medischool.backend.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -37,6 +38,7 @@ public class VaccineEventService {
     private final StudentRepository studentRepository;
     private final ParentStudentLinkRepository parentStudentLinkRepository;
     private final EmailService emailService;
+    private final AsyncEmailService asyncEmailService;
 
     private List<Integer> getAllStudentIdsInSchool() {
         return studentRepository.findAll()
@@ -310,7 +312,7 @@ public class VaccineEventService {
 
 
         if (!notifications.isEmpty()) {
-            emailService.sendBulkVaccineConsentNotifications(notifications);
+            asyncEmailService.sendBulkEmailsAsync(notifications);
         }
 
         return VaccineEventEmailNotificationDTO.builder()
@@ -326,6 +328,47 @@ public class VaccineEventService {
                 .message(String.format("Đã gửi %d email thành công, %d email thất bại", emailsSent, emailsFailed))
                 .success(true)
                 .build();
+    }
+
+    public void sendBulkEmailNotificationsForConsents(VaccineEvent event, List<VaccinationConsent> consents) {
+        if (consents == null || consents.isEmpty()) return;
+        List<Map<String, Object>> notifications = new ArrayList<>();
+        for (VaccinationConsent consent : consents) {
+            try {
+                UserProfile parent = userProfileRepository.findById(consent.getParentId())
+                        .orElse(null);
+                if (parent == null || parent.getEmail() == null || parent.getEmail().trim().isEmpty()) {
+                    continue;
+                }
+                String studentName = "Học sinh";
+                try {
+                    var studentOpt = studentRepository.findByStudentId(consent.getStudentId());
+                    if (studentOpt.isPresent()) {
+                        studentName = studentOpt.get().getFullName();
+                    }
+                } catch (Exception e) {
+                    studentName = "Học sinh";
+                }
+                String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
+                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        consent.getId());
+                Map<String, Object> notification = Map.of(
+                        "email", parent.getEmail(),
+                        "parentName", parent.getFullName() != null ? parent.getFullName() : "Phụ huynh",
+                        "studentName", studentName,
+                        "vaccineName", event.getVaccine().getName(),
+                        "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        "eventLocation", event.getLocation(),
+                        "consentUrl", consentUrl
+                );
+                notifications.add(notification);
+            } catch (Exception e) {
+                // Bỏ qua lỗi từng consent
+            }
+        }
+        if (!notifications.isEmpty()) {
+            asyncEmailService.sendBulkEmailsAsync(notifications);
+        }
     }
 
 }
