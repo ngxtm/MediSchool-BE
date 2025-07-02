@@ -59,6 +59,7 @@ public class HealthEventServiceImpl implements HealthEventService {
                 .eventTime(healthEvent.getEventTime())
                 .recordBy(healthEvent.getRecordBy())
                 .extent(healthEvent.getExtent())
+                .eventMedicines(healthEvent.getEventMedicines())
                 .build();
     }
 

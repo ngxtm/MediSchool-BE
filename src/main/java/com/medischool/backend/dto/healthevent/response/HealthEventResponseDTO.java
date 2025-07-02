@@ -1,8 +1,10 @@
 package com.medischool.backend.dto.healthevent.response;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
+import com.medischool.backend.model.healthevent.EventMedicine;
 import com.medischool.backend.model.parentstudent.Student;
 
 import lombok.AllArgsConstructor;
@@ -25,4 +27,5 @@ public class HealthEventResponseDTO {
     private OffsetDateTime eventTime;
     private UUID recordBy;
     private String extent;
+    private List<EventMedicine> eventMedicines;
 } 

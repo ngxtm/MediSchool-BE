@@ -13,11 +13,11 @@ import com.medischool.backend.model.healthevent.HealthEvent;
 public interface HealthEventRepository extends JpaRepository<HealthEvent, Long> {
     List<HealthEvent> findByExtent(String extent);
     
-    @EntityGraph(attributePaths = {"student"})
+    @EntityGraph(attributePaths = {"student", "eventMedicines", "eventMedicines.medicine"})
     @Query("SELECT h FROM HealthEvent h")
     List<HealthEvent> findAllWithStudent();
     
-    @EntityGraph(attributePaths = {"student"})
+    @EntityGraph(attributePaths = {"student", "eventMedicines", "eventMedicines.medicine"})
     @Query("SELECT h FROM HealthEvent h WHERE h.extent = ?1")
     List<HealthEvent> findByExtentWithStudent(String extent);
 }

@@ -1,6 +1,7 @@
 package com.medischool.backend.model.healthevent;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import com.medischool.backend.model.parentstudent.Student;
@@ -13,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,4 +52,8 @@ public class HealthEvent {
     private UUID recordBy;
 
     private String extent;
+    
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "event_id")
+    private List<EventMedicine> eventMedicines;
 }
