@@ -148,7 +148,7 @@ public class MedicationServiceImpl implements MedicationService {
 
     @Override
     public List<MedicationRequest> searchRequests(String keyword) {
-        return requestRepo.findAll();
+        return requestRepo.searchByKeyword(keyword);
     }
 
     @Override

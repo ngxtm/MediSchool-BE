@@ -123,10 +123,10 @@ class MedicationController {
 
     //Search
     @GetMapping("/search")
-    @PreAuthorize("hasRole('NURSE')")
-    public ResponseEntity<List<MedicationRequest>> searchByKeyword(@RequestParam String keyword) {
+    public ResponseEntity<List<MedicationRequest>> searchRequests(@RequestParam String keyword) {
         return ResponseEntity.ok(service.searchRequests(keyword));
     }
+
 
     //View dispen history
     @GetMapping("/dispensations/by-request/{requestId}")
