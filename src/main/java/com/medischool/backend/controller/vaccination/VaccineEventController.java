@@ -43,7 +43,7 @@ public class VaccineEventController {
     @Operation(summary = "Send bulk email notifications to parents for vaccine consent")
     public ResponseEntity<VaccineEventEmailNotificationDTO> sendEmailNotifications(@PathVariable Long eventId) {
         try {
-            VaccineEventEmailNotificationDTO result = vaccineEventService.sendBulkEmailNotifications(eventId);
+            VaccineEventEmailNotificationDTO result = vaccineEventService.sendBulkEmailNotifications2(eventId);
             return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
