@@ -54,7 +54,9 @@ public class StudentServiceImpl implements StudentService {
                 motherName, motherPhone,
                 student.getEmergencyContact(),
                 student.getEmergencyPhone(),
-                student.getAddress()
+                student.getAddress(),
+                student.getGrade(),
+                student.getAvatar()
         );
     }
 

@@ -1,14 +1,25 @@
 package com.medischool.backend.model.healthevent;
 
-import com.medischool.backend.model.enums.Extent;
-import jakarta.persistence.*;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import com.medischool.backend.model.parentstudent.Student;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "health_event")
@@ -24,10 +35,15 @@ public class HealthEvent {
 
     @Column(name = "student_id")
     private Integer studentId;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    private Student student;
 
     private String problem;
     private String description;
     private String solution;
+    private String location;
 
     @Column(name = "event_time")
     private OffsetDateTime eventTime;
@@ -36,4 +52,8 @@ public class HealthEvent {
     private UUID recordBy;
 
     private String extent;
+    
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "event_id")
+    private List<EventMedicine> eventMedicines;
 }
