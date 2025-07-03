@@ -11,7 +11,7 @@ public interface HealthEventService {
     TotalHealthEventStatusResDTO getTotalHealthEventStatusResDTO();
     List<HealthEventResponseDTO> getAllHealthEvent();
     HealthEvent createHealthEvent(HealthEventRequestDTO requestDTO);
-    HealthEvent getHealthEventById(Long id);
+    HealthEventResponseDTO getHealthEventById(Long id);
     HealthEvent updateHealthEvent(Long id, HealthEventRequestDTO requestDTO);
     void deleteHealthEvent(Long id);
 }

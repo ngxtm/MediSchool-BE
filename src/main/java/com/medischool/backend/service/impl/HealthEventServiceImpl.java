@@ -12,8 +12,10 @@ import com.medischool.backend.dto.healthevent.response.HealthEventResponseDTO;
 import com.medischool.backend.dto.healthevent.response.TotalHealthEventStatusResDTO;
 import com.medischool.backend.model.healthevent.EventMedicine;
 import com.medischool.backend.model.healthevent.HealthEvent;
+import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.repository.healthevent.EventMedicineRepository;
 import com.medischool.backend.repository.healthevent.HealthEventRepository;
+import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.service.healthevent.HealthEventService;
 import com.medischool.backend.service.healthevent.MedicineService;
 
@@ -26,6 +28,7 @@ public class HealthEventServiceImpl implements HealthEventService {
     private final HealthEventRepository healthEventRepository;
     private final EventMedicineRepository eventMedicineRepository;
     private final MedicineService medicineService;
+    private final UserProfileRepository userProfileRepository;
 
     public TotalHealthEventStatusResDTO getTotalHealthEventStatusResDTO() {
         int totalEvent = healthEventRepository.findAllWithStudent().size();
@@ -48,6 +51,11 @@ public class HealthEventServiceImpl implements HealthEventService {
     }
 
     private HealthEventResponseDTO convertToDTO(HealthEvent healthEvent) {
+        UserProfile recordByUser = null;
+        if (healthEvent.getRecordBy() != null) {
+            recordByUser = userProfileRepository.findById(healthEvent.getRecordBy()).orElse(null);
+        }
+        
         return HealthEventResponseDTO.builder()
                 .id(healthEvent.getId())
                 .studentId(healthEvent.getStudentId())
@@ -58,6 +66,7 @@ public class HealthEventServiceImpl implements HealthEventService {
                 .location(healthEvent.getLocation())
                 .eventTime(healthEvent.getEventTime())
                 .recordBy(healthEvent.getRecordBy())
+                .recordByUser(recordByUser)
                 .extent(healthEvent.getExtent())
                 .eventMedicines(healthEvent.getEventMedicines())
                 .build();
@@ -104,8 +113,12 @@ public class HealthEventServiceImpl implements HealthEventService {
     }
 
     @Override
-    public HealthEvent getHealthEventById(Long id) {
-        return healthEventRepository.findById(id).orElse(null);
+    public HealthEventResponseDTO getHealthEventById(Long id) {
+        HealthEvent healthEvent = healthEventRepository.findById(id).orElse(null);
+        if (healthEvent == null) {
+            return null;
+        }
+        return convertToDTO(healthEvent);
     }
 
     @Override

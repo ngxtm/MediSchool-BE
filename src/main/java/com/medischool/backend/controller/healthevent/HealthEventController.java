@@ -64,7 +64,11 @@ public class HealthEventController {
     @Operation(summary = "Get health event by ID", description = "Retrieve a specific health event by its ID")
     public ResponseEntity<?> getHealthEventById(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(healthEventService.getHealthEventById(id));
+            HealthEventResponseDTO result = healthEventService.getHealthEventById(id);
+            if (result == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
