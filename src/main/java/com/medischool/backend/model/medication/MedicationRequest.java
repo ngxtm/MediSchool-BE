@@ -1,5 +1,6 @@
 package com.medischool.backend.model.medication;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.parentstudent.Parent;
@@ -67,11 +68,8 @@ public class MedicationRequest {
     private Boolean isFinalDose;
 
     @OneToMany(mappedBy = "request")
-    private List<MedicationRequestItem> items;
-
-    @OneToMany(mappedBy = "request")
     @JsonManagedReference
-    private List<MedicationDispensation> dispensations;
+    private List<MedicationRequestItem> items;
 
     @Column(name = "medication_status")
     @Enumerated(EnumType.STRING)

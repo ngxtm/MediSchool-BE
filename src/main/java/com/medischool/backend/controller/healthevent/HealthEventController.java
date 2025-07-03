@@ -1,5 +1,8 @@
 package com.medischool.backend.controller.healthevent;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,12 +14,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.medischool.backend.dto.healthevent.request.HealthEventRequestDTO;
+
+import com.medischool.backend.dto.healthevent.request.HealthEventEmailNotificationDTO;
+
+import com.medischool.backend.dto.healthevent.response.HealthEventResponseDTO;
+
 import com.medischool.backend.service.healthevent.HealthEventService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/health-event")
@@ -37,11 +47,12 @@ public class HealthEventController {
 
     @GetMapping
     @Operation(summary = "Get all health event", description = "Retrieve a list of all health event")
-    public ResponseEntity<?> getAllHealthEvent() {
+    public ResponseEntity<List<HealthEventResponseDTO>> getAllHealthEvent() {
         try {
-            return ResponseEntity.ok(healthEventService.getAllHealthEvent());
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            List<HealthEventResponseDTO> events = healthEventService.getAllHealthEvent();
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -59,7 +70,11 @@ public class HealthEventController {
     @Operation(summary = "Get health event by ID", description = "Retrieve a specific health event by its ID")
     public ResponseEntity<?> getHealthEventById(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(healthEventService.getHealthEventById(id));
+            HealthEventResponseDTO result = healthEventService.getHealthEventById(id);
+            if (result == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -82,6 +97,28 @@ public class HealthEventController {
             healthEventService.deleteHealthEvent(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{eventId}/send-email-notifications")
+    @Operation(summary = "Send email notifications to parents for health event", description = "Send bulk email notifications to parents about a specific health event")
+    public ResponseEntity<?> sendEmailNotifications(@PathVariable Long eventId) {
+        try {
+            HealthEventEmailNotificationDTO result = healthEventService.sendHealthEventEmailNotifications(eventId);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/send-all-email-notifications")
+    @Operation(summary = "Send email notifications to parents for all health events", description = "Send bulk email notifications to parents about all health events")
+    public ResponseEntity<?> sendAllEmailNotifications() {
+        try {
+            List<HealthEventEmailNotificationDTO> results = healthEventService.sendAllHealthEventEmailNotifications();
+            return ResponseEntity.ok(results);
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
