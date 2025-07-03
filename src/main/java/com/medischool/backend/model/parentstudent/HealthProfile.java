@@ -83,8 +83,7 @@ public class HealthProfile {
     
     @Column(name = "hearing_grade")
     private String hearingGrade;
-    
-    // Relationship with Student
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", insertable = false, updatable = false)
     private Student student;

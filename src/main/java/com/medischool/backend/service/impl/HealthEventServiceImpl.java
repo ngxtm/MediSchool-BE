@@ -90,7 +90,6 @@ public class HealthEventServiceImpl implements HealthEventService {
                                              " hoặc thuốc không tồn tại");
                 }
                 
-                // Tạo record trong event_medicine
                 EventMedicine eventMedicine = new EventMedicine();
                 eventMedicine.setEventId(savedEvent.getId());
                 eventMedicine.setMedicineId(medicineDTO.getMedicineId());
