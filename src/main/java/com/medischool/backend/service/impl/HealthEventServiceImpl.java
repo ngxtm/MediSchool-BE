@@ -2,17 +2,20 @@ package com.medischool.backend.service.impl;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.medischool.backend.dto.healthevent.request.HealthEventRequestDTO;
+import com.medischool.backend.dto.healthevent.response.HealthEventResponseDTO;
 import com.medischool.backend.dto.healthevent.response.TotalHealthEventStatusResDTO;
 import com.medischool.backend.model.healthevent.EventMedicine;
 import com.medischool.backend.model.healthevent.HealthEvent;
 import com.medischool.backend.repository.healthevent.EventMedicineRepository;
 import com.medischool.backend.repository.healthevent.HealthEventRepository;
 import com.medischool.backend.service.healthevent.HealthEventService;
+import com.medischool.backend.service.healthevent.MedicineService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,11 +25,12 @@ public class HealthEventServiceImpl implements HealthEventService {
 
     private final HealthEventRepository healthEventRepository;
     private final EventMedicineRepository eventMedicineRepository;
+    private final MedicineService medicineService;
 
     public TotalHealthEventStatusResDTO getTotalHealthEventStatusResDTO() {
-        int totalEvent = healthEventRepository.findAll().size();
-        int normalEvent = healthEventRepository.findByExtent("NORMAL").size();
-        int dangerousEvent = healthEventRepository.findByExtent("DANGEROUS").size();
+        int totalEvent = healthEventRepository.findAllWithStudent().size();
+        int normalEvent = healthEventRepository.findByExtentWithStudent("NORMAL").size();
+        int dangerousEvent = healthEventRepository.findByExtentWithStudent("DANGEROUS").size();
         
         return TotalHealthEventStatusResDTO.builder()
                 .totalHealthEvent(totalEvent)
@@ -36,8 +40,27 @@ public class HealthEventServiceImpl implements HealthEventService {
     }
 
     @Override
-    public List<HealthEvent> getAllHealthEvent() {
-        return healthEventRepository.findAll();
+    public List<HealthEventResponseDTO> getAllHealthEvent() {
+        List<HealthEvent> healthEvents = healthEventRepository.findAllWithStudent();
+        return healthEvents.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private HealthEventResponseDTO convertToDTO(HealthEvent healthEvent) {
+        return HealthEventResponseDTO.builder()
+                .id(healthEvent.getId())
+                .studentId(healthEvent.getStudentId())
+                .student(healthEvent.getStudent())
+                .problem(healthEvent.getProblem())
+                .description(healthEvent.getDescription())
+                .solution(healthEvent.getSolution())
+                .location(healthEvent.getLocation())
+                .eventTime(healthEvent.getEventTime())
+                .recordBy(healthEvent.getRecordBy())
+                .extent(healthEvent.getExtent())
+                .eventMedicines(healthEvent.getEventMedicines())
+                .build();
     }
 
     @Override
@@ -48,6 +71,7 @@ public class HealthEventServiceImpl implements HealthEventService {
         healthEvent.setProblem(requestDTO.getProblem());
         healthEvent.setDescription(requestDTO.getDescription());
         healthEvent.setSolution(requestDTO.getSolution());
+        healthEvent.setLocation(requestDTO.getLocation());
         healthEvent.setEventTime(requestDTO.getEventTime() != null ? requestDTO.getEventTime() : OffsetDateTime.now());
         healthEvent.setRecordBy(requestDTO.getRecordBy());
         healthEvent.setExtent(requestDTO.getExtent());
@@ -56,6 +80,16 @@ public class HealthEventServiceImpl implements HealthEventService {
 
         if (requestDTO.getMedicines() != null && !requestDTO.getMedicines().isEmpty()) {
             for (HealthEventRequestDTO.EventMedicineDTO medicineDTO : requestDTO.getMedicines()) {
+                boolean updateSuccess = medicineService.updateMedicineQuantity(
+                    medicineDTO.getMedicineId(),
+                    medicineDTO.getQuantity()
+                );
+                
+                if (!updateSuccess) {
+                    throw new RuntimeException("Không đủ số lượng thuốc với ID: " + medicineDTO.getMedicineId() + 
+                                             " hoặc thuốc không tồn tại");
+                }
+                
                 EventMedicine eventMedicine = new EventMedicine();
                 eventMedicine.setEventId(savedEvent.getId());
                 eventMedicine.setMedicineId(medicineDTO.getMedicineId());
@@ -94,6 +128,9 @@ public class HealthEventServiceImpl implements HealthEventService {
         if (requestDTO.getSolution() != null) {
             existingEvent.setSolution(requestDTO.getSolution());
         }
+        if (requestDTO.getLocation() != null) {
+            existingEvent.setLocation(requestDTO.getLocation());
+        }
         if (requestDTO.getEventTime() != null) {
             existingEvent.setEventTime(requestDTO.getEventTime());
         }
@@ -107,6 +144,16 @@ public class HealthEventServiceImpl implements HealthEventService {
             eventMedicineRepository.deleteByEventId(id);
 
             for (HealthEventRequestDTO.EventMedicineDTO medicineDTO : requestDTO.getMedicines()) {
+                boolean updateSuccess = medicineService.updateMedicineQuantity(
+                    medicineDTO.getMedicineId(),
+                    medicineDTO.getQuantity()
+                );
+                
+                if (!updateSuccess) {
+                    throw new RuntimeException("Không đủ số lượng thuốc với ID: " + medicineDTO.getMedicineId() + 
+                                             " hoặc thuốc không tồn tại");
+                }
+                
                 EventMedicine eventMedicine = new EventMedicine();
                 eventMedicine.setEventId(updatedEvent.getId());
                 eventMedicine.setMedicineId(medicineDTO.getMedicineId());

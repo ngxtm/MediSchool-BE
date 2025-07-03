@@ -1,5 +1,8 @@
 package com.medischool.backend.controller.healthevent;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.medischool.backend.dto.healthevent.request.HealthEventRequestDTO;
+import com.medischool.backend.dto.healthevent.response.HealthEventResponseDTO;
 import com.medischool.backend.service.healthevent.HealthEventService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,11 +41,12 @@ public class HealthEventController {
 
     @GetMapping
     @Operation(summary = "Get all health event", description = "Retrieve a list of all health event")
-    public ResponseEntity<?> getAllHealthEvent() {
+    public ResponseEntity<List<HealthEventResponseDTO>> getAllHealthEvent() {
         try {
-            return ResponseEntity.ok(healthEventService.getAllHealthEvent());
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            List<HealthEventResponseDTO> events = healthEventService.getAllHealthEvent();
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

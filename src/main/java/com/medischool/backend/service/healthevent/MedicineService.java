@@ -12,4 +12,5 @@ public interface MedicineService {
     void deleteMedicine(Long id);
     List<Medicine> searchMedicinesByName(String name);
     List<Medicine> getMedicinesWithLowStock();
+    boolean updateMedicineQuantity(Long medicineId, Integer quantityUsed);
 } 

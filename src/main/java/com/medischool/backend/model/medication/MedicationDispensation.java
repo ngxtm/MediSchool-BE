@@ -35,7 +35,4 @@ public class MedicationDispensation {
 
     @Column(name = "note")
     private String note;
-
-    @Column(name = "is_final_dose")
-    private Boolean isFinalDose;
 }
