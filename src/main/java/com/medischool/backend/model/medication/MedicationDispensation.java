@@ -20,6 +20,11 @@ public class MedicationDispensation {
     private Integer dispensationId;
 
     @ManyToOne
+    @JoinColumn(name = "item_id", nullable = true)
+    @JsonBackReference
+    private MedicationRequestItem item;
+
+    @ManyToOne
     @JoinColumn(name = "request_id")
     @JsonBackReference
     private MedicationRequest request;
@@ -36,4 +41,6 @@ public class MedicationDispensation {
     @Column(name = "note")
     private String note;
 
+    @Column(name = "status")
+    private String status;
 }

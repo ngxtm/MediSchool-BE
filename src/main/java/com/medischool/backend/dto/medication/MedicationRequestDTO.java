@@ -1,5 +1,7 @@
 package com.medischool.backend.dto.medication;
 
+import com.medischool.backend.model.parentstudent.Parent;
+import com.medischool.backend.model.parentstudent.Student;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,8 +15,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MedicationRequestDTO {
     private Integer requestId;
-    private UUID parentId;
-    private Integer studentId;
+    private Parent parent;
+    private Student student;
 
     private String reason;
     private String title;
