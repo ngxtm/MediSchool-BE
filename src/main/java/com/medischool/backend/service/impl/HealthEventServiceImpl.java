@@ -53,8 +53,6 @@ public class HealthEventServiceImpl implements HealthEventService {
     private final ParentStudentLinkRepository parentStudentLinkRepository;
 
     private final MedicineService medicineService;
-    private final UserProfileRepository userProfileRepository;
-
 
     public TotalHealthEventStatusResDTO getTotalHealthEventStatusResDTO() {
         int totalEvent = healthEventRepository.findAllWithStudent().size();
