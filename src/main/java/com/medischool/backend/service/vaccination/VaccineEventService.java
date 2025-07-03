@@ -24,6 +24,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import com.medischool.backend.dto.vaccination.VaccineEventEmailNotificationDTO;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -67,9 +70,6 @@ public class VaccineEventService {
                 .orElseThrow(() -> new RuntimeException("Vaccine not found"));
         VaccineEvent event = new VaccineEvent();
 
-//        UserProfile creator = userProfileRepository.findById(requestDTO.getCreatedBy())
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userIdStr = auth.getName();
         UUID userId = UUID.fromString(userIdStr);
@@ -81,10 +81,16 @@ public class VaccineEventService {
         event.setEventDate(requestDTO.getEventDate());
         event.setEventScope(requestDTO.getEventScope());
         event.setLocation(requestDTO.getLocation());
-        event.setStatus(requestDTO.getStatus());
         event.setCreatedAt(LocalDateTime.now());
         event.setCreatedBy(profileOpt);
-
+        
+        if (profileOpt != null && "MANAGER".equalsIgnoreCase(profileOpt.getRole())) {
+            event.setStatus(EventStatus.APPROVED);
+        } else if (requestDTO.getStatus() != null) {
+            event.setStatus(requestDTO.getStatus());
+        } else {
+            event.setStatus(EventStatus.PENDING);
+        }
 
         event = vaccineEventRepository.save(event);
 
