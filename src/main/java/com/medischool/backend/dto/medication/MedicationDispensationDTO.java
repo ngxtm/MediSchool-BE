@@ -12,9 +12,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MedicationDispensationDTO {
     private Integer requestId;
-    private UUID nurseId;
-    private OffsetDateTime time;
-    private String dosageGiven;
+    private Integer itemId;
+    private String dose;
     private String note;
-    private Boolean isFinalDose;
+    private String status;
+    private OffsetDateTime time;
+    private UUID nurseId;
 }

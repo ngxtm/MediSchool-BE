@@ -1,6 +1,8 @@
 package com.medischool.backend.service;
 
 //import com.medischool.backend.dto.medication.MedicationStatsDTO;
+import com.medischool.backend.dto.medication.MedicationDispensationDTO;
+import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
@@ -20,7 +22,7 @@ public interface MedicationService {
 
     MedicationRequest resubmitRequest(Integer requestId, MedicationRequest updatedRequestData, UUID parentId);
 
-    MedicationDispensation dispenseMedication(int requestId, MedicationDispensation dispensation);
+    MedicationDispensation dispenseMedication(MedicationDispensationDTO dto, UUID nurseId);
 
     MedicationRequest markAsDone(Integer requestId);
 
@@ -30,6 +32,8 @@ public interface MedicationService {
 
     List<MedicationRequest> searchRequests(String keyword);
 
-//    MedicationStatsDTO getRequestStats();
+    List<MedicationDispensation> getDispensationsByRequestId(Integer requestId);
+
+    MedicationStatsDTO getRequestStats();
 //    MedicationRequestDetailDTO getRequestDetail(Integer requestId, CustomUserDetails user);
 }
