@@ -23,4 +23,17 @@ public interface AsyncEmailService {
      * @param notification Thông tin email cần gửi
      */
     void sendSingleEmailAsync(Map<String, Object> notification);
+    
+    /**
+     * Gửi email thông báo sự kiện y tế bất đồng bộ
+     * @param healthEventNotifications Danh sách thông báo sự kiện y tế cần gửi
+     */
+    void sendBulkHealthEventEmailsAsync(List<Map<String, Object>> healthEventNotifications);
+    
+    /**
+     * Gửi email thông báo sự kiện y tế bất đồng bộ và trả về kết quả
+     * @param healthEventNotifications Danh sách thông báo sự kiện y tế cần gửi
+     * @return CompletableFuture với số lượng email thành công
+     */
+    CompletableFuture<Integer> sendBulkHealthEventEmailsAsyncWithResult(List<Map<String, Object>> healthEventNotifications);
 } 

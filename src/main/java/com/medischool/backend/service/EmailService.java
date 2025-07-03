@@ -9,4 +9,8 @@ public interface EmailService {
                                        String consentUrl);
     
     void sendBulkVaccineConsentNotifications(List<Map<String, Object>> parentNotifications);
+    
+    void sendHealthEventNotification(String toEmail, String parentName, String studentName,
+                                    String problem, String description, String solution,
+                                    String extent, String eventDate, String eventLocation);
 } 

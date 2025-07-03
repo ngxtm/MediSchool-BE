@@ -194,6 +194,138 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
                 .toList();
     }
 
+    @Override
+    @Async("emailTaskExecutor")
+    public void sendBulkHealthEventEmailsAsync(List<Map<String, Object>> healthEventNotifications) {
+        if (healthEventNotifications == null || healthEventNotifications.isEmpty()) {
+            log.warn("No health event notifications to send");
+            return;
+        }
+
+        log.info("Starting async bulk health event email sending for {} notifications", healthEventNotifications.size());
+        long startTime = System.currentTimeMillis();
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failureCount = new AtomicInteger(0);
+
+        // Giảm batch size để tránh quá tải SMTP server
+        int batchSize = 5;
+        List<List<Map<String, Object>>> batches = splitIntoBatches(healthEventNotifications, batchSize);
+
+        for (List<Map<String, Object>> batch : batches) {
+            log.info("Processing batch of {} health event emails", batch.size());
+            
+            List<CompletableFuture<Boolean>> futures = batch.stream()
+                    .map(notification -> CompletableFuture.supplyAsync(() -> {
+                        try {
+                            String toEmail = (String) notification.get("email");
+                            String parentName = (String) notification.get("parentName");
+                            String studentName = (String) notification.get("studentName");
+                            String problem = (String) notification.get("problem");
+                            String description = (String) notification.get("description");
+                            String solution = (String) notification.get("solution");
+                            String extent = (String) notification.get("extent");
+                            String eventDate = (String) notification.get("eventDate");
+                            String eventLocation = (String) notification.get("eventLocation");
+                            
+                            emailService.sendHealthEventNotification(
+                                toEmail, parentName, studentName, problem, description, 
+                                solution, extent, eventDate, eventLocation
+                            );
+                            
+                            successCount.incrementAndGet();
+                            log.debug("Health event email sent successfully to: {}", toEmail);
+                            return true;
+                        } catch (Exception e) {
+                            failureCount.incrementAndGet();
+                            log.error("Failed to send health event email to: {}", notification.get("email"), e);
+                            return false;
+                        }
+                    }, emailExecutor))
+                    .toList();
+
+            try {
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .get(timeoutSeconds * 2, TimeUnit.SECONDS);
+
+                Thread.sleep(1000);
+                
+            } catch (Exception e) {
+                log.error("Timeout or error during batch health event email sending", e);
+            }
+        }
+
+        long endTime = System.currentTimeMillis();
+        log.info("Async bulk health event email sending completed in {} ms. Success: {}, Failed: {}", 
+                (endTime - startTime), successCount.get(), failureCount.get());
+    }
+
+    @Override
+    @Async("emailTaskExecutor")
+    public CompletableFuture<Integer> sendBulkHealthEventEmailsAsyncWithResult(List<Map<String, Object>> healthEventNotifications) {
+        if (healthEventNotifications == null || healthEventNotifications.isEmpty()) {
+            log.warn("No health event notifications to send");
+            return CompletableFuture.completedFuture(0);
+        }
+
+        log.info("Starting async bulk health event email sending with result for {} notifications", healthEventNotifications.size());
+        long startTime = System.currentTimeMillis();
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failureCount = new AtomicInteger(0);
+
+        int batchSize = 5;
+        List<List<Map<String, Object>>> batches = splitIntoBatches(healthEventNotifications, batchSize);
+
+        for (List<Map<String, Object>> batch : batches) {
+            log.info("Processing batch of {} health event emails", batch.size());
+            
+            List<CompletableFuture<Boolean>> futures = batch.stream()
+                    .map(notification -> CompletableFuture.supplyAsync(() -> {
+                        try {
+                            String toEmail = (String) notification.get("email");
+                            String parentName = (String) notification.get("parentName");
+                            String studentName = (String) notification.get("studentName");
+                            String problem = (String) notification.get("problem");
+                            String description = (String) notification.get("description");
+                            String solution = (String) notification.get("solution");
+                            String extent = (String) notification.get("extent");
+                            String eventDate = (String) notification.get("eventDate");
+                            String eventLocation = (String) notification.get("eventLocation");
+                            
+                            emailService.sendHealthEventNotification(
+                                toEmail, parentName, studentName, problem, description, 
+                                solution, extent, eventDate, eventLocation
+                            );
+                            
+                            successCount.incrementAndGet();
+                            log.debug("Health event email sent successfully to: {}", toEmail);
+                            return true;
+                        } catch (Exception e) {
+                            failureCount.incrementAndGet();
+                            log.error("Failed to send health event email to: {}", notification.get("email"), e);
+                            return false;
+                        }
+                    }, emailExecutor))
+                    .toList();
+
+            try {
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .get(timeoutSeconds * 2, TimeUnit.SECONDS);
+
+                Thread.sleep(1000);
+                
+            } catch (Exception e) {
+                log.error("Timeout or error during batch health event email sending", e);
+            }
+        }
+
+        long endTime = System.currentTimeMillis();
+        int finalSuccessCount = successCount.get();
+        log.info("Async bulk health event email sending with result completed in {} ms. Success: {}, Failed: {}", 
+                (endTime - startTime), finalSuccessCount, failureCount.get());
+        
+        return CompletableFuture.completedFuture(finalSuccessCount);
+    }
+
     public void shutdown() {
         emailExecutor.shutdown();
         try {
