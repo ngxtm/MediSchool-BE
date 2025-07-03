@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.healthevent.EventMedicine;
 import com.medischool.backend.model.parentstudent.Student;
 
@@ -26,6 +27,7 @@ public class HealthEventResponseDTO {
     private String location;
     private OffsetDateTime eventTime;
     private UUID recordBy;
+    private UserProfile recordByUser;
     private String extent;
     private List<EventMedicine> eventMedicines;
 } 
