@@ -21,12 +21,12 @@ public class MedicationDispensation {
 
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = true)
-    @JsonBackReference
+    @JsonBackReference("item-dispensations")
     private MedicationRequestItem item;
 
     @ManyToOne
     @JoinColumn(name = "request_id")
-    @JsonBackReference
+    @JsonBackReference("request-dispensations")
     private MedicationRequest request;
 
     @Column(name = "nurse_id")

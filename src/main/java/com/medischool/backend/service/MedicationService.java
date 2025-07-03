@@ -2,7 +2,9 @@ package com.medischool.backend.service;
 
 //import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.dto.medication.MedicationDispensationDTO;
+import com.medischool.backend.dto.medication.MedicationRequestDTO;
 import com.medischool.backend.dto.medication.MedicationStatsDTO;
+import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
@@ -14,7 +16,7 @@ import java.util.UUID;
 public interface MedicationService {
     List<MedicationRequest> getRequestsByStudent(Integer studentId, UUID parentId) throws AccessDeniedException;
 
-    MedicationRequest createRequest(MedicationRequest request);
+    MedicationRequest createRequest(MedicationRequestDTO dto, UUID parentId) throws AccessDeniedException;
 
     MedicationRequest approveRequest(int id, UUID nurseId);
 
@@ -35,5 +37,6 @@ public interface MedicationService {
     List<MedicationDispensation> getDispensationsByRequestId(Integer requestId);
 
     MedicationStatsDTO getRequestStats();
-//    MedicationRequestDetailDTO getRequestDetail(Integer requestId, CustomUserDetails user);
+
+    MedicationRequestDTO getRequestDetail(Integer requestId);
 }

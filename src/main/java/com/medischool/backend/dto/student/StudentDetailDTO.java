@@ -1,13 +1,13 @@
 package com.medischool.backend.dto.student;
 
 import com.medischool.backend.model.enums.Gender;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Data
+@Builder
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudentDetailDTO {
