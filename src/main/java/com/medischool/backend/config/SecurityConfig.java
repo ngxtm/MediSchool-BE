@@ -57,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/consents/**").permitAll()
                         .requestMatchers("/api/medications/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers("/api/manager/**").hasAuthority("MANAGER")
                         .requestMatchers("/api/nurse/**").hasAuthority("NURSE")
                         .requestMatchers("/api/parent/**").hasAuthority("PARENT")
