@@ -24,6 +24,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import com.medischool.backend.dto.vaccination.VaccineEventEmailNotificationDTO;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -67,9 +70,6 @@ public class VaccineEventService {
                 .orElseThrow(() -> new RuntimeException("Vaccine not found"));
         VaccineEvent event = new VaccineEvent();
 
-//        UserProfile creator = userProfileRepository.findById(requestDTO.getCreatedBy())
-//                .orElseThrow(() -> new RuntimeException("User not found"));
-
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userIdStr = auth.getName();
         UUID userId = UUID.fromString(userIdStr);
@@ -81,10 +81,16 @@ public class VaccineEventService {
         event.setEventDate(requestDTO.getEventDate());
         event.setEventScope(requestDTO.getEventScope());
         event.setLocation(requestDTO.getLocation());
-        event.setStatus(requestDTO.getStatus());
         event.setCreatedAt(LocalDateTime.now());
         event.setCreatedBy(profileOpt);
-
+        
+        if (profileOpt != null && "MANAGER".equalsIgnoreCase(profileOpt.getRole())) {
+            event.setStatus(EventStatus.APPROVED);
+        } else if (requestDTO.getStatus() != null) {
+            event.setStatus(requestDTO.getStatus());
+        } else {
+            event.setStatus(EventStatus.PENDING);
+        }
 
         event = vaccineEventRepository.save(event);
 
@@ -240,6 +246,93 @@ public class VaccineEventService {
             }
         }
         return count;
+    }
+    public VaccineEventEmailNotificationDTO sendBulkEmailNotifications2(Long eventId) {
+        VaccineEvent event = vaccineEventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Vaccine event with ID " + eventId + " not found"));
+
+        List<VaccinationConsent> pendingConsents = consentRepository.findAllByEventIdAndConsentStatusIsNull(eventId);
+
+        if (pendingConsents.isEmpty()) {
+            return VaccineEventEmailNotificationDTO.builder()
+                    .eventId(eventId)
+                    .eventTitle(event.getEventTitle())
+                    .vaccineName(event.getVaccine().getName())
+                    .eventDate(event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                    .eventLocation(event.getLocation())
+                    .totalParentsNotified(0)
+                    .totalEmailsSent(0)
+                    .totalEmailsFailed(0)
+                    .message("Không có parent nào cần gửi thông báo (tất cả đã có phản hồi)")
+                    .success(true)
+                    .build();
+        }
+
+        List<Map<String, Object>> notifications = new ArrayList<>();
+        int emailsSent = 0;
+        int emailsFailed = 0;
+
+        for (VaccinationConsent consent : pendingConsents) {
+            try {
+                UserProfile parent = userProfileRepository.findById(consent.getParentId())
+                        .orElse(null);
+
+                if (parent == null || parent.getEmail() == null || parent.getEmail().trim().isEmpty()) {
+                    emailsFailed++;
+                    continue;
+                }
+
+                String studentName = "Học sinh";
+                try {
+                    var studentOpt = studentRepository.findByStudentId(consent.getStudentId());
+                    if (studentOpt.isPresent()) {
+                        studentName = studentOpt.get().getFullName();
+                    }
+                } catch (Exception e) {
+                    studentName = "Học sinh";
+                }
+
+
+                String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
+                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        consent.getId());
+
+                Map<String, Object> notification = Map.of(
+                        "email", parent.getEmail(),
+                        "parentName", parent.getFullName() != null ? parent.getFullName() : "Phụ huynh",
+                        "studentName", studentName,
+                        "vaccineName", event.getVaccine().getName(),
+                        "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        "eventLocation", event.getLocation(),
+                        "consentUrl", consentUrl
+                );
+
+                notifications.add(notification);
+                emailsSent++;
+
+            } catch (Exception e) {
+                emailsFailed++;
+            }
+        }
+
+
+        if (!notifications.isEmpty()) {
+            emailService.sendBulkVaccineConsentNotifications(notifications);
+        }
+
+        return VaccineEventEmailNotificationDTO.builder()
+                .eventId(eventId)
+                .eventTitle(event.getEventTitle())
+                .vaccineName(event.getVaccine().getName())
+                .eventDate(event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                .eventLocation(event.getLocation())
+                .totalParentsNotified(pendingConsents.size())
+                .totalEmailsSent(emailsSent)
+                .totalEmailsFailed(emailsFailed)
+                .notificationDetails(notifications)
+                .message(String.format("Đã gửi %d email thành công, %d email thất bại", emailsSent, emailsFailed))
+                .success(true)
+                .build();
     }
 
     public VaccineEventEmailNotificationDTO sendBulkEmailNotifications(Long eventId) {

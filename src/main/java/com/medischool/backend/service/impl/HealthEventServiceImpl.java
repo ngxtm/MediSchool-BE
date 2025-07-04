@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 
+import com.medischool.backend.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +54,7 @@ public class HealthEventServiceImpl implements HealthEventService {
     private final ParentStudentLinkRepository parentStudentLinkRepository;
 
     private final MedicineService medicineService;
-    private final UserProfileRepository userProfileRepository;
-
+    private final EmailService emailService;
 
     public TotalHealthEventStatusResDTO getTotalHealthEventStatusResDTO() {
         int totalEvent = healthEventRepository.findAllWithStudent().size();
@@ -296,7 +296,7 @@ public class HealthEventServiceImpl implements HealthEventService {
         }
 
         if (!notifications.isEmpty()) {
-            asyncEmailService.sendBulkHealthEventEmailsAsync(notifications);
+            emailService.sendBulkVaccineConsentNotifications(notifications);
         }
 
         return HealthEventEmailNotificationDTO.builder()
