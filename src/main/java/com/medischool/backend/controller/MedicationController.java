@@ -55,15 +55,14 @@ class MedicationController {
     }
 
     //Parents view all their requests by student
-    @GetMapping
+    @GetMapping("/student/{studentId}")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<List<MedicationRequest>> getRequestsByStudent(
             Authentication authentication,
-            @RequestParam Integer studentId) throws AccessDeniedException {
+            @PathVariable Integer studentId
+    ) throws AccessDeniedException {
         UUID parentId = UUID.fromString(authentication.getName());
-        List<MedicationRequest> requests =
-                service.getRequestsByStudent(studentId, parentId);
-
+        List<MedicationRequest> requests = service.getRequestsByStudent(studentId, parentId);
         return ResponseEntity.ok(requests);
     }
 

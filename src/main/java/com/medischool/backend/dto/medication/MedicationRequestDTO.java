@@ -29,4 +29,6 @@ public class MedicationRequestDTO {
     private Student student;
     private List<MedicationRequestItemDTO> items;
     private List<MedicationDispensationDTO> dispensations;
+    private String nurseName;
+    private String managerName;
 }
