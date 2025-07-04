@@ -1,6 +1,7 @@
 package com.medischool.backend.controller;
 
 import com.medischool.backend.dto.medication.MedicationDispensationDTO;
+import com.medischool.backend.dto.medication.MedicationRequestDTO;
 import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
@@ -54,23 +55,23 @@ class MedicationController {
     }
 
     //Parents view all their requests by student
-    @GetMapping
+    @GetMapping("/student/{studentId}")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<List<MedicationRequest>> getRequestsByStudent(
             Authentication authentication,
-            @RequestParam Integer studentId) throws AccessDeniedException {
+            @PathVariable Integer studentId
+    ) throws AccessDeniedException {
         UUID parentId = UUID.fromString(authentication.getName());
-        List<MedicationRequest> requests =
-                service.getRequestsByStudent(studentId, parentId);
-
+        List<MedicationRequest> requests = service.getRequestsByStudent(studentId, parentId);
         return ResponseEntity.ok(requests);
     }
 
     //Parents create a request
     @PostMapping
     @PreAuthorize("hasRole('PARENT')")
-    public ResponseEntity<MedicationRequest> createRequest(@RequestBody MedicationRequest request) {
-        return ResponseEntity.ok(service.createRequest(request));
+    public ResponseEntity<MedicationRequest> createRequest(@RequestBody MedicationRequestDTO dto, Authentication authentication) throws AccessDeniedException {
+        UUID parentId = UUID.fromString(authentication.getName());
+        return ResponseEntity.ok(service.createRequest(dto, parentId));
     }
 
     //Parent resubmit a request
@@ -79,7 +80,7 @@ class MedicationController {
     public ResponseEntity<MedicationRequest> resubmitRequest(
             @PathVariable Integer id,
             @RequestBody MedicationRequest updatedData,
-            @RequestParam UUID parentId
+            @RequestBody UUID parentId
     ) {
         return ResponseEntity.ok(service.resubmitRequest(id, updatedData, parentId));
     }
@@ -137,9 +138,10 @@ class MedicationController {
     }
 
 
-//    //View detail
-//    @GetMapping("/{id}/detail")
-//    public MedicationRequestDetailDTO getRequestDetail(@PathVariable Integer id) {
-//        return ResponseEntity.ok(service.getRequestDetailWithDispensations(id));
-//    }
+    //View detail
+    @GetMapping("/{id}")
+    public ResponseEntity<MedicationRequestDTO> getMedicationRequestDetail(@PathVariable Integer id) {
+        MedicationRequestDTO dto = service.getRequestDetail(id);
+        return ResponseEntity.ok(dto);
+    }
 }
