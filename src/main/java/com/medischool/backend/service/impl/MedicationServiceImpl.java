@@ -1,12 +1,16 @@
 package com.medischool.backend.service.impl;
 
-//import com.medischool.backend.dto.medication.MedicationStatsDTO;
 import com.medischool.backend.dto.medication.MedicationDispensationDTO;
+import com.medischool.backend.dto.medication.MedicationRequestDTO;
+import com.medischool.backend.dto.medication.MedicationRequestItemDTO;
 import com.medischool.backend.dto.medication.MedicationStatsDTO;
+import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
 import com.medischool.backend.model.medication.MedicationRequestItem;
+import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.repository.medication.MedicationDispensationRepository;
 import com.medischool.backend.repository.medication.MedicationRequestItemRepository;
 import com.medischool.backend.repository.medication.MedicationRequestRepository;
@@ -30,6 +34,8 @@ public class MedicationServiceImpl implements MedicationService {
     private MedicationDispensationRepository dispensationRepo;
     @Autowired
     private ParentStudentLinkRepository parentStudentRepo;
+    @Autowired
+    private UserProfileRepository userRepo;
 
     //Xem đơn dặn thuốc của học sinh
     @Override
@@ -43,28 +49,30 @@ public class MedicationServiceImpl implements MedicationService {
 
     //Phụ huynh tạo đơn dặn thuốc
     @Override
-    public MedicationRequest createRequest(MedicationRequest request) {
+    public MedicationRequest createRequest(MedicationRequestDTO dto, UUID parentId) throws AccessDeniedException {
+        MedicationRequest request = requestRepo.findById(dto.getRequestId()).get();
         request.setMedicationStatus(MedicationStatus.PENDING);
         request.setCreateAt(OffsetDateTime.now());
+        request.setParent(request.getParent());
         return requestRepo.save(request);
     }
 
     //Y tá chấp thuận đơn
     @Override
     public MedicationRequest approveRequest(int id, UUID nurseId) {
-        MedicationRequest req = requestRepo.findById(id).orElseThrow();
-        req.setMedicationStatus(MedicationStatus.APPROVED);
-        req.setConfirmBy(nurseId);
-        return requestRepo.save(req);
+        MedicationRequest request = requestRepo.findById(id).orElseThrow();
+        request.setMedicationStatus(MedicationStatus.APPROVED);
+        request.setConfirmBy(nurseId);
+        return requestRepo.save(request);
     }
 
     //Y tá từ chối đơn
     @Override
     public MedicationRequest rejectRequest(int id, UUID nurseId, String reason) {
-        MedicationRequest req = requestRepo.findById(id).orElseThrow();
-        req.setMedicationStatus(MedicationStatus.REJECTED);
-        req.setRejectReason(reason);
-        return requestRepo.save(req);
+        MedicationRequest request = requestRepo.findById(id).orElseThrow();
+        request.setMedicationStatus(MedicationStatus.REJECTED);
+        request.setRejectReason(reason);
+        return requestRepo.save(request);
     }
 
     @Override
@@ -108,6 +116,8 @@ public class MedicationServiceImpl implements MedicationService {
         dispensation.setStatus(dto.getStatus());
         dispensation.setTime(OffsetDateTime.now());
         dispensation.setNurseId(nurseId);
+        MedicationRequest request = requestRepo.findById(dto.getRequestId()).get();
+        request.setUpdateAt(OffsetDateTime.now());
 
         if (dto.getItemId() != null) {
             MedicationRequestItem item = requestItemRepo.findById(dto.getItemId())
@@ -116,7 +126,7 @@ public class MedicationServiceImpl implements MedicationService {
             dispensation.setItem(item);
             dispensation.setRequest(item.getRequest());
         } else if (dto.getRequestId() != null) {
-            MedicationRequest request = requestRepo.findById(dto.getRequestId())
+            request = requestRepo.findById(dto.getRequestId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn thuốc"));
 
             dispensation.setRequest(request);
@@ -154,13 +164,67 @@ public class MedicationServiceImpl implements MedicationService {
     @Override
     public MedicationStatsDTO getRequestStats() {
         long total = requestRepo.count();
+        long pending = requestRepo.countByMedicationStatus(MedicationStatus.PENDING);
         long approved = requestRepo.countByMedicationStatus(MedicationStatus.APPROVED);
         long rejected = requestRepo.countByMedicationStatus(MedicationStatus.REJECTED);
-        return new MedicationStatsDTO(total, approved, rejected);
+        return new MedicationStatsDTO(total, pending, approved, rejected);
     }
 
     @Override
     public List<MedicationDispensation> getDispensationsByRequestId(Integer requestId) {
         return dispensationRepo.findByRequestRequestId(requestId);
     }
+
+    @Override
+    public MedicationRequestDTO getRequestDetail(Integer requestId) {
+        MedicationRequest request = requestRepo.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Request not found for id: " + requestId));
+
+        Student student = request.getStudent();
+        UserProfile parent = request.getParent();
+        UserProfile nurse = userRepo.findSingleById(request.getReviewBy());
+        UserProfile manager = userRepo.findSingleById(request.getConfirmBy());
+        List<MedicationRequestItem> items = request.getItems();
+        List<MedicationDispensation> allDispensations = getDispensationsByRequestId(requestId);
+
+        List<MedicationRequestItemDTO> itemDTOs = items.stream().map(item ->
+                MedicationRequestItemDTO.builder()
+                        .medicineName(item.getMedicineName())
+                        .quantity(item.getQuantity())
+                        .unit(item.getUnit())
+                        .dosage(item.getDosage())
+                        .note(item.getNote())
+                        .build()
+        ).toList();
+
+        List<MedicationDispensationDTO> dispensationDTOs = allDispensations.stream().map(d -> {
+            UserProfile nursedispen = userRepo.findSingleById(d.getNurseId());
+            return MedicationDispensationDTO.builder()
+                    .nurseName(nursedispen != null ? nursedispen.getFullName() : "Không rõ")
+                    .dose(d.getDosageGiven())
+                    .note(d.getNote())
+                    .status(d.getStatus())
+                    .time(d.getTime())
+                    .build();
+        }).toList();
+
+        return MedicationRequestDTO.builder()
+                .requestId(request.getRequestId())
+                .nurseName(nurse != null ? nurse.getFullName() : "Không rõ")
+                .managerName(manager != null ? manager.getFullName() : "Không rõ")
+                .title(request.getTitle())
+                .reason(request.getReason())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .note(request.getNote())
+                .createAt(request.getCreateAt())
+                .updateAt(request.getUpdateAt())
+                .medicationStatus(request.getMedicationStatus().name())
+                .parent(parent)
+                .student(student)
+                .items(itemDTOs)
+                .dispensations(dispensationDTOs)
+                .build();
+    }
+
 }

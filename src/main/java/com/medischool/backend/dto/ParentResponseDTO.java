@@ -5,11 +5,11 @@ import java.util.UUID;
 
 import com.medischool.backend.model.enums.Gender;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
+@Builder
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ParentResponseDTO {
