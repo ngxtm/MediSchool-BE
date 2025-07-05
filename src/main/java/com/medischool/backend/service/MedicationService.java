@@ -20,7 +20,7 @@ public interface MedicationService {
 
     MedicationRequest approveRequest(int id, UUID nurseId);
 
-    MedicationRequest rejectRequest(int id, UUID nurseId, String reason);
+    MedicationRequest rejectRequest(int id, UUID nurseId, String rejectReason);
 
     MedicationRequest resubmitRequest(Integer requestId, MedicationRequest updatedRequestData, UUID parentId);
 
@@ -39,4 +39,8 @@ public interface MedicationService {
     MedicationStatsDTO getRequestStats();
 
     MedicationRequestDTO getRequestDetail(Integer requestId);
+
+    MedicationRequest disableRequest(Integer requestId);
+
+    MedicationRequestDTO updateRequest(Integer id, MedicationRequestDTO dto);
 }

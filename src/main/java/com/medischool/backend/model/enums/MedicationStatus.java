@@ -4,6 +4,7 @@ public enum MedicationStatus {
     PENDING,
     APPROVED,
     REJECTED,
-    DONE
+    DONE,
+    DISABLED
 }
 

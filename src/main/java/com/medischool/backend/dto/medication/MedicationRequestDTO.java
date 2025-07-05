@@ -17,6 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 public class MedicationRequestDTO {
     private Integer requestId;
+    private Integer studentId;
     private String title;
     private String reason;
     private LocalDate startDate;
@@ -29,6 +30,7 @@ public class MedicationRequestDTO {
     private Student student;
     private List<MedicationRequestItemDTO> items;
     private List<MedicationDispensationDTO> dispensations;
+    private String rejectReason;
     private String nurseName;
     private String managerName;
 }
