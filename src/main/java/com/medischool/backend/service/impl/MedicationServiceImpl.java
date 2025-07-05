@@ -299,8 +299,8 @@ public class MedicationServiceImpl implements MedicationService {
         request.setUpdateAt(OffsetDateTime.now());
 
         List<MedicationRequestItem> currentItems = request.getItems();
-
-        if (currentItems != null) {
+        if (currentItems != null && !currentItems.isEmpty()) {
+            requestItemRepo.deleteAll(currentItems);
             currentItems.clear();
         }
 
@@ -312,9 +312,9 @@ public class MedicationServiceImpl implements MedicationService {
             item.setQuantity(itemDto.getQuantity());
             item.setUnit(itemDto.getUnit());
             item.setNote(itemDto.getNote());
-
             currentItems.add(item);
         }
+
         return getRequestDetail(requestRepo.save(request).getRequestId());
     }
 }

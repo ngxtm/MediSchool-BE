@@ -72,7 +72,7 @@ public class MedicationRequest {
     @Column(name = "is_final_dose")
     private Boolean isFinalDose;
 
-    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("request-items")
     private List<MedicationRequestItem> items;
 
