@@ -38,8 +38,8 @@ public class HealthProfile {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private ZonedDateTime updatedAt;
-    
-    @Column(name = "student_id")
+
+    @Column(name = "student_id", insertable = false, updatable = false)
     private Integer studentId;
     
     @Column(name = "height")
@@ -85,6 +85,6 @@ public class HealthProfile {
     private String hearingGrade;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    @JoinColumn(name = "student_id", referencedColumnName = "student_id")
     private Student student;
 }
