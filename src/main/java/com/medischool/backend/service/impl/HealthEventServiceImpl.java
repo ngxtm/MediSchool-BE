@@ -3,46 +3,37 @@ package com.medischool.backend.service.impl;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import java.util.Map;
-
 import java.util.stream.Collectors;
 
-
-import com.medischool.backend.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.medischool.backend.dto.healthevent.request.HealthEventRequestDTO;
-
 import com.medischool.backend.dto.healthevent.request.HealthEventEmailNotificationDTO;
-
+import com.medischool.backend.dto.healthevent.request.HealthEventRequestDTO;
 import com.medischool.backend.dto.healthevent.response.HealthEventResponseDTO;
-
 import com.medischool.backend.dto.healthevent.response.TotalHealthEventStatusResDTO;
+import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.healthevent.EventMedicine;
 import com.medischool.backend.model.healthevent.HealthEvent;
-import com.medischool.backend.model.UserProfile;
+import com.medischool.backend.model.parentstudent.ParentStudentLink;
+import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.repository.ParentStudentLinkRepository;
+import com.medischool.backend.repository.StudentRepository;
+import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.repository.healthevent.EventMedicineRepository;
 import com.medischool.backend.repository.healthevent.HealthEventRepository;
-import com.medischool.backend.repository.UserProfileRepository;
-import com.medischool.backend.service.healthevent.HealthEventService;
-
 import com.medischool.backend.service.AsyncEmailService;
-import com.medischool.backend.repository.UserProfileRepository;
-import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.repository.ParentStudentLinkRepository;
-import com.medischool.backend.model.UserProfile;
-import com.medischool.backend.model.parentstudent.Student;
-import com.medischool.backend.model.parentstudent.ParentStudentLink;
-
+import com.medischool.backend.service.EmailService;
+import com.medischool.backend.service.healthevent.HealthEventService;
 import com.medischool.backend.service.healthevent.MedicineService;
 
-
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class HealthEventServiceImpl implements HealthEventService {
 
     private final HealthEventRepository healthEventRepository;
@@ -296,7 +287,23 @@ public class HealthEventServiceImpl implements HealthEventService {
         }
 
         if (!notifications.isEmpty()) {
-            emailService.sendBulkVaccineConsentNotifications(notifications);
+            for (Map<String, Object> notification : notifications) {
+                try {
+                    emailService.sendHealthEventNotification(
+                        (String) notification.get("email"),
+                        (String) notification.get("parentName"),
+                        (String) notification.get("studentName"),
+                        (String) notification.get("problem"),
+                        (String) notification.get("description"),
+                        (String) notification.get("solution"),
+                        (String) notification.get("extent"),
+                        (String) notification.get("eventDate"),
+                        (String) notification.get("eventLocation")
+                    );
+                } catch (Exception e) {
+                    log.error("Failed to send health event email to: {}", notification.get("email"), e);
+                }
+            }
         }
 
         return HealthEventEmailNotificationDTO.builder()
@@ -327,7 +334,6 @@ public class HealthEventServiceImpl implements HealthEventService {
                 HealthEventEmailNotificationDTO result = sendHealthEventEmailNotifications(event.getId());
                 results.add(result);
             } catch (Exception e) {
-                // Tạo kết quả lỗi cho sự kiện này
                 HealthEventEmailNotificationDTO errorResult = HealthEventEmailNotificationDTO.builder()
                         .eventId(event.getId())
                         .eventTitle("Sự kiện y tế")
