@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -44,7 +43,6 @@ public class VaccineEventService {
     private final VaccineEventRepository vaccineEventRepository;
     private final VaccineRepository vaccineRepository;
     private final ConsentRepository consentRepository;
-    private final JdbcTemplate jdbcTemplate;
     private final VaccineEventClassRepository vaccineEventClassRepository;
     private final VaccinationHistoryRepository vaccinationHistoryRepository;
     private final UserProfileRepository userProfileRepository;
