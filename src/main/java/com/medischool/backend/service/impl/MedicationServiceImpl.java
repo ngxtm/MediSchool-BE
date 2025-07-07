@@ -106,49 +106,41 @@ public class MedicationServiceImpl implements MedicationService {
     }
 
     @Override
-    public MedicationRequest approveRequest(int id, UUID nurseId) {
+    public MedicationRequest approveRequest(int id, UUID userId, String role) {
         MedicationRequest request = requestRepo.findById(id).orElseThrow();
-        request.setMedicationStatus(MedicationStatus.APPROVED);
         request.setUpdateAt(OffsetDateTime.now());
-        request.setConfirmBy(nurseId);
+        if(role.equalsIgnoreCase("nurse")){
+            request.setMedicationStatus(MedicationStatus.REVIEWED);
+            request.setReviewBy(userId);
+        } else {
+            request.setMedicationStatus(MedicationStatus.APPROVED);
+            request.setReviewBy(userId);
+            request.setConfirmBy(userId);
+        }
         return requestRepo.save(request);
     }
 
     @Override
-    public MedicationRequest rejectRequest(int id, UUID nurseId, String reason) {
+    public MedicationRequest rejectRequest(int id, UUID userId, String reason, String role) {
         MedicationRequest request = requestRepo.findById(id).orElseThrow();
         request.setMedicationStatus(MedicationStatus.REJECTED);
         request.setUpdateAt(OffsetDateTime.now());
         request.setRejectReason(reason);
+        if(role.equalsIgnoreCase("nurse")){
+            request.setReviewBy(userId);
+        } else {
+            request.setReviewBy(userId);
+            request.setConfirmBy(userId);
+        }
         return requestRepo.save(request);
     }
 
     @Override
-    public MedicationRequest resubmitRequest(Integer requestId, MedicationRequest updated, UUID parentId) {
-        MedicationRequest existing = requestRepo.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("ID không tồn tại, vui lòng thử lại!"));
-
-        if (!existing.getMedicationStatus().equals(MedicationStatus.REJECTED)) {
-            throw new IllegalStateException("Bạn không thể chỉnh sửa đơn dặn thuốc này. Hãy liên hệ y tá nếu cần hỗ trợ.");
-        }
-
-        existing.setTitle(updated.getTitle());
-        existing.setNote(updated.getNote());
-        existing.setStartDate(updated.getStartDate());
-        existing.setEndDate(updated.getEndDate());
-        existing.setMedicationStatus(MedicationStatus.PENDING);
-        existing.setRejectReason(null);
-        existing.setUpdateAt(OffsetDateTime.now());
-
-        if (updated.getItems() != null) {
-            existing.getItems().clear();
-            for (MedicationRequestItem item : updated.getItems()) {
-                item.setRequest(existing);
-                existing.getItems().add(item);
-            }
-        }
-
-        return requestRepo.save(existing);
+    public MedicationRequest receiveMedicine(int id) {
+        MedicationRequest request = requestRepo.findById(id).orElseThrow();
+        request.setMedicationStatus(MedicationStatus.DISPENSING);
+        request.setUpdateAt(OffsetDateTime.now());
+        return requestRepo.save(request);
     }
 
     @Override
