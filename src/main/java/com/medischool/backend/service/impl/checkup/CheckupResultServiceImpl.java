@@ -12,6 +12,8 @@ import com.medischool.backend.repository.checkup.CheckupCategoryRepository;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.repository.checkup.CheckupConsentRepository;
 import com.medischool.backend.service.checkup.CheckupResultService;
+import com.medischool.backend.model.checkup.CheckupBasicInfo;
+import com.medischool.backend.service.checkup.CheckupBasicInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,7 @@ public class CheckupResultServiceImpl implements CheckupResultService {
     private final CheckupCategoryRepository checkupCategoryRepository;
     private final StudentRepository studentRepository;
     private final CheckupConsentRepository checkupConsentRepository;
+    private final CheckupBasicInfoService checkupBasicInfoService;
 
     @Override
     public boolean isApproved(Long eventId, Integer studentId, Long categoryId) {
@@ -74,5 +77,44 @@ public class CheckupResultServiceImpl implements CheckupResultService {
         result.setResultData(resultData);
         result.setCheckedAt(java.time.LocalDateTime.now());
         checkupResultRepository.save(result);
+
+        // Đồng thời cập nhật CheckupBasicInfo nếu là category cơ bản
+        Long categoryId = result.getCategory().getId();
+        Integer studentId = result.getStudent().getStudentId();
+        if (categoryId != null && studentId != null) {
+            CheckupBasicInfo info = checkupBasicInfoService.getByStudentId(studentId);
+            if (info == null) {
+                info = CheckupBasicInfo.builder().build();
+            }
+            boolean updated = false;
+            switch (categoryId.intValue()) {
+                case 1:
+                    try { info.setHeight(Double.parseDouble(resultData)); updated = true; } catch (Exception ignored) {}
+                    break;
+                case 2:
+                    try { info.setWeight(Double.parseDouble(resultData)); updated = true; } catch (Exception ignored) {}
+                    break;
+                case 3:
+                    info.setBloodType(resultData); updated = true;
+                    break;
+                case 4:
+                    try { info.setVisionLeft(Double.parseDouble(resultData)); updated = true; } catch (Exception ignored) {}
+                    break;
+                case 5:
+                    try { info.setVisionRight(Double.parseDouble(resultData)); updated = true; } catch (Exception ignored) {}
+                    break;
+                case 6:
+                    info.setUnderlyingDiseases(resultData); updated = true;
+                    break;
+                case 7:
+                    info.setAllergies(resultData); updated = true;
+                    break;
+                default:
+                    break;
+            }
+            if (updated) {
+                checkupBasicInfoService.updateByStudentId(studentId, info);
+            }
+        }
     }
 } 
