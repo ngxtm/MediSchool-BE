@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.medischool.backend.model.enums.CheckupEventScope;
+import com.medischool.backend.repository.checkup.CheckupEventCategoryRepository;
+import com.medischool.backend.model.checkup.CheckupEventCategory;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +38,7 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
     private final ParentStudentLinkRepository parentStudentLinkRepository;
     private final UserProfileRepository userProfileRepository;
     private final CheckupResultRepository checkupResultRepository;
+    private final CheckupEventCategoryRepository checkupEventCategoryRepository;
 
     @Override
     public List<CheckupConsent> getConsentsForStudentInEvent(Long eventId, Integer studentId) {
@@ -163,22 +166,21 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
     @Transactional
     public void sendConsentToAllParents(Long eventId) {
         CheckupEvent event = checkupEventRepository.findById(eventId).orElseThrow();
-        List<CheckupCategory> categories = checkupCategoryRepository.findAll();
+        // Lấy categoryIds từ bảng trung gian
+        java.util.List<CheckupEventCategory> eventCategories = checkupEventCategoryRepository.findByEvent_Id(eventId);
+        java.util.List<Long> categoryIds = eventCategories.stream().map(ec -> ec.getCategory().getId()).toList();
+        if (categoryIds == null || categoryIds.isEmpty()) return;
+        List<CheckupCategory> categories = checkupCategoryRepository.findAllById(categoryIds);
         List<ParentStudentLink> links = parentStudentLinkRepository.findAll();
         for (ParentStudentLink link : links) {
             Integer studentId = link.getStudentId();
             UserProfile parent = userProfileRepository.findById(link.getParentId()).orElseThrow();
             boolean shouldSend = true;
             if (event.getScope() == CheckupEventScope.NEED_RECHECK) {
-                // Kiểm tra xem học sinh có kết quả khám nào không (trong bất kỳ event nào)
                 boolean hasAnyResult = checkupResultRepository.findByStudent_StudentId(studentId).size() > 0;
-                
-                // Kiểm tra xem học sinh có consent nào được approve trong các event trước đó không
                 boolean hasApprovedConsent = checkupConsentRepository.findByStudent_StudentId(studentId)
                     .stream()
                     .anyMatch(c -> c.getConsentStatus() == ConsentStatus.APPROVE);
-                
-                // Chỉ gửi consent nếu học sinh chưa từng được khám hoặc chưa có consent nào được approve
                 shouldSend = !hasAnyResult || !hasApprovedConsent;
             }
             if (!shouldSend) continue;
