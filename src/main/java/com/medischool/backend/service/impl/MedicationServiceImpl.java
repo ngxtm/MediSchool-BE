@@ -10,22 +10,27 @@ import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
 import com.medischool.backend.model.medication.MedicationRequestItem;
 import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.repository.medication.MedicationDispensationRepository;
 import com.medischool.backend.repository.medication.MedicationRequestItemRepository;
 import com.medischool.backend.repository.medication.MedicationRequestRepository;
 import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.service.MedicationService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class MedicationServiceImpl implements MedicationService {
+
     @Autowired
     private MedicationRequestRepository requestRepo;
     @Autowired
@@ -36,8 +41,17 @@ public class MedicationServiceImpl implements MedicationService {
     private ParentStudentLinkRepository parentStudentRepo;
     @Autowired
     private UserProfileRepository userRepo;
+    @Autowired
+    private StudentRepository studentRepo;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-    //Xem đơn dặn thuốc của học sinh
+    private void resetMedicationRequestSequence() {
+        Integer maxId = jdbcTemplate.queryForObject("SELECT MAX(request_id) FROM medication_request", Integer.class);
+        int nextId = (maxId != null ? maxId + 1 : 1);
+        jdbcTemplate.update("SELECT setval('medication_request_request_id_seq', ?, false)", nextId);
+    }
+
     @Override
     public List<MedicationRequest> getRequestsByStudent(Integer studentId, UUID parentId) throws AccessDeniedException {
         boolean linked = parentStudentRepo.existsByParentIdAndStudentId(parentId, studentId);
@@ -47,30 +61,64 @@ public class MedicationServiceImpl implements MedicationService {
         return requestRepo.findByStudentStudentId(studentId);
     }
 
-    //Phụ huynh tạo đơn dặn thuốc
     @Override
-    public MedicationRequest createRequest(MedicationRequestDTO dto, UUID parentId) throws AccessDeniedException {
-        MedicationRequest request = requestRepo.findById(dto.getRequestId()).get();
-        request.setMedicationStatus(MedicationStatus.PENDING);
+    @Transactional
+    public MedicationRequest createRequest(MedicationRequestDTO dto, UUID parentId) {
+        MedicationRequest request = new MedicationRequest();
+        request.setTitle(dto.getTitle());
+        request.setReason(dto.getReason());
+        request.setStartDate(dto.getStartDate());
+        request.setEndDate(dto.getEndDate());
+        request.setNote(dto.getNote());
         request.setCreateAt(OffsetDateTime.now());
-        request.setParent(request.getParent());
-        return requestRepo.save(request);
+        request.setUpdateAt(OffsetDateTime.now());
+        request.setMedicationStatus(MedicationStatus.PENDING);
+        request.setParent(userRepo.findById(parentId).orElseThrow());
+        request.setStudent(studentRepo.findById(dto.getStudentId()).orElseThrow());
+
+        try {
+            request = requestRepo.save(request);
+        } catch (Exception e) {
+            if (e.getMessage().contains("duplicate key value violates unique constraint")) {
+                resetMedicationRequestSequence();
+                request = requestRepo.save(request);
+            } else {
+                throw e;
+            }
+        }
+
+        if (dto.getItems() != null && !dto.getItems().isEmpty()) {
+            MedicationRequest finalRequest = request;
+            List<MedicationRequestItem> items = dto.getItems().stream().map(itemDTO -> {
+                MedicationRequestItem item = new MedicationRequestItem();
+                item.setRequest(finalRequest);
+                item.setMedicineName(itemDTO.getMedicineName());
+                item.setUnit(itemDTO.getUnit());
+                item.setQuantity(itemDTO.getQuantity());
+                item.setDosage(itemDTO.getDosage());
+                item.setNote(itemDTO.getNote());
+                return item;
+            }).toList();
+
+            requestItemRepo.saveAll(items);
+        }
+        return request;
     }
 
-    //Y tá chấp thuận đơn
     @Override
     public MedicationRequest approveRequest(int id, UUID nurseId) {
         MedicationRequest request = requestRepo.findById(id).orElseThrow();
         request.setMedicationStatus(MedicationStatus.APPROVED);
+        request.setUpdateAt(OffsetDateTime.now());
         request.setConfirmBy(nurseId);
         return requestRepo.save(request);
     }
 
-    //Y tá từ chối đơn
     @Override
     public MedicationRequest rejectRequest(int id, UUID nurseId, String reason) {
         MedicationRequest request = requestRepo.findById(id).orElseThrow();
         request.setMedicationStatus(MedicationStatus.REJECTED);
+        request.setUpdateAt(OffsetDateTime.now());
         request.setRejectReason(reason);
         return requestRepo.save(request);
     }
@@ -84,18 +132,14 @@ public class MedicationServiceImpl implements MedicationService {
             throw new IllegalStateException("Bạn không thể chỉnh sửa đơn dặn thuốc này. Hãy liên hệ y tá nếu cần hỗ trợ.");
         }
 
-        // Update fields
         existing.setTitle(updated.getTitle());
         existing.setNote(updated.getNote());
         existing.setStartDate(updated.getStartDate());
         existing.setEndDate(updated.getEndDate());
-
-        // Reset status and review fields
         existing.setMedicationStatus(MedicationStatus.PENDING);
         existing.setRejectReason(null);
         existing.setUpdateAt(OffsetDateTime.now());
 
-        // Xử lý items nếu cần (update hoặc thay thế toàn bộ)
         if (updated.getItems() != null) {
             existing.getItems().clear();
             for (MedicationRequestItem item : updated.getItems()) {
@@ -107,7 +151,6 @@ public class MedicationServiceImpl implements MedicationService {
         return requestRepo.save(existing);
     }
 
-    //Phát thuốc
     @Override
     public MedicationDispensation dispenseMedication(MedicationDispensationDTO dto, UUID nurseId) {
         MedicationDispensation dispensation = new MedicationDispensation();
@@ -116,8 +159,8 @@ public class MedicationServiceImpl implements MedicationService {
         dispensation.setStatus(dto.getStatus());
         dispensation.setTime(OffsetDateTime.now());
         dispensation.setNurseId(nurseId);
-        MedicationRequest request = requestRepo.findById(dto.getRequestId()).get();
-        request.setUpdateAt(OffsetDateTime.now());
+
+        MedicationRequest request = requestRepo.findById(dto.getRequestId()).orElseThrow();
 
         if (dto.getItemId() != null) {
             MedicationRequestItem item = requestItemRepo.findById(dto.getItemId())
@@ -125,24 +168,18 @@ public class MedicationServiceImpl implements MedicationService {
 
             dispensation.setItem(item);
             dispensation.setRequest(item.getRequest());
-        } else if (dto.getRequestId() != null) {
-            request = requestRepo.findById(dto.getRequestId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn thuốc"));
-
-            dispensation.setRequest(request);
         } else {
-            throw new IllegalArgumentException("Phải cung cấp ít nhất itemId hoặc requestId.");
+            dispensation.setRequest(request);
         }
 
         return dispensationRepo.save(dispensation);
     }
 
-
-    //Xác nhận đơn thuốc đã hoàn thành
     @Override
     public MedicationRequest markAsDone(Integer requestId) {
         MedicationRequest request = requestRepo.findById(requestId).orElseThrow();
         request.setMedicationStatus(MedicationStatus.DONE);
+        request.setUpdateAt(OffsetDateTime.now());
         return requestRepo.save(request);
     }
 
@@ -210,8 +247,10 @@ public class MedicationServiceImpl implements MedicationService {
 
         return MedicationRequestDTO.builder()
                 .requestId(request.getRequestId())
+                .studentId(student != null ? student.getStudentId() : null)
                 .nurseName(nurse != null ? nurse.getFullName() : "Không rõ")
                 .managerName(manager != null ? manager.getFullName() : "Không rõ")
+                .rejectReason(request.getRejectReason())
                 .title(request.getTitle())
                 .reason(request.getReason())
                 .startDate(request.getStartDate())
@@ -227,4 +266,55 @@ public class MedicationServiceImpl implements MedicationService {
                 .build();
     }
 
+    @Override
+    public MedicationRequest disableRequest(Integer requestId) {
+        MedicationRequest request = requestRepo.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn thuốc với ID: " + requestId));
+
+        if (request.getMedicationStatus() == MedicationStatus.APPROVED || request.getMedicationStatus() == MedicationStatus.DONE) {
+            throw new IllegalStateException("Không thể xóa đơn đã được duyệt hoặc hoàn thành.");
+        }
+
+        request.setMedicationStatus(MedicationStatus.DISABLED);
+        request.setUpdateAt(OffsetDateTime.now());
+
+        return requestRepo.save(request);
+    }
+
+    @Override
+    public MedicationRequestDTO updateRequest(Integer id, MedicationRequestDTO dto) {
+        MedicationRequest request = requestRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn thuốc với ID: " + id));
+
+        if (request.getMedicationStatus() == MedicationStatus.APPROVED
+                || request.getMedicationStatus() == MedicationStatus.DONE) {
+            throw new IllegalStateException("Không thể chỉnh sửa đơn đã được duyệt hoặc hoàn thành.");
+        }
+
+        request.setTitle(dto.getTitle());
+        request.setNote(dto.getNote());
+        request.setReason(dto.getReason());
+        request.setStartDate(dto.getStartDate());
+        request.setEndDate(dto.getEndDate());
+        request.setUpdateAt(OffsetDateTime.now());
+
+        List<MedicationRequestItem> currentItems = request.getItems();
+        if (currentItems != null && !currentItems.isEmpty()) {
+            requestItemRepo.deleteAll(currentItems);
+            currentItems.clear();
+        }
+
+        for (MedicationRequestItemDTO itemDto : dto.getItems()) {
+            MedicationRequestItem item = new MedicationRequestItem();
+            item.setRequest(request);
+            item.setMedicineName(itemDto.getMedicineName());
+            item.setDosage(itemDto.getDosage());
+            item.setQuantity(itemDto.getQuantity());
+            item.setUnit(itemDto.getUnit());
+            item.setNote(itemDto.getNote());
+            currentItems.add(item);
+        }
+
+        return getRequestDetail(requestRepo.save(request).getRequestId());
+    }
 }

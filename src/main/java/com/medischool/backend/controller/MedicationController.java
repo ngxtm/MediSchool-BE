@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -67,23 +68,13 @@ class MedicationController {
     }
 
     //Parents create a request
-    @PostMapping
+    @PostMapping("/create")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<MedicationRequest> createRequest(@RequestBody MedicationRequestDTO dto, Authentication authentication) throws AccessDeniedException {
         UUID parentId = UUID.fromString(authentication.getName());
         return ResponseEntity.ok(service.createRequest(dto, parentId));
     }
 
-    //Parent resubmit a request
-    @PutMapping("/{id}/update")
-    @PreAuthorize("hasRole('PARENT')")
-    public ResponseEntity<MedicationRequest> resubmitRequest(
-            @PathVariable Integer id,
-            @RequestBody MedicationRequest updatedData,
-            @RequestBody UUID parentId
-    ) {
-        return ResponseEntity.ok(service.resubmitRequest(id, updatedData, parentId));
-    }
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<MedicationRequest> approve(@PathVariable Integer id, Authentication authentication) {
@@ -95,11 +86,11 @@ class MedicationController {
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<MedicationRequest> reject(
             @PathVariable Integer id,
-            @RequestParam String reason,
+            @RequestParam String rejectReason,
             Authentication authentication
     ) {
         UUID nurseId = UUID.fromString(authentication.getName());
-        return ResponseEntity.ok(service.rejectRequest(id, nurseId, reason));
+        return ResponseEntity.ok(service.rejectRequest(id, nurseId, rejectReason));
     }
 
 
@@ -143,5 +134,17 @@ class MedicationController {
     public ResponseEntity<MedicationRequestDTO> getMedicationRequestDetail(@PathVariable Integer id) {
         MedicationRequestDTO dto = service.getRequestDetail(id);
         return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping("/{id}")
+    public MedicationRequestDTO disableRequest(@PathVariable Integer id) {
+        service.disableRequest(id);
+        return service.getRequestDetail(id);
+    }
+
+    @PutMapping("/{id}/update")
+    public ResponseEntity<MedicationRequestDTO> updateRequest(@PathVariable Integer id, @RequestBody MedicationRequestDTO dto) {
+        MedicationRequestDTO updated = service.updateRequest(id, dto);
+        return ResponseEntity.ok(updated);
     }
 }

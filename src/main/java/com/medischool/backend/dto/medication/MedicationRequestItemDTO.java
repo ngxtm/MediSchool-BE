@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MedicationRequestItemDTO {
+    private Integer requestId;
+    private Integer itemId;
     private String medicineName;
     private String unit;
     private String quantity;

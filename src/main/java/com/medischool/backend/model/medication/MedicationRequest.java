@@ -9,6 +9,8 @@ import com.medischool.backend.model.parentstudent.Student;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -58,17 +60,19 @@ public class MedicationRequest {
     @Column(name = "reject_reason")
     private String rejectReason;
 
-    @Setter
     @Column(name = "create_at")
+    @CreationTimestamp
     private OffsetDateTime createAt;
 
     @Column(name = "update_at")
+    @UpdateTimestamp
     private OffsetDateTime updateAt;
+
 
     @Column(name = "is_final_dose")
     private Boolean isFinalDose;
 
-    @OneToMany(mappedBy = "request")
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("request-items")
     private List<MedicationRequestItem> items;
 
