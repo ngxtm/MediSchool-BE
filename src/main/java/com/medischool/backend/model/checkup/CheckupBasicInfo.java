@@ -21,10 +21,10 @@ public class CheckupBasicInfo {
     private Student student;
 
     private String bloodType;
-    private Double height;
-    private Double weight;
-    private Double visionLeft;
-    private Double visionRight;
+    private String height;
+    private String weight;
+    private String visionLeft;
+    private String visionRight;
     private String underlyingDiseases;
     private String allergies;
 

@@ -89,19 +89,19 @@ public class CheckupResultServiceImpl implements CheckupResultService {
             boolean updated = false;
             switch (categoryId.intValue()) {
                 case 1:
-                    try { info.setHeight(Double.parseDouble(resultData)); updated = true; } catch (Exception ignored) {}
+                    try { info.setHeight(resultData); updated = true; } catch (Exception ignored) {}
                     break;
                 case 2:
-                    try { info.setWeight(Double.parseDouble(resultData)); updated = true; } catch (Exception ignored) {}
+                    try { info.setWeight(resultData); updated = true; } catch (Exception ignored) {}
                     break;
                 case 3:
                     info.setBloodType(resultData); updated = true;
                     break;
                 case 4:
-                    try { info.setVisionLeft(Double.parseDouble(resultData)); updated = true; } catch (Exception ignored) {}
+                    try { info.setVisionLeft(resultData); updated = true; } catch (Exception ignored) {}
                     break;
                 case 5:
-                    try { info.setVisionRight(Double.parseDouble(resultData)); updated = true; } catch (Exception ignored) {}
+                    try { info.setVisionRight(resultData); updated = true; } catch (Exception ignored) {}
                     break;
                 case 6:
                     info.setUnderlyingDiseases(resultData); updated = true;
