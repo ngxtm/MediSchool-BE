@@ -1,8 +1,24 @@
 package com.medischool.backend.security;
 
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.repository.UserProfileRepository;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -10,19 +26,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import javax.crypto.SecretKey;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -50,6 +53,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Optional<UserProfile> userOpt = userProfileRepository.findById(UUID.fromString(userId));
                     if (userOpt.isPresent()) {
                         UserProfile user = userOpt.get();
+                        
+                        if (user.getIsActive() != null && !user.getIsActive()) {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("User account has been deactivated. Please contact administrator.");
+                            return;
+                        }
+                        
                         String role = user.getRole();
                         List<SimpleGrantedAuthority> authorities =
                                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));

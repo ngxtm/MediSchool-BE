@@ -1,25 +1,38 @@
 package com.medischool.backend.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.medischool.backend.dto.auth.AuthResponse;
-import com.medischool.backend.dto.UserDTO;
-import com.medischool.backend.model.UserProfile;
-import com.medischool.backend.repository.UserProfileRepository;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.medischool.backend.dto.UserDTO;
+import com.medischool.backend.dto.auth.AuthResponse;
+import com.medischool.backend.model.UserProfile;
+import com.medischool.backend.repository.UserProfileRepository;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class SupabaseAuthService {
@@ -190,6 +203,10 @@ public class SupabaseAuthService {
             }
 
             UserProfile userProfile = userProfileOpt.get();
+            
+            if (userProfile.getIsActive() != null && !userProfile.getIsActive()) {
+                throw new RuntimeException("User account has been deactivated. Please contact administrator.");
+            }
             UserDTO userDto = UserDTO.builder()
                     .id(userProfile.getId())
                     .email(userProfile.getEmail())
@@ -236,6 +253,29 @@ public class SupabaseAuthService {
 
     public void signOut(String token) {
         tokenBlacklist.add(token);
+    }
+
+    public boolean deleteUserFromSupabase(UUID userId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("apikey", supabaseApiKey);
+            headers.set("Authorization", "Bearer " + supabaseApiKey);
+
+            HttpEntity<Void> request = new HttpEntity<>(headers);
+            
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    supabaseUrl + "/auth/v1/admin/users/" + userId.toString(),
+                    HttpMethod.DELETE,
+                    request,
+                    Void.class
+            );
+
+            return response.getStatusCode().is2xxSuccessful();
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete user from Supabase: " + e.getMessage());
+        }
     }
 
     private AuthResponse processAuthResponse(Map<String, Object> supabaseResponse, boolean rememberMe) {
@@ -289,13 +329,19 @@ public class SupabaseAuthService {
         Optional<UserProfile> existingUser = userProfileRepository.findById(UUID.fromString(userId));
 
         if (existingUser.isPresent()) {
-            return existingUser.get();
+            UserProfile user = existingUser.get();
+            
+            if (user.getIsActive() != null && !user.getIsActive()) {
+                throw new RuntimeException("User account has been deactivated. Please contact administrator.");
+            }
+            
+            return user;
         } else {
             UserProfile newUser = new UserProfile();
             newUser.setId(UUID.fromString(userId));
             newUser.setEmail(email);
             newUser.setFullName((String) userData.getOrDefault("user_metadata.full_name", ""));
-            newUser.setRole("PARENT"); // Default role
+            newUser.setRole("PARENT");
 
             return userProfileRepository.save(newUser);
         }
