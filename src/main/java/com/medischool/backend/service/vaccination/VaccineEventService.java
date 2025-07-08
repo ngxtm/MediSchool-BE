@@ -1,32 +1,41 @@
 package com.medischool.backend.service.vaccination;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
+import com.medischool.backend.dto.vaccination.VaccineEventEmailNotificationDTO;
 import com.medischool.backend.dto.vaccination.VaccineEventRequestDTO;
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.ConsentStatus;
-import com.medischool.backend.model.vaccine.*;
 import com.medischool.backend.model.enums.EventStatus;
-import com.medischool.backend.repository.*;
+import com.medischool.backend.model.vaccine.VaccinationConsent;
+import com.medischool.backend.model.vaccine.VaccinationHistory;
+import com.medischool.backend.model.vaccine.Vaccine;
+import com.medischool.backend.model.vaccine.VaccineEvent;
+import com.medischool.backend.model.vaccine.VaccineEventClass;
+import com.medischool.backend.repository.ConsentRepository;
+import com.medischool.backend.repository.ParentStudentLinkRepository;
+import com.medischool.backend.repository.StudentRepository;
+import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.repository.vaccination.VaccinationHistoryRepository;
 import com.medischool.backend.repository.vaccination.VaccineEventClassRepository;
 import com.medischool.backend.repository.vaccination.VaccineEventRepository;
 import com.medischool.backend.repository.vaccination.VaccineRepository;
 import com.medischool.backend.service.AsyncEmailService;
 import com.medischool.backend.service.EmailService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-import com.medischool.backend.dto.vaccination.VaccineEventEmailNotificationDTO;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +43,6 @@ public class VaccineEventService {
     private final VaccineEventRepository vaccineEventRepository;
     private final VaccineRepository vaccineRepository;
     private final ConsentRepository consentRepository;
-    private final JdbcTemplate jdbcTemplate;
     private final VaccineEventClassRepository vaccineEventClassRepository;
     private final VaccinationHistoryRepository vaccinationHistoryRepository;
     private final UserProfileRepository userProfileRepository;
@@ -464,4 +472,328 @@ public class VaccineEventService {
         }
     }
 
+    public Map<String, Object> sendSelectiveEmailNotificationsByConsents(Long eventId, List<Long> consentIds) {
+        System.out.println("=== SELECTIVE EMAIL DEBUG ===");
+        System.out.println("Event ID: " + eventId);
+        System.out.println("Consent IDs received: " + consentIds);
+
+        if (consentIds == null || consentIds.isEmpty()) {
+            System.out.println("ERROR: Consent IDs list is null or empty");
+            return Map.of(
+                    "success", false,
+                    "message", "Danh sách consent không được để trống",
+                    "data", Map.of(
+                            "sentEmails", 0,
+                            "failedEmails", 0,
+                            "details", List.of()
+                    )
+            );
+        }
+
+        VaccineEvent event;
+        try {
+            event = vaccineEventRepository.findById(eventId)
+                    .orElseThrow(() -> new RuntimeException("Vaccine event with ID " + eventId + " not found"));
+            System.out.println("Found vaccine event: " + event.getEventTitle());
+        } catch (Exception e) {
+            System.out.println("ERROR: Failed to find vaccine event: " + e.getMessage());
+            throw e;
+        }
+
+        List<VaccinationConsent> selectedConsents = new ArrayList<>();
+        for (Long consentId : consentIds) {
+            try {
+                VaccinationConsent consent = consentRepository.findById(consentId).orElse(null);
+                if (consent != null && consent.getEventId().equals(eventId) && consent.getConsentStatus() == null) {
+                    selectedConsents.add(consent);
+                    System.out.println("  - Found pending consent ID: " + consentId + " for student: " + consent.getStudentId());
+                } else {
+                    System.out.println("  - Consent ID: " + consentId + " not found, wrong event, or already responded");
+                }
+            } catch (Exception e) {
+                System.out.println("  - Error finding consent ID: " + consentId + ", error: " + e.getMessage());
+            }
+        }
+        
+        System.out.println("Found " + selectedConsents.size() + " valid pending consents");
+
+        if (selectedConsents.isEmpty()) {
+            System.out.println("No valid pending consents found");
+            return Map.of(
+                    "success", true,
+                    "message", "Không có phụ huynh nào cần gửi email (tất cả đã có phản hồi hoặc consent không hợp lệ)",
+                    "data", Map.of(
+                            "sentEmails", 0,
+                            "failedEmails", 0,
+                            "details", List.of()
+                    )
+            );
+        }
+
+        List<Map<String, Object>> notifications = new ArrayList<>();
+        List<Map<String, Object>> details = new ArrayList<>();
+        int emailsSent = 0;
+        int emailsFailed = 0;
+
+        for (VaccinationConsent consent : selectedConsents) {
+            try {
+                System.out.println("Processing consent ID: " + consent.getId() + " for student ID: " + consent.getStudentId());
+                
+                UserProfile parent = userProfileRepository.findById(consent.getParentId())
+                        .orElse(null);
+
+                if (parent == null || parent.getEmail() == null || parent.getEmail().trim().isEmpty()) {
+                    System.out.println("  - Failed: Parent not found or no email");
+                    emailsFailed++;
+                    details.add(Map.of(
+                            "consentId", consent.getId(),
+                            "studentId", consent.getStudentId(),
+                            "status", "failed",
+                            "timestamp", LocalDateTime.now().toString(),
+                            "reason", "Parent email not found"
+                    ));
+                    continue;
+                }
+
+                String studentName = "Học sinh";
+                try {
+                    var studentOpt = studentRepository.findByStudentId(consent.getStudentId());
+                    if (studentOpt.isPresent()) {
+                        studentName = studentOpt.get().getFullName();
+                    }
+                } catch (Exception e) {
+                    System.out.println("  - Warning: Could not find student name: " + e.getMessage());
+                    studentName = "Học sinh";
+                }
+
+                String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
+                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        consent.getId());
+
+                Map<String, Object> notification = Map.of(
+                        "email", parent.getEmail(),
+                        "parentName", parent.getFullName() != null ? parent.getFullName() : "Phụ huynh",
+                        "studentName", studentName,
+                        "vaccineName", event.getVaccine().getName(),
+                        "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        "eventLocation", event.getLocation(),
+                        "consentUrl", consentUrl
+                );
+
+                notifications.add(notification);
+                emailsSent++;
+                
+                System.out.println("  - Success: Prepared email for " + parent.getEmail());
+                details.add(Map.of(
+                        "consentId", consent.getId(),
+                        "studentId", consent.getStudentId(),
+                        "status", "sent",
+                        "timestamp", LocalDateTime.now().toString(),
+                        "parentEmail", parent.getEmail()
+                ));
+
+            } catch (Exception e) {
+                System.out.println("  - Error processing consent: " + e.getMessage());
+                emailsFailed++;
+                details.add(Map.of(
+                        "consentId", consent.getId(),
+                        "studentId", consent.getStudentId(),
+                        "status", "failed",
+                        "timestamp", LocalDateTime.now().toString(),
+                        "reason", e.getMessage()
+                ));
+            }
+        }
+
+        if (!notifications.isEmpty()) {
+            try {
+                System.out.println("Sending " + notifications.size() + " email notifications...");
+                emailService.sendBulkVaccineConsentNotifications(notifications);
+                System.out.println("Email sending completed");
+            } catch (Exception e) {
+                System.out.println("ERROR: Failed to send emails: " + e.getMessage());
+                throw new RuntimeException("Failed to send emails: " + e.getMessage());
+            }
+        }
+
+        System.out.println("=== RESULT ===");
+        System.out.println("Emails sent: " + emailsSent);
+        System.out.println("Emails failed: " + emailsFailed);
+
+        return Map.of(
+                "success", true,
+                "message", String.format("Đã gửi email thành công tới %d phụ huynh", emailsSent),
+                "data", Map.of(
+                        "sentEmails", emailsSent,
+                        "failedEmails", emailsFailed,
+                        "details", details
+                )
+        );
+    }
+
+
+    public Map<String, Object> sendSelectiveEmailNotifications(Long eventId, List<Long> studentIds) {
+        System.out.println("=== SELECTIVE EMAIL DEBUG ===");
+        System.out.println("Event ID: " + eventId);
+        System.out.println("Student IDs received: " + studentIds);
+
+        if (studentIds == null || studentIds.isEmpty()) {
+            System.out.println("ERROR: Student IDs list is null or empty");
+            return Map.of(
+                    "success", false,
+                    "message", "Danh sách học sinh không được để trống",
+                    "data", Map.of(
+                            "sentEmails", 0,
+                            "failedEmails", 0,
+                            "details", List.of()
+                    )
+            );
+        }
+
+        VaccineEvent event;
+        try {
+            event = vaccineEventRepository.findById(eventId)
+                    .orElseThrow(() -> new RuntimeException("Vaccine event with ID " + eventId + " not found"));
+            System.out.println("Found vaccine event: " + event.getEventTitle());
+        } catch (Exception e) {
+            System.out.println("ERROR: Failed to find vaccine event: " + e.getMessage());
+            throw e;
+        }
+
+        List<Integer> integerStudentIds = studentIds.stream()
+                .map(Long::intValue)
+                .collect(Collectors.toList());
+        System.out.println("Converted to Integer IDs: " + integerStudentIds);
+
+        List<VaccinationConsent> allPendingConsents;
+        try {
+            allPendingConsents = consentRepository.findAllByEventIdAndConsentStatusIsNull(eventId);
+            System.out.println("Found " + allPendingConsents.size() + " total pending consents for event");
+        } catch (Exception e) {
+            System.out.println("ERROR: Failed to find pending consents: " + e.getMessage());
+            throw new RuntimeException("Failed to find pending consents: " + e.getMessage());
+        }
+
+        // Find pending consents for specific students
+        List<VaccinationConsent> selectedConsents = allPendingConsents
+                .stream()
+                .filter(consent -> integerStudentIds.contains(consent.getStudentId()))
+                .collect(Collectors.toList());
+        
+        System.out.println("Found " + selectedConsents.size() + " consents for selected students");
+        selectedConsents.forEach(consent -> 
+            System.out.println("  - Student ID: " + consent.getStudentId() + ", Parent ID: " + consent.getParentId())
+        );
+
+        if (selectedConsents.isEmpty()) {
+            System.out.println("No matching consents found");
+            return Map.of(
+                    "success", true,
+                    "message", "Không có phụ huynh nào cần gửi email (tất cả học sinh đã có phản hồi)",
+                    "data", Map.of(
+                            "sentEmails", 0,
+                            "failedEmails", 0,
+                            "details", List.of()
+                    )
+            );
+        }
+
+        List<Map<String, Object>> notifications = new ArrayList<>();
+        List<Map<String, Object>> details = new ArrayList<>();
+        int emailsSent = 0;
+        int emailsFailed = 0;
+
+        for (VaccinationConsent consent : selectedConsents) {
+            try {
+                System.out.println("Processing consent for student ID: " + consent.getStudentId());
+                
+                UserProfile parent = userProfileRepository.findById(consent.getParentId())
+                        .orElse(null);
+
+                if (parent == null || parent.getEmail() == null || parent.getEmail().trim().isEmpty()) {
+                    System.out.println("  - Failed: Parent not found or no email");
+                    emailsFailed++;
+                    details.add(Map.of(
+                            "studentId", consent.getStudentId(),
+                            "status", "failed",
+                            "timestamp", LocalDateTime.now().toString(),
+                            "reason", "Parent email not found"
+                    ));
+                    continue;
+                }
+
+                String studentName = "Học sinh";
+                try {
+                    var studentOpt = studentRepository.findByStudentId(consent.getStudentId());
+                    if (studentOpt.isPresent()) {
+                        studentName = studentOpt.get().getFullName();
+                    }
+                } catch (Exception e) {
+                    System.out.println("  - Warning: Could not find student name: " + e.getMessage());
+                    studentName = "Học sinh";
+                }
+
+                String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
+                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        consent.getId());
+
+                Map<String, Object> notification = Map.of(
+                        "email", parent.getEmail(),
+                        "parentName", parent.getFullName() != null ? parent.getFullName() : "Phụ huynh",
+                        "studentName", studentName,
+                        "vaccineName", event.getVaccine().getName(),
+                        "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                        "eventLocation", event.getLocation(),
+                        "consentUrl", consentUrl
+                );
+
+                notifications.add(notification);
+                emailsSent++;
+                
+                System.out.println("  - Success: Prepared email for " + parent.getEmail());
+                details.add(Map.of(
+                        "studentId", consent.getStudentId(),
+                        "status", "sent",
+                        "timestamp", LocalDateTime.now().toString(),
+                        "parentEmail", parent.getEmail()
+                ));
+
+            } catch (Exception e) {
+                System.out.println("  - Error processing consent: " + e.getMessage());
+                emailsFailed++;
+                details.add(Map.of(
+                        "studentId", consent.getStudentId(),
+                        "status", "failed",
+                        "timestamp", LocalDateTime.now().toString(),
+                        "reason", e.getMessage()
+                ));
+            }
+        }
+
+        // Send emails if there are any
+        if (!notifications.isEmpty()) {
+            try {
+                System.out.println("Sending " + notifications.size() + " email notifications...");
+                emailService.sendBulkVaccineConsentNotifications(notifications);
+                System.out.println("Email sending completed");
+            } catch (Exception e) {
+                System.out.println("ERROR: Failed to send emails: " + e.getMessage());
+                throw new RuntimeException("Failed to send emails: " + e.getMessage());
+            }
+        }
+
+        System.out.println("=== RESULT ===");
+        System.out.println("Emails sent: " + emailsSent);
+        System.out.println("Emails failed: " + emailsFailed);
+
+        return Map.of(
+                "success", true,
+                "message", String.format("Đã gửi email thành công tới %d phụ huynh", emailsSent),
+                "data", Map.of(
+                        "sentEmails", emailsSent,
+                        "failedEmails", emailsFailed,
+                        "details", details
+                )
+        );
+    }
 }

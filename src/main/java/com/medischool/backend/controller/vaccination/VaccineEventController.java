@@ -1,18 +1,21 @@
 package com.medischool.backend.controller.vaccination;
 
-import com.medischool.backend.dto.vaccination.VaccineEventRequestDTO;
-import com.medischool.backend.dto.vaccination.VaccineEventEmailNotificationDTO;
-import com.medischool.backend.model.vaccine.VaccineEvent;
-import com.medischool.backend.service.vaccination.VaccineEventService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.medischool.backend.dto.vaccination.SelectiveEmailRequestDTO;
+import com.medischool.backend.dto.vaccination.VaccineEventEmailNotificationDTO;
+import com.medischool.backend.dto.vaccination.VaccineEventRequestDTO;
+import com.medischool.backend.model.vaccine.VaccineEvent;
+import com.medischool.backend.service.vaccination.VaccineEventService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/vaccine-events")
@@ -40,13 +43,42 @@ public class VaccineEventController {
     }
 
     @PostMapping("/{eventId}/send-email-notifications")
-    @Operation(summary = "Send bulk email notifications to parents for vaccine consent")
-    public ResponseEntity<VaccineEventEmailNotificationDTO> sendEmailNotifications(@PathVariable Long eventId) {
+    @Operation(summary = "Send email notifications to parents for vaccine consent")
+    public ResponseEntity<?> sendEmailNotifications(@PathVariable Long eventId) {
+        System.out.println("=== BULK EMAIL ENDPOINT HIT ===");
+        System.out.println("Event ID: " + eventId);
+        System.out.println("Timestamp: " + LocalDateTime.now());
+        
         try {
             VaccineEventEmailNotificationDTO result = vaccineEventService.sendBulkEmailNotifications2(eventId);
+            System.out.println("=== BULK EMAIL RESULT ===");
+            System.out.println("Result: " + result);
             return ResponseEntity.ok(result);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            System.err.println("=== BULK EMAIL ERROR ===");
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Lỗi khi gửi email: " + e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/{eventId}/send-selective-emails")
+    @Operation(summary = "Send selective email notifications to specific consents")
+    public ResponseEntity<?> sendSelectiveEmailNotifications(
+            @PathVariable Long eventId,
+            @RequestBody SelectiveEmailRequestDTO request) {
+        try {
+            Map<String, Object> result = vaccineEventService.sendSelectiveEmailNotificationsByConsents(eventId, request.getConsentIds());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Lỗi khi gửi email: " + e.getMessage()
+            ));
         }
     }
 
