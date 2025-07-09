@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -22,5 +23,15 @@ public class ClassController {
     @GetMapping
     public ResponseEntity<List<Classes>> getAllClasses() {
         return ResponseEntity.ok(classesService.findAll());
+    }
+
+    @GetMapping("/grades")
+    public ResponseEntity<List<String>> getAllGrades() {
+        return ResponseEntity.ok(classesService.findAllGrades());
+    }
+
+    @GetMapping("/by-grade")
+    public ResponseEntity<List<Classes>> getByGrade(@RequestParam String grade) {
+        return ResponseEntity.ok(classesService.findByGrade(grade));
     }
 }

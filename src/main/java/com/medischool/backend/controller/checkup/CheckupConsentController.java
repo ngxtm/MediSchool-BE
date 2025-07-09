@@ -29,12 +29,12 @@ public class CheckupConsentController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/event/{eventId}/send-all")
-    @Operation(summary = "Send consents to all parents")
-    public ResponseEntity<Void> sendConsentToAllParents(@PathVariable Long eventId) {
-        checkupConsentService.sendConsentToAllParents(eventId);
-        return ResponseEntity.ok().build();
-    }
+//    @PostMapping("/event/{eventId}/send-all")
+//    @Operation(summary = "Send consents to all parents")
+//    public ResponseEntity<Void> sendConsentToAllParents(@PathVariable Long eventId) {
+//        checkupConsentService.sendConsentToAllParents(eventId);
+//        return ResponseEntity.ok().build();
+//    }
 
     @GetMapping("/{consentId}")
     @Operation(summary = "Get consent by ID")

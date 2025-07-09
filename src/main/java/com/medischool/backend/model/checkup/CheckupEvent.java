@@ -1,11 +1,14 @@
 package com.medischool.backend.model.checkup;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.CheckupEventScope;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "checkup_event")
@@ -14,6 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class CheckupEvent {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,6 +36,9 @@ public class CheckupEvent {
 
     private String status;
 
+    @Enumerated(EnumType.STRING)
+    private CheckupEventScope scope;
+
     @ManyToOne
     @JoinColumn(name = "created_by")
     private UserProfile createdBy;
@@ -39,9 +46,7 @@ public class CheckupEvent {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Transient
-    private java.util.List<Long> categoryIds;
-
-    @Enumerated(EnumType.STRING)
-    private CheckupEventScope scope;
-} 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<CheckupEventCategory> eventCategories;
+}
