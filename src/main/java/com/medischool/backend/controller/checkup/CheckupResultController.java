@@ -15,21 +15,21 @@ import java.util.List;
 public class CheckupResultController {
     private final CheckupResultService checkupResultService;
 
-    @PutMapping("/{resultId}")
-    @Operation(summary = "Record checkup result")
-    public ResponseEntity<?> recordResult(
-            @PathVariable Long resultId,
-            @RequestBody CheckupResultRequest body
-    ) {
-        checkupResultService.updateResultById(resultId, body.getResultData());
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/event/{eventId}/student/{studentId}")
-    @Operation(summary = "Get checkup results for student in event")
-    public ResponseEntity<List<?>> getResultsForStudentInEvent(@PathVariable Long eventId, @PathVariable Integer studentId) {
-        return ResponseEntity.ok(checkupResultService.getResultsForStudentInEvent(eventId, studentId));
-    }
+//    @PutMapping("/{resultId}")
+//    @Operation(summary = "Record checkup result")
+//    public ResponseEntity<?> recordResult(
+//            @PathVariable Long resultId,
+//            @RequestBody CheckupResultRequest body
+//    ) {
+//        checkupResultService.updateResultById(resultId, body.getResultData());
+//        return ResponseEntity.ok().build();
+//    }
+//
+//    @GetMapping("/event/{eventId}/student/{studentId}")
+//    @Operation(summary = "Get checkup results for student in event")
+//    public ResponseEntity<List<?>> getResultsForStudentInEvent(@PathVariable Long eventId, @PathVariable Integer studentId) {
+//        return ResponseEntity.ok(checkupResultService.getResultsForStudentInEvent(eventId, studentId));
+//    }
 
     @Data
     public static class CheckupResultRequest {
