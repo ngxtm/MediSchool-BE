@@ -52,7 +52,10 @@ class MedicationController {
     @GetMapping("/approved")
 //    @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationRequest>> getApprovedRequests() {
-        return ResponseEntity.ok(service.getRequestsByStatus(MedicationStatus.APPROVED));
+        List<MedicationRequest> approved = service.getRequestsByStatus(MedicationStatus.APPROVED);
+        List<MedicationRequest> dispensing = service.getRequestsByStatus(MedicationStatus.DISPENSING);
+        approved.addAll(dispensing);
+        return ResponseEntity.ok(approved);
     }
 
     //Parents view all their requests by student
@@ -76,10 +79,20 @@ class MedicationController {
     }
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasRole('NURSE')")
+    @PreAuthorize("hasRole('NURSE') || hasRole('MANAGER')")
     public ResponseEntity<MedicationRequest> approve(@PathVariable Integer id, Authentication authentication) {
-        UUID nurseId = UUID.fromString(authentication.getName());
-        return ResponseEntity.ok(service.approveRequest(id, nurseId));
+        UUID userId = UUID.fromString(authentication.getName());
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse("UNKNOWN");
+        return ResponseEntity.ok(service.approveRequest(id, userId, role));
+    }
+
+    @PutMapping("/{id}/receive")
+    @PreAuthorize("hasRole('NURSE')")
+    public ResponseEntity<MedicationRequest> receive(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.receiveMedicine(id));
     }
 
     @PutMapping("/{id}/reject")
@@ -90,9 +103,12 @@ class MedicationController {
             Authentication authentication
     ) {
         UUID nurseId = UUID.fromString(authentication.getName());
-        return ResponseEntity.ok(service.rejectRequest(id, nurseId, rejectReason));
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse("UNKNOWN");
+        return ResponseEntity.ok(service.rejectRequest(id, nurseId, rejectReason, role));
     }
-
 
     //Nurse dispense medicine
     @PostMapping("/{requestId}/dispense")

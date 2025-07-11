@@ -1,12 +1,9 @@
 package com.medischool.backend.model.enums;
 
-public enum MedicationStatus {
+public enum CheckupConsentStatus {
+    NOT_SENT,
     PENDING,
-    REVIEWED,
     APPROVED,
     REJECTED,
-    DISPENSING,
-    DONE,
-    DISABLED
+    REMIND_LATER
 }
-

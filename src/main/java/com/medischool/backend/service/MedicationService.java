@@ -18,11 +18,11 @@ public interface MedicationService {
 
     MedicationRequest createRequest(MedicationRequestDTO dto, UUID parentId) throws AccessDeniedException;
 
-    MedicationRequest approveRequest(int id, UUID nurseId);
+    MedicationRequest approveRequest(int id, UUID userId, String role);
 
-    MedicationRequest rejectRequest(int id, UUID nurseId, String rejectReason);
+    MedicationRequest rejectRequest(int id, UUID userId, String rejectReason, String role);
 
-    MedicationRequest resubmitRequest(Integer requestId, MedicationRequest updatedRequestData, UUID parentId);
+    MedicationRequest receiveMedicine(int id);
 
     MedicationDispensation dispenseMedication(MedicationDispensationDTO dto, UUID nurseId);
 

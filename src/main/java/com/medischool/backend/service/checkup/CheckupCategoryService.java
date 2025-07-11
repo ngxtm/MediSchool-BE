@@ -9,4 +9,5 @@ public interface CheckupCategoryService {
     CheckupCategory getCategoryById(Long id);
     CheckupCategory updateCategory(Long id, CheckupCategory category);
     void deleteCategory(Long id);
+    List<CheckupCategory> getCategoriesByEvent(Long eventId);
 } 
