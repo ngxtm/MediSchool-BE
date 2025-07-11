@@ -56,11 +56,11 @@ build/
 ### VS Code ###
 .vscode/
 
-# Maven Wrapper
-.mvn/wrapper/maven-wrapper.properties
+# # Maven Wrapper
+# .mvn/wrapper/maven-wrapper.properties
 
-# Maven Wrapper
-mvnw
-mvnw.cmd
+# # Maven Wrapper
+# mvnw
+# mvnw.cmd
 
 .env
