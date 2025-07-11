@@ -9,49 +9,62 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CheckupConsentDTO {
     private Long id;
-    private Long eventId;
-    private Integer studentId;
-    private String studentCode;
-    private String studentName;
-    private String classCode;
-
-    private String parentName;
-    private String contactPhone;
-    private String contactEmail;
-    private LocalDateTime createdAt;
+    private String eventTitle;
     private String schoolYear;
-
     private String consentStatus;
     private String note;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    private Integer studentId;
+    private String studentName;
+    private String studentCode;
+    private String classCode;
+    private String gender;
+    private String dob;
+
+    private String parentName;
+    private String parentEmail;
+    private String parentPhone;
+
+    private boolean replied;
+    private boolean accepted;
+
+    private String eventStatus;
 
     private List<CheckupCategoryConsentDTO> categoryConsents;
 
-    public CheckupConsentDTO(CheckupEventConsent entity, List<CheckupCategoryConsent> categoryConsentList) {
+    public CheckupConsentDTO(CheckupEventConsent entity, List<CheckupCategoryConsent> categories) {
         this.id = entity.getId();
-        this.eventId = entity.getEvent().getId();
+        this.eventTitle = entity.getEvent().getEventTitle();
+        this.schoolYear = entity.getEvent().getSchoolYear();
+        this.consentStatus = entity.getConsentStatus().name();
+        this.note = entity.getNote();
+        this.createdAt = entity.getCreatedAt();
+        this.updatedAt = entity.getUpdatedAt();
+
         this.studentId = entity.getStudent().getStudentId();
-        this.studentCode = entity.getStudent().getStudentCode();
         this.studentName = entity.getStudent().getFullName();
+        this.studentCode = entity.getStudent().getStudentCode();
         this.classCode = entity.getStudent().getClassCode();
+        this.gender = entity.getStudent().getGender().name();
+        this.dob = entity.getStudent().getDateOfBirth().toString();
 
         this.parentName = entity.getParent().getFullName();
-        this.contactPhone = entity.getParent().getPhone();
-        this.contactEmail = entity.getParent().getEmail();
-        this.createdAt = entity.getCreatedAt();
-        this.schoolYear = entity.getEvent().getSchoolYear();
+        this.parentEmail = entity.getParent().getEmail();
+        this.parentPhone = entity.getParent().getPhone();
 
-        CheckupConsentStatus status = entity.getConsentStatus();
-        this.consentStatus = status != null ? status.name() : "NOT_SENT";
-        this.note = entity.getNote();
+        this.replied = entity.getConsentStatus() != CheckupConsentStatus.PENDING;
+        this.accepted = entity.getConsentStatus() == CheckupConsentStatus.APPROVED;
+        this.eventStatus = entity.getEvent().getStatus();
 
-        this.categoryConsents = categoryConsentList.stream()
+        this.categoryConsents = categories.stream()
                 .map(CheckupCategoryConsentDTO::new)
                 .toList();
     }

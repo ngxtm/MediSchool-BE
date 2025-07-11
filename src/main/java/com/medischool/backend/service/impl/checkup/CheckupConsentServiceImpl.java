@@ -174,10 +174,11 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
 
                 for (CheckupCategoryConsent categoryConsent : categoryConsents) {
                     if (categoryConsent.getCategoryConsentStatus() == CheckupConsentStatus.APPROVED) {
-                        CheckupResultItem item = CheckupResultItem.builder()
-                                .result(result)
-                                .eventCategory(categoryConsent.getEventCategory())
-                                .build();
+                        CheckupResultItem item = new CheckupResultItem();
+                        item.setEventCategory(categoryConsent.getEventCategory()); // ✅ Sửa đúng biến
+                        item.setResult(result);
+                        item.setStatus(null); // bạn có thể set null hoặc giữ nguyên
+                        item.setCreatedAt(LocalDateTime.now()); // ✅ BẮT BUỘC
                         checkupResultItemRepository.save(item);
                     }
                 }

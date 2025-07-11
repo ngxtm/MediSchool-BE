@@ -7,7 +7,7 @@ import java.util.Map;
 
 @Data
 public class CheckupConsentResponseDTO {
-    private CheckupConsentStatus overallStatus; // APPROVED / REJECTED
-    private String note; // optional
-    private Map<Long, String> categoryReplies; // key: eventCategoryId, value: "APPROVED"/"REJECTED"
+    private CheckupConsentStatus overallStatus;
+    private String note;
+    private Map<Long, String> categoryReplies; // categoryId -> "APPROVED"/"REJECTED"
 }
