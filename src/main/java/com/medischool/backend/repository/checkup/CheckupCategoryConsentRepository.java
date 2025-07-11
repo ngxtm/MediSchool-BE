@@ -14,4 +14,5 @@ public interface CheckupCategoryConsentRepository extends JpaRepository<CheckupC
     List<CheckupCategoryConsent> findByConsentId(Long consentId);
     boolean existsByConsentAndEventCategory(CheckupEventConsent consent, CheckupEventCategory category);
 
+    List<CheckupCategoryConsent> findAllByConsentId(Long id);
 }

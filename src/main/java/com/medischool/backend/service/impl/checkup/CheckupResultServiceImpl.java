@@ -1,29 +1,124 @@
 package com.medischool.backend.service.impl.checkup;
 
+import com.medischool.backend.dto.checkup.CheckupResultDTO;
+import com.medischool.backend.dto.checkup.CheckupResultItemDTO;
+import com.medischool.backend.dto.checkup.CheckupResultUpdateDTO;
+import com.medischool.backend.model.UserProfile;
+import com.medischool.backend.model.checkup.CheckupEvent;
 import com.medischool.backend.model.checkup.CheckupResult;
+import com.medischool.backend.model.checkup.CheckupResultItem;
 import com.medischool.backend.model.enums.ConsentStatus;
-import com.medischool.backend.repository.checkup.CheckupResultRepository;
-import com.medischool.backend.repository.checkup.CheckupEventRepository;
-import com.medischool.backend.repository.checkup.CheckupCategoryRepository;
+import com.medischool.backend.model.enums.ResultStatus;
+import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.repository.checkup.*;
 import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.repository.checkup.CheckupConsentRepository;
 import com.medischool.backend.service.checkup.CheckupResultService;
 import com.medischool.backend.model.checkup.CheckupBasicInfo;
 import com.medischool.backend.service.checkup.CheckupBasicInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CheckupResultServiceImpl implements CheckupResultService {
     private final CheckupResultRepository checkupResultRepository;
-    private final CheckupEventRepository checkupEventRepository;
-    private final CheckupCategoryRepository checkupCategoryRepository;
-    private final StudentRepository studentRepository;
-    private final CheckupConsentRepository checkupConsentRepository;
-    private final CheckupBasicInfoService checkupBasicInfoService;
+    private final CheckupResultItemRepository checkupResultItemRepository;
+
+    @Override
+    public CheckupResultDTO getResultDetail(Long resultId) {
+        CheckupResult result = checkupResultRepository.findById(resultId)
+                .orElseThrow(() -> new RuntimeException("Result not found"));
+
+        List<CheckupResultItem> items = checkupResultItemRepository.findByResultId(resultId);
+        List<CheckupResultItemDTO> itemDTOs = items.stream()
+                .map(CheckupResultItemDTO::new)
+                .collect(Collectors.toList());
+
+        var student = result.getStudent();
+        var parent = result.getConsent().getParent();
+        var event = result.getEvent();
+
+        return new CheckupResultDTO(
+                event.getEventTitle(),
+                event.getSchoolYear(),
+                event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+
+                student.getFullName(),
+                student.getStudentCode(),
+                student.getClassCode(),
+                student.getGender().name(),
+                student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+
+                parent.getFullName(),
+                parent.getEmail(),
+                parent.getPhone(),
+
+                itemDTOs
+        );
+    }
+
+    @Override
+    public CheckupResultDTO convertToDTO(CheckupResult result) {
+        Student student = result.getStudent();
+        CheckupEvent event = result.getEvent();
+        UserProfile parent = result.getConsent().getParent();
+
+        return new CheckupResultDTO(
+                event.getEventTitle(),
+                event.getSchoolYear(),
+                event.getCreatedAt().toString(),
+
+                student.getFullName(),
+                student.getStudentCode(),
+                student.getClassCode(),
+                student.getGender().name(),
+                student.getDateOfBirth().toString(),
+
+                parent != null ? parent.getFullName() : "",
+                parent != null ? parent.getEmail() : "",
+                parent != null ? parent.getPhone() : "",
+
+                result.getResultItems().stream()
+                        .map(CheckupResultItemDTO::new)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    @Override
+    public List<CheckupResultDTO> getResultsByEventId(Long eventId) {
+        List<CheckupResult> results = checkupResultRepository.findByEventId(eventId);
+
+        return results.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CheckupResultDTO> getResultsByStudentId(Integer studentId) {
+        List<CheckupResult> results = checkupResultRepository.findByStudent_StudentId(studentId);
+
+        return results.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public CheckupResultItemDTO updateResultItem(Long itemId, CheckupResultUpdateDTO dto) {
+        CheckupResultItem item = checkupResultItemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Result item not found"));
+
+        item.setValue(dto.getValue());
+        item.setStatus(ResultStatus.valueOf(dto.getStatus()));
+
+        checkupResultItemRepository.save(item);
+        return new CheckupResultItemDTO(item);
+    }
+
+
+}
 
 //    @Override
 //    public boolean isApproved(Long eventId, Integer studentId, Long categoryId) {
@@ -112,4 +207,3 @@ public class CheckupResultServiceImpl implements CheckupResultService {
 //            }
 //        }
 //    }
-} 

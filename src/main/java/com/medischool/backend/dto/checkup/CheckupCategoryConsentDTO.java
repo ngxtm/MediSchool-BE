@@ -1,29 +1,21 @@
 package com.medischool.backend.dto.checkup;
 
 import com.medischool.backend.model.checkup.CheckupCategoryConsent;
-import com.medischool.backend.model.enums.CheckupConsentStatus;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CheckupCategoryConsentDTO {
-    private Long id;
-    private Long consentId;
     private Long eventCategoryId;
-    private CheckupConsentStatus categoryConsentStatus;
+    private String categoryName;
+    private String status;
     private String note;
 
-    public CheckupCategoryConsentDTO(CheckupCategoryConsent consent) {
-        this.id = consent.getId();
-        this.consentId = consent.getConsent().getId();
-        this.eventCategoryId = consent.getEventCategory().getId();
-        this.categoryConsentStatus = consent.getCategoryConsentStatus();
-        this.note = consent.getNote();
+    public CheckupCategoryConsentDTO(CheckupCategoryConsent entity) {
+        this.eventCategoryId = entity.getEventCategory().getId();
+        this.categoryName = entity.getEventCategory().getCategory().getName(); // nếu có CheckupCategory trong EventCategory
+        this.status = entity.getCategoryConsentStatus() != null ? entity.getCategoryConsentStatus().name() : "PENDING";
+        this.note = entity.getNote();
     }
 }
-

@@ -1,6 +1,7 @@
 package com.medischool.backend.controller.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupConsentDTO;
+import com.medischool.backend.dto.checkup.CheckupConsentResponseDTO;
 import com.medischool.backend.model.checkup.CheckupEventConsent;
 import com.medischool.backend.service.checkup.CheckupConsentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +20,12 @@ public class CheckupConsentController {
 
     private final CheckupConsentService checkupConsentService;
 
+    @GetMapping("/student/{studentId}")
+    @Operation(summary = "Get all consents for a student")
+    public ResponseEntity<List<CheckupConsentDTO>> getConsentsByStudent(@PathVariable Integer studentId) {
+        return ResponseEntity.ok(checkupConsentService.getConsentsByStudentId(studentId));
+    }
+
     @GetMapping("/event/{eventId}")
     @Operation(summary = "Get all consents for an event")
     public ResponseEntity<List<CheckupConsentDTO>> getAllConsentsForEvent(@PathVariable Long eventId) {
@@ -31,12 +38,21 @@ public class CheckupConsentController {
         return ResponseEntity.ok(result);
     }
 
-//    // ✅ Get consent by ID
-//    @GetMapping("/consent/{consentId}")
-//    @Operation(summary = "Get consent by ID")
-//    public ResponseEntity<CheckupEventConsent> getConsentById(@PathVariable Long consentId) {
-//        return ResponseEntity.ok(checkupConsentService.getConsentById(consentId));
-//    }
+    @GetMapping("/consent/{consentId}")
+    @Operation(summary = "Get consent by ID")
+    public ResponseEntity<CheckupConsentDTO> getConsentById(@PathVariable Long consentId) {
+        return ResponseEntity.ok(checkupConsentService.getConsentById(consentId));
+    }
+
+    @PutMapping("/consent/{id}/reply")
+    public ResponseEntity<CheckupConsentDTO> submitParentConsentReply(
+            @PathVariable Long id,
+            @RequestBody CheckupConsentResponseDTO dto
+    ) {
+        CheckupConsentDTO response = checkupConsentService.submitParentConsentReply(id, dto);
+        return ResponseEntity.ok(response);
+    }
+
 //
 //    // ✅ Get consents for a student in event
 //    @GetMapping("/event/{eventId}/student/{studentId}")

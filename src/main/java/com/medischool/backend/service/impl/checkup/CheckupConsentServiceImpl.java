@@ -1,6 +1,7 @@
 package com.medischool.backend.service.impl.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupConsentDTO;
+import com.medischool.backend.dto.checkup.CheckupConsentResponseDTO;
 import com.medischool.backend.model.checkup.*;
 import com.medischool.backend.model.enums.CheckupConsentStatus;
 import com.medischool.backend.model.parentstudent.Student;
@@ -35,6 +36,8 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
     private final CheckupEventCategoryRepository checkupEventCategoryRepository;
     private final CheckupEventClassRepository checkupEventClassRepository;
     private final CheckupCategoryConsentRepository categoryConsentRepository;
+    private final CheckupResultRepository checkupResultRepository;
+    private final CheckupResultItemRepository checkupResultItemRepository;
 
     public Map<String, Object> sendConsentsToAllStudents(Long eventId) {
         CheckupEvent event = checkupEventRepository.findById(eventId)
@@ -116,7 +119,83 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
     public List<CheckupConsentDTO> getAllConsentsForEvent(Long eventId) {
         List<CheckupEventConsent> consents = checkupConsentRepository.findByEventId(eventId);
         return consents.stream()
-                .map(consent -> new CheckupConsentDTO(consent))
-                .collect(Collectors.toList());
+                .map(consent -> {
+                    List<CheckupCategoryConsent> categoryConsents = categoryConsentRepository.findAllByConsentId(consent.getId());
+                    return new CheckupConsentDTO(consent, categoryConsents);
+                })
+                .toList();
+    }
+
+    @Override
+    public CheckupConsentDTO getConsentById(Long id) {
+        CheckupEventConsent consent = checkupConsentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Checkup consent not found with ID: " + id));
+        List<CheckupCategoryConsent> categoryConsents = categoryConsentRepository.findAllByConsentId(consent.getId());
+        return new CheckupConsentDTO(consent, categoryConsents);
+    }
+
+    @Override
+    @Transactional
+    public CheckupConsentDTO submitParentConsentReply(Long consentId, CheckupConsentResponseDTO dto) {
+        CheckupEventConsent consent = checkupConsentRepository.findById(consentId)
+                .orElseThrow(() -> new RuntimeException("Consent not found"));
+
+        consent.setConsentStatus(dto.getOverallStatus());
+        consent.setNote(dto.getNote());
+        consent.setUpdatedAt(LocalDateTime.now());
+        checkupConsentRepository.save(consent);
+
+        Map<Long, String> categoryReplies = dto.getCategoryReplies();
+        List<CheckupCategoryConsent> categoryConsents = categoryConsentRepository.findAllByConsentId(consentId);
+
+        for (CheckupCategoryConsent categoryConsent : categoryConsents) {
+            Long categoryId = categoryConsent.getEventCategory().getId();
+            if (categoryReplies.containsKey(categoryId)) {
+                String reply = categoryReplies.get(categoryId);
+                if ("APPROVED".equalsIgnoreCase(reply)) {
+                    categoryConsent.setCategoryConsentStatus(CheckupConsentStatus.APPROVED);
+                } else if ("REJECTED".equalsIgnoreCase(reply)) {
+                    categoryConsent.setCategoryConsentStatus(CheckupConsentStatus.REJECTED);
+                }
+                categoryConsentRepository.save(categoryConsent);
+            }
+        }
+
+        // ✅ Nếu toàn bộ đơn được duyệt, tạo kết quả khám và kết quả từng hạng mục
+        if (dto.getOverallStatus() == CheckupConsentStatus.APPROVED) {
+            boolean exists = checkupResultRepository.existsByConsentId(consent.getId());
+            if (!exists) {
+                CheckupResult result = CheckupResult.builder()
+                        .consent(consent)
+                        .student(consent.getStudent())
+                        .event(consent.getEvent())
+                        .build();
+                result = checkupResultRepository.save(result);
+
+                for (CheckupCategoryConsent categoryConsent : categoryConsents) {
+                    if (categoryConsent.getCategoryConsentStatus() == CheckupConsentStatus.APPROVED) {
+                        CheckupResultItem item = CheckupResultItem.builder()
+                                .result(result)
+                                .eventCategory(categoryConsent.getEventCategory())
+                                .build();
+                        checkupResultItemRepository.save(item);
+                    }
+                }
+            }
+        }
+
+        return new CheckupConsentDTO(consent, categoryConsents);
+    }
+
+    @Override
+    public List<CheckupConsentDTO> getConsentsByStudentId(Integer studentId) {
+        List<CheckupEventConsent> consents = checkupConsentRepository.findByStudent_StudentId(studentId);
+        return consents.stream()
+                .map(consent -> {
+                    List<CheckupCategoryConsent> categoryConsents =
+                            categoryConsentRepository.findAllByConsentId(consent.getId());
+                    return new CheckupConsentDTO(consent, categoryConsents);
+                })
+                .toList();
     }
 }

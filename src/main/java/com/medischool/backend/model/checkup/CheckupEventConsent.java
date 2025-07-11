@@ -6,6 +6,8 @@ import com.medischool.backend.model.parentstudent.Student;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "checkup_event_consent")
@@ -41,4 +43,7 @@ public class CheckupEventConsent {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "consent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<CheckupCategoryConsent> categoryConsents = new ArrayList<>();
 } 

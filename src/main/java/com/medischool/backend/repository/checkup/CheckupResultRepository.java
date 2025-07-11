@@ -8,7 +8,8 @@ import java.util.List;
 
 @Repository
 public interface CheckupResultRepository extends JpaRepository<CheckupResult, Long> {
-    List<CheckupResult> findByEvent_IdAndStudent_StudentId(Long eventId, Integer studentId);
-    List<CheckupResult> findByEvent_Id(Long eventId);
+    boolean existsByConsentId(Long consentId);
+    CheckupResult findByConsentId(Long consentId);
+    List<CheckupResult> findByEventId(Long eventId);
     List<CheckupResult> findByStudent_StudentId(Integer studentId);
 } 
