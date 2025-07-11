@@ -1,4 +1,4 @@
-# MediSchool-BE
+# MediSchool Backend
 
 <details>
 <summary>Hướng dẫn dành cho dev</summary>

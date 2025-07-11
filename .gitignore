@@ -62,3 +62,5 @@ build/
 # Maven Wrapper
 mvnw
 mvnw.cmd
+
+.env

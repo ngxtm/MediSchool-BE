@@ -1,393 +1,531 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.dto.student.StudentImportDTO;
-import com.medischool.backend.dto.student.StudentImportResponseDTO;
-import com.medischool.backend.model.enums.Gender;
-import com.medischool.backend.model.enums.StudentStatus;
-import com.medischool.backend.model.parentstudent.Student;
-import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.service.ExcelImportService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
+import com.medischool.backend.dto.UserImportDTO;
+import com.medischool.backend.dto.UserImportResponseDTO;
+import com.medischool.backend.model.UserProfile;
+import com.medischool.backend.model.enums.Gender;
+import com.medischool.backend.repository.UserProfileRepository;
+import com.medischool.backend.service.ExcelImportService;
+import com.medischool.backend.service.SupabaseAuthService;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Implementation of ExcelImportService for user management
+ * Handles import/export with Supabase auth integration
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ExcelImportServiceImpl implements ExcelImportService {
 
-    private final StudentRepository studentRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final SupabaseAuthService supabaseAuthService;
+
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final DateTimeFormatter DATE_FORMATTER_2 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    private static final String[] EXPECTED_HEADERS = {
+            "Full Name", "Email", "Phone", "Role", "Address", "Gender", "Date of Birth"
+    };
+
+    @Override
+    public boolean validateExcelFormat(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return false;
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null
+                || (!filename.toLowerCase().endsWith(".xlsx") && !filename.toLowerCase().endsWith(".xls"))) {
+            return false;
+        }
+
+        String contentType = file.getContentType();
+        return contentType != null
+                && (contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
+                        contentType.equals("application/vnd.ms-excel"));
+    }
 
     @Override
     @Transactional
-    public StudentImportResponseDTO importStudentsFromExcel(MultipartFile file) {
-        List<StudentImportDTO> errors = new ArrayList<>();
-        int successCount = 0;
+    public UserImportResponseDTO importUsersFromExcel(MultipartFile file) {
+        log.info("Starting user import from Excel file: {}", file.getOriginalFilename());
+
+        if (!validateExcelFormat(file)) {
+            return createErrorResponse("Invalid file format. Please upload an Excel file (.xlsx or .xls)");
+        }
+
+        List<UserImportDTO> errors = new ArrayList<>();
+        List<UserProfile> successfulUsers = new ArrayList<>();
         int totalRows = 0;
 
-        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
-            
-            // Skip header row
+
+            if (!validateHeaders(sheet)) {
+                return createErrorResponse("Invalid Excel headers. Please use the provided template.");
+            }
+
             for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 Row row = sheet.getRow(rowIndex);
-                if (row == null) continue;
-                
+                if (row == null || isEmptyRow(row)) {
+                    continue;
+                }
+
                 totalRows++;
-                StudentImportDTO studentImport = parseRow(row, rowIndex + 1);
-                
-                if (studentImport.isValid()) {
+                log.debug("Processing row {}", rowIndex + 1);
+
+                UserImportDTO userImport = parseUserRow(row, rowIndex + 1);
+
+                if (userImport.isValid()) {
                     try {
-                        Student student = convertToStudent(studentImport);
-                        studentRepository.save(student);
-                        successCount++;
-                        log.info("Successfully imported student: {}", student.getFullName());
+                        UserProfile createdUser = createUserAccount(userImport);
+                        successfulUsers.add(createdUser);
+                        log.info("Successfully created user: {} ({})", createdUser.getFullName(),
+                                createdUser.getEmail());
                     } catch (Exception e) {
-                        studentImport.setValid(false);
-                        studentImport.setErrorMessage("Database error: " + e.getMessage());
-                        errors.add(studentImport);
-                        log.error("Failed to save student at row {}: {}", rowIndex + 1, e.getMessage());
+                        log.error("Failed to create user at row {}: {}", rowIndex + 1, e.getMessage());
+                        userImport.setValid(false);
+                        userImport.setErrorMessage("Account creation failed: " + e.getMessage());
+                        errors.add(userImport);
                     }
                 } else {
-                    errors.add(studentImport);
+                    errors.add(userImport);
                 }
             }
-            
-            String message = String.format("Import completed. Success: %d, Errors: %d", successCount, errors.size());
-            return StudentImportResponseDTO.builder()
+
+            String message = String.format("Import completed. Success: %d, Errors: %d",
+                    successfulUsers.size(), errors.size());
+
+            return UserImportResponseDTO.builder()
                     .success(errors.isEmpty())
                     .totalRows(totalRows)
-                    .successCount(successCount)
+                    .successCount(successfulUsers.size())
                     .errorCount(errors.size())
                     .errors(errors)
                     .message(message)
                     .build();
-                    
-        } catch (IOException e) {
-            log.error("Error reading Excel file: {}", e.getMessage());
-            return StudentImportResponseDTO.builder()
-                    .success(false)
-                    .totalRows(0)
-                    .successCount(0)
-                    .errorCount(0)
-                    .errors(new ArrayList<>())
-                    .message("Error reading Excel file: " + e.getMessage())
-                    .build();
-        }
-    }
-
-    private StudentImportDTO parseRow(Row row, int rowNumber) {
-        StudentImportDTO studentImport = StudentImportDTO.builder()
-                .rowNumber(rowNumber)
-                .isValid(true)
-                .build();
-
-        try {
-            // Parse each column
-            studentImport.setStudentCode(getStringCellValue(row.getCell(0), "Student Code"));
-            studentImport.setFullName(getStringCellValue(row.getCell(1), "Full Name"));
-            studentImport.setClassCode(getStringCellValue(row.getCell(2), "Class Code"));
-            studentImport.setGrade(getIntegerCellValue(row.getCell(3), "Grade"));
-            studentImport.setDateOfBirth(getDateCellValue(row.getCell(4), "Date of Birth"));
-            studentImport.setAddress(getStringCellValue(row.getCell(5), "Address"));
-            studentImport.setGender(getStringCellValue(row.getCell(6), "Gender"));
-            studentImport.setEnrollmentDate(getDateCellValue(row.getCell(7), "Enrollment Date"));
-            studentImport.setEmergencyContact(getStringCellValue(row.getCell(8), "Emergency Contact"));
-            studentImport.setEmergencyPhone(getStringCellValue(row.getCell(9), "Emergency Phone"));
-            studentImport.setStatus(getStringCellValue(row.getCell(10), "Status"));
-            studentImport.setAvatar(getStringCellValue(row.getCell(11), "Avatar"));
-
-            // Validate required fields
-            validateStudentImport(studentImport);
 
         } catch (Exception e) {
-            studentImport.setValid(false);
-            studentImport.setErrorMessage("Parsing error: " + e.getMessage());
-        }
-
-        return studentImport;
-    }
-
-    private String getStringCellValue(Cell cell, String fieldName) {
-        if (cell == null) return null;
-        
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue().trim();
-            case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue());
-            default:
-                return null;
+            log.error("Error processing Excel file: {}", e.getMessage());
+            return createErrorResponse("Error processing file: " + e.getMessage());
         }
     }
 
-    private Integer getIntegerCellValue(Cell cell, String fieldName) {
-        if (cell == null) return null;
-        
-        switch (cell.getCellType()) {
-            case NUMERIC:
-                return (int) cell.getNumericCellValue();
-            case STRING:
-                try {
-                    return Integer.parseInt(cell.getStringCellValue().trim());
-                } catch (NumberFormatException e) {
-                    return null;
-                }
-            default:
-                return null;
-        }
-    }
+    @Override
+    public byte[] generateUserImportTemplate() {
+        log.info("Generating user import template");
 
-    private LocalDate getDateCellValue(Cell cell, String fieldName) {
-        if (cell == null) return null;
-        switch (cell.getCellType()) {
-            case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    return cell.getLocalDateTimeCellValue().toLocalDate();
-                }
-                return null;
-            case STRING:
-                String value = cell.getStringCellValue().trim();
-                try {
-                    return LocalDate.parse(value, DATE_FORMATTER);
-                } catch (DateTimeParseException e1) {
-                    try {
-                        return LocalDate.parse(value, DATE_FORMATTER_2);
-                    } catch (DateTimeParseException e2) {
-                        return null;
-                    }
-                }
-            default:
-                return null;
-        }
-    }
-
-    private void validateStudentImport(StudentImportDTO studentImport) {
-        List<String> errors = new ArrayList<>();
-
-        // Required fields validation
-        if (studentImport.getStudentCode() == null || studentImport.getStudentCode().isEmpty()) {
-            errors.add("Student Code is required");
-        }
-        if (studentImport.getFullName() == null || studentImport.getFullName().isEmpty()) {
-            errors.add("Full Name is required");
-        }
-        if (studentImport.getClassCode() == null || studentImport.getClassCode().isEmpty()) {
-            errors.add("Class Code is required");
-        }
-
-        // Gender validation
-        if (studentImport.getGender() != null && !studentImport.getGender().isEmpty()) {
-            try {
-                Gender.valueOf(studentImport.getGender().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                errors.add("Invalid gender value. Must be MALE, FEMALE, or OTHER");
-            }
-        }
-
-        // Status validation
-        if (studentImport.getStatus() != null && !studentImport.getStatus().isEmpty()) {
-            try {
-                StudentStatus.valueOf(studentImport.getStatus().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                errors.add("Invalid status value. Must be ACTIVE, INACTIVE, or SUSPENDED");
-            }
-        }
-
-        if (!errors.isEmpty()) {
-            studentImport.setValid(false);
-            studentImport.setErrorMessage(String.join("; ", errors));
-        }
-    }
-
-    private Student convertToStudent(StudentImportDTO studentImport) {
-        Student student = new Student();
-        student.setStudentCode(studentImport.getStudentCode());
-        student.setFullName(studentImport.getFullName());
-        student.setClassCode(studentImport.getClassCode());
-        student.setGrade(studentImport.getGrade());
-        student.setDateOfBirth(studentImport.getDateOfBirth());
-        student.setAddress(studentImport.getAddress());
-        
-        if (studentImport.getGender() != null && !studentImport.getGender().isEmpty()) {
-            student.setGender(Gender.valueOf(studentImport.getGender().toUpperCase()));
-        }
-        
-        student.setEnrollmentDate(studentImport.getEnrollmentDate());
-        student.setEmergencyContact(studentImport.getEmergencyContact());
-        student.setEmergencyPhone(studentImport.getEmergencyPhone());
-        
-        if (studentImport.getStatus() != null && !studentImport.getStatus().isEmpty()) {
-            student.setStatus(StudentStatus.valueOf(studentImport.getStatus().toUpperCase()));
-        } else {
-            student.setStatus(StudentStatus.ACTIVE); // Default status
-        }
-        
-        student.setAvatar(studentImport.getAvatar());
-        
-        return student;
-    }
-
-
-    public byte[] generateStudentImportTemplate() {
         try (Workbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            
-            Sheet sheet = workbook.createSheet("Students");
-            
-            // Create header row
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Users");
+
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle instructionStyle = createInstructionStyle(workbook);
+
             Row headerRow = sheet.createRow(0);
-            String[] headers = {
-                "Student Code*", "Full Name*", "Class Code*", "Grade", "Date of Birth (dd/MM/yyyy)", 
-                "Address", "Gender (MALE/FEMALE/OTHER)", "Enrollment Date (dd/MM/yyyy)", 
-                "Emergency Contact", "Emergency Phone", "Status (ACTIVE/INACTIVE/SUSPENDED)", "Avatar"
-            };
-            
-            // Create header style
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setFontHeightInPoints((short) 12);
-            headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setBorderBottom(BorderStyle.THIN);
-            headerStyle.setBorderTop(BorderStyle.THIN);
-            headerStyle.setBorderRight(BorderStyle.THIN);
-            headerStyle.setBorderLeft(BorderStyle.THIN);
-            
-            // Add headers
-            for (int i = 0; i < headers.length; i++) {
+            for (int i = 0; i < EXPECTED_HEADERS.length; i++) {
                 Cell cell = headerRow.createCell(i);
-                cell.setCellValue(headers[i]);
+                cell.setCellValue(EXPECTED_HEADERS[i] + (isRequiredField(EXPECTED_HEADERS[i]) ? "*" : ""));
                 cell.setCellStyle(headerStyle);
-                sheet.setColumnWidth(i, 20 * 256); // Set column width
+                sheet.setColumnWidth(i, 20 * 256);
             }
-            
-            // Add sample data row
-            Row sampleRow = sheet.createRow(1);
-            sampleRow.createCell(0).setCellValue("ST001");
-            sampleRow.createCell(1).setCellValue("Nguyễn Văn A");
-            sampleRow.createCell(2).setCellValue("10A1");
-            sampleRow.createCell(3).setCellValue(10);
-            sampleRow.createCell(4).setCellValue("15/03/2008");
-            sampleRow.createCell(5).setCellValue("123 Đường ABC, Quận 1, TP.HCM");
-            sampleRow.createCell(6).setCellValue("MALE");
-            sampleRow.createCell(7).setCellValue("01/09/2023");
-            sampleRow.createCell(8).setCellValue("Nguyễn Văn B");
-            sampleRow.createCell(9).setCellValue("0901234567");
-            sampleRow.createCell(10).setCellValue("ACTIVE");
-            sampleRow.createCell(11).setCellValue("avatar1.jpg");
-            
-            // Add instruction row
-            Row instructionRow = sheet.createRow(3);
-            Cell instructionCell = instructionRow.createCell(0);
-            instructionCell.setCellValue("HƯỚNG DẪN:");
-            CellStyle instructionStyle = workbook.createCellStyle();
-            Font instructionFont = workbook.createFont();
-            instructionFont.setBold(true);
-            instructionFont.setColor(IndexedColors.RED.getIndex());
-            instructionStyle.setFont(instructionFont);
-            instructionCell.setCellStyle(instructionStyle);
-            
-            Row instructionRow2 = sheet.createRow(4);
-            Cell instructionCell2 = instructionRow2.createCell(0);
-            instructionCell2.setCellValue("- Các cột có dấu * là bắt buộc");
-            instructionCell2.setCellStyle(instructionStyle);
-            
-            Row instructionRow3 = sheet.createRow(5);
-            Cell instructionCell3 = instructionRow3.createCell(0);
-            instructionCell3.setCellValue("- Định dạng ngày tháng: dd/MM/yyyy (ví dụ: 15/03/2008)");
-            instructionCell3.setCellStyle(instructionStyle);
-            
-            Row instructionRow4 = sheet.createRow(6);
-            Cell instructionCell4 = instructionRow4.createCell(0);
-            instructionCell4.setCellValue("- Gender: MALE, FEMALE, OTHER");
-            instructionCell4.setCellStyle(instructionStyle);
-            
-            Row instructionRow5 = sheet.createRow(7);
-            Cell instructionCell5 = instructionRow5.createCell(0);
-            instructionCell5.setCellValue("- Status: ACTIVE, INACTIVE, SUSPENDED");
-            instructionCell5.setCellStyle(instructionStyle);
-            
-            // Write to output stream
+
+            addSampleData(sheet);
+
+            addInstructions(sheet, instructionStyle);
+
             workbook.write(outputStream);
-            outputStream.flush();
-            
-            log.info("Excel template generated successfully");
+            log.info("Template generated successfully");
             return outputStream.toByteArray();
-            
+
         } catch (IOException e) {
-            log.error("Error generating Excel template: {}", e.getMessage());
+            log.error("Error generating template: {}", e.getMessage());
             throw new RuntimeException("Failed to generate Excel template", e);
         }
     }
 
     @Override
-    public byte[] generateStudentListExcel(List<Student> students) {
+    public byte[] exportUsersToExcel(List<UserProfile> users) {
+        log.info("Exporting {} users to Excel", users.size());
+
         try (Workbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("Students");
-            // Header
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            Sheet sheet = workbook.createSheet("Users");
+            CellStyle headerStyle = createHeaderStyle(workbook);
+
             Row headerRow = sheet.createRow(0);
-            String[] headers = {
-                "Student Code", "Full Name", "Class Code", "Grade", "Date of Birth", 
-                "Address", "Gender", "Enrollment Date", "Emergency Contact", "Emergency Phone", "Status", "Avatar"
-            };
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerFont.setFontHeightInPoints((short) 12);
-            headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            headerStyle.setBorderBottom(BorderStyle.THIN);
-            headerStyle.setBorderTop(BorderStyle.THIN);
-            headerStyle.setBorderRight(BorderStyle.THIN);
-            headerStyle.setBorderLeft(BorderStyle.THIN);
-            for (int i = 0; i < headers.length; i++) {
+            for (int i = 0; i < EXPECTED_HEADERS.length; i++) {
                 Cell cell = headerRow.createCell(i);
-                cell.setCellValue(headers[i]);
+                cell.setCellValue(EXPECTED_HEADERS[i]);
                 cell.setCellStyle(headerStyle);
                 sheet.setColumnWidth(i, 20 * 256);
             }
-            // Data
-            int rowIdx = 1;
-            for (Student s : students) {
-                Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(s.getStudentCode() != null ? s.getStudentCode() : "");
-                row.createCell(1).setCellValue(s.getFullName() != null ? s.getFullName() : "");
-                row.createCell(2).setCellValue(s.getClassCode() != null ? s.getClassCode() : "");
-                row.createCell(3).setCellValue(s.getGrade() != null ? s.getGrade() : 0);
-                row.createCell(4).setCellValue(s.getDateOfBirth() != null ? s.getDateOfBirth().toString() : "");
-                row.createCell(5).setCellValue(s.getAddress() != null ? s.getAddress() : "");
-                row.createCell(6).setCellValue(s.getGender() != null ? s.getGender().name() : "");
-                row.createCell(7).setCellValue(s.getEnrollmentDate() != null ? s.getEnrollmentDate().toString() : "");
-                row.createCell(8).setCellValue(s.getEmergencyContact() != null ? s.getEmergencyContact() : "");
-                row.createCell(9).setCellValue(s.getEmergencyPhone() != null ? s.getEmergencyPhone() : "");
-                row.createCell(10).setCellValue(s.getStatus() != null ? s.getStatus().name() : "");
-                row.createCell(11).setCellValue(s.getAvatar() != null ? s.getAvatar() : "");
+
+            int rowIndex = 1;
+            for (UserProfile user : users) {
+                Row row = sheet.createRow(rowIndex++);
+                populateUserRow(row, user);
             }
+
             workbook.write(outputStream);
-            outputStream.flush();
+            log.info("Export completed successfully");
             return outputStream.toByteArray();
+
         } catch (IOException e) {
-            log.error("Error generating Excel student list: {}", e.getMessage());
-            throw new RuntimeException("Failed to generate Excel student list", e);
+            log.error("Error exporting users: {}", e.getMessage());
+            throw new RuntimeException("Failed to export users to Excel", e);
         }
     }
-} 
+
+    private boolean validateHeaders(Sheet sheet) {
+        Row headerRow = sheet.getRow(0);
+        if (headerRow == null) {
+            return false;
+        }
+
+        for (int i = 0; i < EXPECTED_HEADERS.length; i++) {
+            Cell cell = headerRow.getCell(i);
+            if (cell == null) {
+                return false;
+            }
+
+            String headerValue = cell.getStringCellValue().trim().replace("*", "");
+            if (!EXPECTED_HEADERS[i].equals(headerValue)) {
+                log.warn("Header mismatch at column {}: expected '{}', found '{}'",
+                        i, EXPECTED_HEADERS[i], headerValue);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isEmptyRow(Row row) {
+        for (int i = 0; i < EXPECTED_HEADERS.length; i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != org.apache.poi.ss.usermodel.CellType.BLANK) {
+                String value = getCellValueAsString(cell);
+                if (value != null && !value.trim().isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private UserImportDTO parseUserRow(Row row, int rowNumber) {
+        UserImportDTO userImport = UserImportDTO.builder()
+                .rowNumber(rowNumber)
+                .isValid(true)
+                .build();
+
+        try {
+            userImport.setFullName(getCellValueAsString(row.getCell(0)));
+            userImport.setEmail(getCellValueAsString(row.getCell(1)));
+            userImport.setPhone(getCellValueAsString(row.getCell(2)));
+            userImport.setRole(getCellValueAsString(row.getCell(3)));
+            userImport.setAddress(getCellValueAsString(row.getCell(4)));
+            userImport.setGender(getCellValueAsString(row.getCell(5)));
+            userImport.setDateOfBirth(getCellValueAsString(row.getCell(6)));
+
+            validateUserImport(userImport);
+
+        } catch (Exception e) {
+            log.error("Error parsing row {}: {}", rowNumber, e.getMessage());
+            userImport.setValid(false);
+            userImport.setErrorMessage("Parsing error: " + e.getMessage());
+        }
+
+        return userImport;
+    }
+
+    private void validateUserImport(UserImportDTO userImport) {
+        List<String> errors = new ArrayList<>();
+
+        if (isBlank(userImport.getFullName())) {
+            errors.add("Full Name is required");
+        }
+        if (isBlank(userImport.getEmail())) {
+            errors.add("Email is required");
+        }
+        if (isBlank(userImport.getRole())) {
+            errors.add("Role is required");
+        }
+
+        if (!isBlank(userImport.getEmail()) && !isValidEmail(userImport.getEmail())) {
+            errors.add("Invalid email format");
+        }
+
+        if (!isBlank(userImport.getRole()) && !isValidRole(userImport.getRole())) {
+            errors.add("Invalid role. Must be ADMIN, MANAGER, NURSE, or PARENT");
+        }
+
+        if (!isBlank(userImport.getGender()) && !isValidGender(userImport.getGender())) {
+            errors.add("Invalid gender. Must be MALE, FEMALE, or OTHER");
+        }
+
+        if (!isBlank(userImport.getEmail()) && userProfileRepository.findByEmail(userImport.getEmail()).isPresent()) {
+            errors.add("Email already exists in the system");
+        }
+
+        if (!errors.isEmpty()) {
+            userImport.setValid(false);
+            userImport.setErrorMessage(String.join("; ", errors));
+        }
+    }
+
+    @Transactional
+    private UserProfile createUserAccount(UserImportDTO userImport) throws Exception {
+        log.info("Creating user account for: {}", userImport.getEmail());
+
+        String tempPassword = generateTemporaryPassword();
+
+        Map<String, Object> userMetadata = new HashMap<>();
+        userMetadata.put("full_name", userImport.getFullName());
+        userMetadata.put("role", userImport.getRole().toUpperCase());
+
+        UUID supabaseUserId;
+        try {
+            supabaseUserId = supabaseAuthService.createUserInSupabase(
+                    userImport.getEmail(),
+                    tempPassword,
+                    userMetadata);
+            log.info("✅ Successfully created user in Supabase auth.users: {} with ID: {}",
+                    userImport.getEmail(), supabaseUserId);
+        } catch (Exception e) {
+            log.error("❌ Failed to create user in Supabase: {}", e.getMessage());
+            throw new RuntimeException("Failed to create Supabase account: " + e.getMessage(), e);
+        }
+
+        UserProfile user = new UserProfile();
+        user.setId(supabaseUserId);
+        user.setFullName(userImport.getFullName());
+        user.setEmail(userImport.getEmail());
+        user.setPhone(userImport.getPhone());
+        user.setRole(userImport.getRole().toUpperCase());
+        user.setAddress(userImport.getAddress());
+
+        if (!isBlank(userImport.getGender())) {
+            user.setGender(Gender.valueOf(userImport.getGender().toUpperCase()));
+        }
+
+        if (!isBlank(userImport.getDateOfBirth())) {
+            try {
+                LocalDate dateOfBirth = parseDate(userImport.getDateOfBirth());
+                user.setDateOfBirth(dateOfBirth);
+            } catch (Exception e) {
+                log.warn("Could not parse date of birth for user {}: {}", userImport.getEmail(), e.getMessage());
+            }
+        }
+
+        user.setIsActive(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        try {
+            UserProfile savedUser = userProfileRepository.save(user);
+            log.info("✅ Successfully created user_profile: {} ({}) with ID: {}",
+                    savedUser.getFullName(), savedUser.getEmail(), savedUser.getId());
+
+            return savedUser;
+        } catch (Exception e) {
+            log.error("❌ Failed to create user_profile, will cleanup Supabase user: {}", e.getMessage());
+
+            try {
+                supabaseAuthService.deleteUserFromSupabase(supabaseUserId);
+                log.info("✅ Cleaned up Supabase user after profile creation failure");
+            } catch (Exception cleanupError) {
+                log.warn("⚠️ Failed to cleanup Supabase user after profile creation failure: {}",
+                        cleanupError.getMessage());
+            }
+
+            throw new RuntimeException("Failed to create user profile: " + e.getMessage(), e);
+        }
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null)
+            return null;
+
+        switch (cell.getCellType()) {
+            case STRING -> {
+                return cell.getStringCellValue().trim();
+            }
+            case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getLocalDateTimeCellValue().toLocalDate().format(DATE_FORMATTER);
+                } else {
+                    double numValue = cell.getNumericCellValue();
+                    if (numValue == Math.floor(numValue)) {
+                        return String.valueOf((long) numValue);
+                    } else {
+                        return String.valueOf(numValue);
+                    }
+                }
+            }
+            case BOOLEAN -> {
+                return String.valueOf(cell.getBooleanCellValue());
+            }
+            case BLANK -> {
+                return null;
+            }
+            default -> {
+                return null;
+            }
+        }
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        try {
+            return LocalDate.parse(dateStr, DATE_FORMATTER);
+        } catch (DateTimeParseException e1) {
+            try {
+                return LocalDate.parse(dateStr, DATE_FORMATTER_ISO);
+            } catch (DateTimeParseException e2) {
+                throw new IllegalArgumentException("Invalid date format: " + dateStr);
+            }
+        }
+    }
+
+    private boolean isBlank(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    private boolean isValidEmail(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+    }
+
+    private boolean isValidRole(String role) {
+        try {
+            String upperRole = role.toUpperCase();
+            return "ADMIN".equals(upperRole) || "MANAGER".equals(upperRole) ||
+                    "NURSE".equals(upperRole) || "PARENT".equals(upperRole);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isValidGender(String gender) {
+        try {
+            Gender.valueOf(gender.toUpperCase());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private boolean isRequiredField(String header) {
+        return "Full Name".equals(header) || "Email".equals(header) || "Role".equals(header);
+    }
+
+    private String generateTemporaryPassword() {
+        return "TempPass" + System.currentTimeMillis();
+    }
+
+    private CellStyle createHeaderStyle(Workbook workbook) {
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setFontHeightInPoints((short) 12);
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setBorderBottom(BorderStyle.THIN);
+        headerStyle.setBorderTop(BorderStyle.THIN);
+        headerStyle.setBorderRight(BorderStyle.THIN);
+        headerStyle.setBorderLeft(BorderStyle.THIN);
+        return headerStyle;
+    }
+
+    private CellStyle createInstructionStyle(Workbook workbook) {
+        CellStyle instructionStyle = workbook.createCellStyle();
+        Font instructionFont = workbook.createFont();
+        instructionFont.setBold(true);
+        instructionFont.setColor(IndexedColors.RED.getIndex());
+        instructionStyle.setFont(instructionFont);
+        return instructionStyle;
+    }
+
+    private void addSampleData(Sheet sheet) {
+        Row sampleRow = sheet.createRow(1);
+        sampleRow.createCell(0).setCellValue("Nguyễn Văn A");
+        sampleRow.createCell(1).setCellValue("admin@medischool.com");
+        sampleRow.createCell(2).setCellValue("0901234567");
+        sampleRow.createCell(3).setCellValue("ADMIN");
+        sampleRow.createCell(4).setCellValue("123 Đường ABC, Quận 1, TP.HCM");
+        sampleRow.createCell(5).setCellValue("MALE");
+        sampleRow.createCell(6).setCellValue("15/03/1990");
+    }
+
+    private void addInstructions(Sheet sheet, CellStyle instructionStyle) {
+        String[] instructions = {
+                "HƯỚNG DẪN:",
+                "- Các cột có dấu * là bắt buộc",
+                "- Định dạng ngày tháng: dd/MM/yyyy (ví dụ: 15/03/1990)",
+                "- Role: ADMIN, MANAGER, NURSE, PARENT",
+                "- Gender: MALE, FEMALE, OTHER",
+                "- Email phải unique trong hệ thống"
+        };
+
+        for (int i = 0; i < instructions.length; i++) {
+            Row instructionRow = sheet.createRow(3 + i);
+            Cell instructionCell = instructionRow.createCell(0);
+            instructionCell.setCellValue(instructions[i]);
+            instructionCell.setCellStyle(instructionStyle);
+        }
+    }
+
+    private void populateUserRow(Row row, UserProfile user) {
+        row.createCell(0).setCellValue(user.getFullName() != null ? user.getFullName() : "");
+        row.createCell(1).setCellValue(user.getEmail() != null ? user.getEmail() : "");
+        row.createCell(2).setCellValue(user.getPhone() != null ? user.getPhone() : "");
+        row.createCell(3).setCellValue(user.getRole() != null ? user.getRole() : "");
+        row.createCell(4).setCellValue(user.getAddress() != null ? user.getAddress() : "");
+        row.createCell(5).setCellValue(user.getGender() != null ? user.getGender().name() : "");
+        row.createCell(6)
+                .setCellValue(user.getDateOfBirth() != null ? user.getDateOfBirth().format(DATE_FORMATTER) : "");
+    }
+
+    private UserImportResponseDTO createErrorResponse(String message) {
+        return UserImportResponseDTO.builder()
+                .success(false)
+                .totalRows(0)
+                .successCount(0)
+                .errorCount(0)
+                .errors(new ArrayList<>())
+                .message(message)
+                .build();
+    }
+}
