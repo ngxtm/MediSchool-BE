@@ -24,7 +24,7 @@ public interface MedicationService {
 
     MedicationRequest receiveMedicine(int id);
 
-    MedicationDispensation dispenseMedication(MedicationDispensationDTO dto, UUID nurseId);
+    MedicationDispensation dispenseMedication(Integer requestId, MedicationDispensationDTO dto, UUID nurseId);
 
     MedicationRequest markAsDone(Integer requestId);
 
