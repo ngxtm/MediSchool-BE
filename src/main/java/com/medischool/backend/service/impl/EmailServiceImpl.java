@@ -1,23 +1,24 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.service.EmailService;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Service;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.scheduling.annotation.EnableScheduling;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.stereotype.Service;
+
+import com.medischool.backend.service.EmailService;
+
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -372,6 +373,70 @@ public class EmailServiceImpl implements EmailService {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException("Email sending interrupted", ie);
                 }
+            }
+        }
+    }
+
+    @Override
+    public void sendCustomEmail(String toEmail, String subject, String content) {
+        int maxRetries = 3;
+        int retryCount = 0;
+        while (retryCount < maxRetries) {
+            try {
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+                helper.setFrom(fromEmail);
+                helper.setTo(toEmail);
+                helper.setSubject(subject);
+
+                String htmlContent = String.format(
+                    """
+                    <!DOCTYPE html>
+                    <html lang=\"vi\">
+                      <body style=\"margin:0;padding:0;background:#f6f8fa;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;\">
+                        <table align=\"center\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%%\" style=\"max-width:600px;margin:40px auto;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.07);overflow:hidden;\">
+                          <tr>
+                            <td style=\"background:linear-gradient(90deg,#023E73 0%%,#1976d2 100%%);color:#fff;text-align:center;padding:32px 24px;\">
+                              <img src=\"cid:logoImage\" alt=\"Logo\" style=\"width:80px;height:80px;object-fit:contain;border-radius:50%%;background:#fff;margin-bottom:12px;\" />
+                              <h1 style=\"margin:0;font-size:24px;font-weight:700;letter-spacing:0.5px;\">MediSchool - Thông báo từ Quản trị viên</h1>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style=\"padding:32px 24px;\">
+                              <h2 style=\"color:#023E73;font-size:20px;margin:0 0 16px 0;font-weight:600;\">%s</h2>
+                              <div style=\"color:#222;font-size:15px;line-height:1.7;\">%s</div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style=\"background:#f6f8fa;color:#888;text-align:center;padding:18px 24px;font-size:13px;\">
+                              <div>Liên hệ hỗ trợ: <a href=\"mailto:medischool@gmail.com\" style=\"color:#1976d2;text-decoration:none;\">medischool@gmail.com</a> | Hotline: 19009999</div>
+                              <div style=\"margin-top:6px;\">© 2024 MediSchool. Email này được gửi tự động, vui lòng không phản hồi.</div>
+                            </td>
+                          </tr>
+                        </table>
+                      </body>
+                    </html>
+                    """,
+                    subject,
+                    content.replaceAll("(\r\n|\n)", "<br/>")
+                );
+
+                helper.setText(htmlContent, true);
+                ClassPathResource image = new ClassPathResource("static/logo.png");
+                helper.addInline("logoImage", image);
+
+                mailSender.send(mimeMessage);
+                log.info("Custom email sent successfully to: {} (attempt {})", toEmail, retryCount + 1);
+                return;
+            } catch (Exception e) {
+                retryCount++;
+                log.warn("Failed to send custom email to: {} (attempt {}/{}): {}", toEmail, retryCount, maxRetries, e.getMessage());
+                if (retryCount >= maxRetries) {
+                    log.error("Failed to send custom email to: {} after {} attempts", toEmail, maxRetries, e);
+                    throw new RuntimeException("Failed to send email after " + maxRetries + " attempts: " + e.getMessage());
+                }
+                try { Thread.sleep(2000 * retryCount); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); throw new RuntimeException("Email sending interrupted", ie); }
             }
         }
     }

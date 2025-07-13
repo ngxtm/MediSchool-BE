@@ -55,7 +55,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     private static final DateTimeFormatter DATE_FORMATTER_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private static final String[] EXPECTED_HEADERS = {
-            "Full Name", "Email", "Phone", "Role", "Address", "Gender", "Date of Birth"
+            "Full Name", "Email", "Phone", "Role", "Address", "Gender", "Date of Birth", "Password"
     };
 
     @Override
@@ -259,6 +259,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             userImport.setAddress(getCellValueAsString(row.getCell(4)));
             userImport.setGender(getCellValueAsString(row.getCell(5)));
             userImport.setDateOfBirth(getCellValueAsString(row.getCell(6)));
+            userImport.setPassword(getCellValueAsString(row.getCell(7)));
 
             validateUserImport(userImport);
 
@@ -296,6 +297,10 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             errors.add("Invalid gender. Must be MALE, FEMALE, or OTHER");
         }
 
+        if (!isBlank(userImport.getPassword()) && userImport.getPassword().length() < 6) {
+            errors.add("Password must be at least 6 characters long");
+        }
+
         if (!isBlank(userImport.getEmail()) && userProfileRepository.findByEmail(userImport.getEmail()).isPresent()) {
             errors.add("Email already exists in the system");
         }
@@ -310,7 +315,11 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     private UserProfile createUserAccount(UserImportDTO userImport) throws Exception {
         log.info("Creating user account for: {}", userImport.getEmail());
 
-        String tempPassword = generateTemporaryPassword();
+        String password = userImport.getPassword();
+        if (isBlank(password)) {
+            password = generateTemporaryPassword();
+            log.info("No password provided, generating temporary password for user: {}", userImport.getEmail());
+        }
 
         Map<String, Object> userMetadata = new HashMap<>();
         userMetadata.put("full_name", userImport.getFullName());
@@ -320,7 +329,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         try {
             supabaseUserId = supabaseAuthService.createUserInSupabase(
                     userImport.getEmail(),
-                    tempPassword,
+                    password,
                     userMetadata);
             log.info("✅ Successfully created user in Supabase auth.users: {} with ID: {}",
                     userImport.getEmail(), supabaseUserId);
@@ -487,6 +496,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         sampleRow.createCell(4).setCellValue("123 Đường ABC, Quận 1, TP.HCM");
         sampleRow.createCell(5).setCellValue("MALE");
         sampleRow.createCell(6).setCellValue("15/03/1990");
+        sampleRow.createCell(7).setCellValue("password123");
     }
 
     private void addInstructions(Sheet sheet, CellStyle instructionStyle) {
@@ -496,7 +506,8 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 "- Định dạng ngày tháng: dd/MM/yyyy (ví dụ: 15/03/1990)",
                 "- Role: ADMIN, MANAGER, NURSE, PARENT",
                 "- Gender: MALE, FEMALE, OTHER",
-                "- Email phải unique trong hệ thống"
+                "- Email phải unique trong hệ thống",
+                "- Password: Để trống để tự động tạo mật khẩu tạm thời"
         };
 
         for (int i = 0; i < instructions.length; i++) {
@@ -516,6 +527,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         row.createCell(5).setCellValue(user.getGender() != null ? user.getGender().name() : "");
         row.createCell(6)
                 .setCellValue(user.getDateOfBirth() != null ? user.getDateOfBirth().format(DATE_FORMATTER) : "");
+        row.createCell(7).setCellValue(""); // Password không được lưu trong database
     }
 
     private UserImportResponseDTO createErrorResponse(String message) {
@@ -527,5 +539,71 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 .errors(new ArrayList<>())
                 .message(message)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public UserImportResponseDTO importStudentsFromExcel(MultipartFile file) {
+        log.info("Starting student import from Excel file: {}", file.getOriginalFilename());
+
+        if (!validateExcelFormat(file)) {
+            return createErrorResponse("Invalid file format. Please upload an Excel file (.xlsx or .xls)");
+        }
+
+        List<UserImportDTO> errors = new ArrayList<>();
+        List<UserProfile> successfulStudents = new ArrayList<>();
+        int totalRows = 0;
+
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+
+            if (!validateHeaders(sheet)) {
+                return createErrorResponse("Invalid Excel headers. Please use the provided template.");
+            }
+
+            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null || isEmptyRow(row)) {
+                    continue;
+                }
+
+                totalRows++;
+                log.debug("Processing student row {}", rowIndex + 1);
+
+                UserImportDTO studentImport = parseUserRow(row, rowIndex + 1);
+
+                if (studentImport.isValid()) {
+                    try {
+                        UserProfile createdStudent = createUserAccount(studentImport);
+                        successfulStudents.add(createdStudent);
+                        log.info("Successfully created student: {} ({})", createdStudent.getFullName(),
+                                createdStudent.getEmail());
+                    } catch (Exception e) {
+                        log.error("Failed to create student at row {}: {}", rowIndex + 1, e.getMessage());
+                        studentImport.setValid(false);
+                        studentImport.setErrorMessage("Student creation failed: " + e.getMessage());
+                        errors.add(studentImport);
+                    }
+                } else {
+                    errors.add(studentImport);
+                }
+            }
+
+            String message = String.format("Student import completed. Success: %d, Errors: %d",
+                    successfulStudents.size(), errors.size());
+
+            return UserImportResponseDTO.builder()
+                    .success(errors.isEmpty())
+                    .totalRows(totalRows)
+                    .successCount(successfulStudents.size())
+                    .errorCount(errors.size())
+                    .errors(errors)
+                    .message(message)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Error processing student Excel file: {}", e.getMessage());
+            return createErrorResponse("Error processing file: " + e.getMessage());
+        }
     }
 }

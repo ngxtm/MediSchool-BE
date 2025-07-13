@@ -1,5 +1,15 @@
 package com.medischool.backend.controller;
 
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.medischool.backend.dto.auth.AuthRequest;
 import com.medischool.backend.dto.auth.AuthResponse;
 import com.medischool.backend.dto.auth.GoogleCallbackRequest;
@@ -10,12 +20,6 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,6 +30,11 @@ public class AuthController {
 
     @PostMapping("/signin")
     @Operation(summary = "Sign in with email and password")
+    @com.medischool.backend.annotation.LogActivity(
+        actionType = com.medischool.backend.model.ActivityLog.ActivityType.LOGIN,
+        entityType = com.medischool.backend.model.ActivityLog.EntityType.USER,
+        description = "Đăng nhập hệ thống"
+    )
     public ResponseEntity<AuthResponse> signIn(@RequestBody AuthRequest request) {
         AuthResponse authResponse = supabaseAuthService.signInWithEmail(
                 request.getEmail(),
@@ -36,6 +45,11 @@ public class AuthController {
 
     @PostMapping("/signup")
     @Operation(summary = "Sign up with email and password")
+    @com.medischool.backend.annotation.LogActivity(
+        actionType = com.medischool.backend.model.ActivityLog.ActivityType.CREATE,
+        entityType = com.medischool.backend.model.ActivityLog.EntityType.USER,
+        description = "Tạo tài khoản người dùng mới"
+    )
     public ResponseEntity<AuthResponse> signUp(@RequestBody AuthRequest request) {
         AuthResponse authResponse = supabaseAuthService.signUpWithEmail(request.getEmail(), request.getPassword());
         return ResponseEntity.ok(authResponse);
@@ -65,6 +79,11 @@ public class AuthController {
 
     @PostMapping("/signout")
     @Operation(summary = "Sign out")
+    @com.medischool.backend.annotation.LogActivity(
+        actionType = com.medischool.backend.model.ActivityLog.ActivityType.LOGOUT,
+        entityType = com.medischool.backend.model.ActivityLog.EntityType.USER,
+        description = "Đăng xuất hệ thống"
+    )
     public ResponseEntity<AuthResponse> signOut(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

@@ -191,4 +191,8 @@ public class VaccinationHistoryService {
         }
         return result;
     }
+
+    public List<VaccinationHistory> findAll() {
+        return vaccinationHistoryRepository.findAll();
+    }
 }
