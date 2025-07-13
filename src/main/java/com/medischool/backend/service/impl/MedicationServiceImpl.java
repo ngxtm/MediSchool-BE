@@ -109,7 +109,7 @@ public class MedicationServiceImpl implements MedicationService {
     public MedicationRequest approveRequest(int id, UUID userId, String role) {
         MedicationRequest request = requestRepo.findById(id).orElseThrow();
         request.setUpdateAt(OffsetDateTime.now());
-        if(role.equalsIgnoreCase("nurse")){
+        if(role.equalsIgnoreCase("role_nurse")){
             request.setMedicationStatus(MedicationStatus.REVIEWED);
             request.setReviewBy(userId);
         } else {
