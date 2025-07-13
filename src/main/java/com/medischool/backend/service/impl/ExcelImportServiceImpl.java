@@ -528,4 +528,70 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 .message(message)
                 .build();
     }
+
+    @Override
+    @Transactional
+    public UserImportResponseDTO importStudentsFromExcel(MultipartFile file) {
+        log.info("Starting student import from Excel file: {}", file.getOriginalFilename());
+
+        if (!validateExcelFormat(file)) {
+            return createErrorResponse("Invalid file format. Please upload an Excel file (.xlsx or .xls)");
+        }
+
+        List<UserImportDTO> errors = new ArrayList<>();
+        List<UserProfile> successfulStudents = new ArrayList<>();
+        int totalRows = 0;
+
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+
+            if (!validateHeaders(sheet)) {
+                return createErrorResponse("Invalid Excel headers. Please use the provided template.");
+            }
+
+            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null || isEmptyRow(row)) {
+                    continue;
+                }
+
+                totalRows++;
+                log.debug("Processing student row {}", rowIndex + 1);
+
+                UserImportDTO studentImport = parseUserRow(row, rowIndex + 1);
+
+                if (studentImport.isValid()) {
+                    try {
+                        UserProfile createdStudent = createUserAccount(studentImport);
+                        successfulStudents.add(createdStudent);
+                        log.info("Successfully created student: {} ({})", createdStudent.getFullName(),
+                                createdStudent.getEmail());
+                    } catch (Exception e) {
+                        log.error("Failed to create student at row {}: {}", rowIndex + 1, e.getMessage());
+                        studentImport.setValid(false);
+                        studentImport.setErrorMessage("Student creation failed: " + e.getMessage());
+                        errors.add(studentImport);
+                    }
+                } else {
+                    errors.add(studentImport);
+                }
+            }
+
+            String message = String.format("Student import completed. Success: %d, Errors: %d",
+                    successfulStudents.size(), errors.size());
+
+            return UserImportResponseDTO.builder()
+                    .success(errors.isEmpty())
+                    .totalRows(totalRows)
+                    .successCount(successfulStudents.size())
+                    .errorCount(errors.size())
+                    .errors(errors)
+                    .message(message)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Error processing student Excel file: {}", e.getMessage());
+            return createErrorResponse("Error processing file: " + e.getMessage());
+        }
+    }
 }
