@@ -13,4 +13,6 @@ public interface EmailService {
     void sendHealthEventNotification(String toEmail, String parentName, String studentName,
                                     String problem, String description, String solution,
                                     String extent, String eventDate, String eventLocation);
+    
+    void sendCustomEmail(String toEmail, String subject, String content);
 } 
