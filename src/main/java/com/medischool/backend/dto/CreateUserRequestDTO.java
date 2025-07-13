@@ -1,5 +1,10 @@
 package com.medischool.backend.dto;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
+import com.medischool.backend.model.enums.Gender;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,17 +14,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserImportDTO {
+public class CreateUserRequestDTO {
+    private UUID id;
     private String fullName;
-    private String email;
     private String phone;
-    private String role;
+    private String email;
     private String address;
-    private String gender;
-    private String dateOfBirth;
+    private LocalDate dateOfBirth;
+    private Gender gender;
+    private String role;
     private String password;
-    
-    private boolean isValid;
-    private String errorMessage;
-    private int rowNumber;
+    private Boolean isActive;
 } 

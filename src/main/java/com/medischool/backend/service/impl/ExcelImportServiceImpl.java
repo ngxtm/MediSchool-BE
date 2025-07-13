@@ -55,7 +55,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     private static final DateTimeFormatter DATE_FORMATTER_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private static final String[] EXPECTED_HEADERS = {
-            "Full Name", "Email", "Phone", "Role", "Address", "Gender", "Date of Birth"
+            "Full Name", "Email", "Phone", "Role", "Address", "Gender", "Date of Birth", "Password"
     };
 
     @Override
@@ -259,6 +259,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             userImport.setAddress(getCellValueAsString(row.getCell(4)));
             userImport.setGender(getCellValueAsString(row.getCell(5)));
             userImport.setDateOfBirth(getCellValueAsString(row.getCell(6)));
+            userImport.setPassword(getCellValueAsString(row.getCell(7)));
 
             validateUserImport(userImport);
 
@@ -296,6 +297,10 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             errors.add("Invalid gender. Must be MALE, FEMALE, or OTHER");
         }
 
+        if (!isBlank(userImport.getPassword()) && userImport.getPassword().length() < 6) {
+            errors.add("Password must be at least 6 characters long");
+        }
+
         if (!isBlank(userImport.getEmail()) && userProfileRepository.findByEmail(userImport.getEmail()).isPresent()) {
             errors.add("Email already exists in the system");
         }
@@ -310,7 +315,11 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     private UserProfile createUserAccount(UserImportDTO userImport) throws Exception {
         log.info("Creating user account for: {}", userImport.getEmail());
 
-        String tempPassword = generateTemporaryPassword();
+        String password = userImport.getPassword();
+        if (isBlank(password)) {
+            password = generateTemporaryPassword();
+            log.info("No password provided, generating temporary password for user: {}", userImport.getEmail());
+        }
 
         Map<String, Object> userMetadata = new HashMap<>();
         userMetadata.put("full_name", userImport.getFullName());
@@ -320,7 +329,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         try {
             supabaseUserId = supabaseAuthService.createUserInSupabase(
                     userImport.getEmail(),
-                    tempPassword,
+                    password,
                     userMetadata);
             log.info("✅ Successfully created user in Supabase auth.users: {} with ID: {}",
                     userImport.getEmail(), supabaseUserId);
@@ -487,6 +496,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         sampleRow.createCell(4).setCellValue("123 Đường ABC, Quận 1, TP.HCM");
         sampleRow.createCell(5).setCellValue("MALE");
         sampleRow.createCell(6).setCellValue("15/03/1990");
+        sampleRow.createCell(7).setCellValue("password123");
     }
 
     private void addInstructions(Sheet sheet, CellStyle instructionStyle) {
@@ -496,7 +506,8 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 "- Định dạng ngày tháng: dd/MM/yyyy (ví dụ: 15/03/1990)",
                 "- Role: ADMIN, MANAGER, NURSE, PARENT",
                 "- Gender: MALE, FEMALE, OTHER",
-                "- Email phải unique trong hệ thống"
+                "- Email phải unique trong hệ thống",
+                "- Password: Để trống để tự động tạo mật khẩu tạm thời"
         };
 
         for (int i = 0; i < instructions.length; i++) {
@@ -516,6 +527,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         row.createCell(5).setCellValue(user.getGender() != null ? user.getGender().name() : "");
         row.createCell(6)
                 .setCellValue(user.getDateOfBirth() != null ? user.getDateOfBirth().format(DATE_FORMATTER) : "");
+        row.createCell(7).setCellValue(""); // Password không được lưu trong database
     }
 
     private UserImportResponseDTO createErrorResponse(String message) {
