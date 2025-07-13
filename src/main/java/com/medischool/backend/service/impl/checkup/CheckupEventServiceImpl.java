@@ -6,6 +6,9 @@ import com.medischool.backend.model.checkup.CheckupEvent;
 import com.medischool.backend.model.checkup.CheckupEventCategory;
 import com.medischool.backend.model.checkup.CheckupCategory;
 import com.medischool.backend.model.checkup.CheckupEventClass;
+import com.medischool.backend.model.enums.EventStatus;
+import com.medischool.backend.model.enums.MedicationStatus;
+import com.medischool.backend.model.medication.MedicationRequest;
 import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.repository.checkup.CheckupEventClassRepository;
 import com.medischool.backend.repository.checkup.CheckupEventRepository;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -100,5 +104,33 @@ public class CheckupEventServiceImpl implements CheckupEventService {
     @Override
     public void deleteEvent(Long id) {
         checkupEventRepository.deleteById(id);
+    }
+
+    @Override
+    public List<CheckupEvent> getPendingEvent (String status) {
+        return checkupEventRepository.findByStatus(status);
+    }
+
+    @Override
+    public CheckupEvent updateEventStatus(Long eventId, String status, String rejectionReason) {
+        String newStatus;
+        try {
+            newStatus = status;
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Status must be one of: APPROVED, REJECTED, PENDING, COMPLETED");
+        }
+
+        CheckupEvent event = checkupEventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Checkup event not found"));
+
+        event.setStatus(newStatus);
+
+        if (Objects.equals(newStatus, "REJECTED") && rejectionReason != null && !rejectionReason.trim().isEmpty()) {
+            event.setRejectionReason(rejectionReason.trim());
+        } else if (newStatus != "REJECTED") {
+            event.setRejectionReason(null);
+        }
+
+        return checkupEventRepository.save(event);
     }
 } 

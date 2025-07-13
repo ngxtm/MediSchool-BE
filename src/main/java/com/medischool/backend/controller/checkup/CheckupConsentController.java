@@ -2,6 +2,7 @@ package com.medischool.backend.controller.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupConsentDTO;
 import com.medischool.backend.dto.checkup.CheckupConsentResponseDTO;
+import com.medischool.backend.dto.checkup.ConsentReplyResponse;
 import com.medischool.backend.model.checkup.CheckupEventConsent;
 import com.medischool.backend.service.checkup.CheckupConsentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,12 +45,12 @@ public class CheckupConsentController {
         return ResponseEntity.ok(checkupConsentService.getConsentById(consentId));
     }
 
-    @PutMapping("/consent/{id}/reply")
-    public ResponseEntity<CheckupConsentDTO> submitParentConsentReply(
-            @PathVariable Long id,
+    @PutMapping("/consent/{consentId}/reply")
+    public ResponseEntity<ConsentReplyResponse> submitReply(
+            @PathVariable Long consentId,
             @RequestBody CheckupConsentResponseDTO dto
     ) {
-        CheckupConsentDTO response = checkupConsentService.submitParentConsentReply(id, dto);
+        ConsentReplyResponse response = checkupConsentService.submitParentConsentReply(consentId, dto);
         return ResponseEntity.ok(response);
     }
 

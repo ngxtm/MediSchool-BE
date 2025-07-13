@@ -46,6 +46,9 @@ public class CheckupEvent {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
+
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<CheckupEventCategory> eventCategories;

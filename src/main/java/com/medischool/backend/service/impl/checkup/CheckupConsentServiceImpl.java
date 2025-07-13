@@ -2,8 +2,11 @@ package com.medischool.backend.service.impl.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupConsentDTO;
 import com.medischool.backend.dto.checkup.CheckupConsentResponseDTO;
+import com.medischool.backend.dto.checkup.CheckupResultItemDTO;
+import com.medischool.backend.dto.checkup.ConsentReplyResponse;
 import com.medischool.backend.model.checkup.*;
 import com.medischool.backend.model.enums.CheckupConsentStatus;
+import com.medischool.backend.model.enums.ResultStatus;
 import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.UserProfile;
@@ -17,10 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.medischool.backend.model.enums.CheckupEventScope;
@@ -106,6 +106,8 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
             }
         }
 
+        event.setStatus("UPCOMING");
+
         return Map.of(
                 "success", true,
                 "event_id", eventId,
@@ -136,10 +138,11 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
 
     @Override
     @Transactional
-    public CheckupConsentDTO submitParentConsentReply(Long consentId, CheckupConsentResponseDTO dto) {
+    public ConsentReplyResponse submitParentConsentReply(Long consentId, CheckupConsentResponseDTO dto) {
         CheckupEventConsent consent = checkupConsentRepository.findById(consentId)
                 .orElseThrow(() -> new RuntimeException("Consent not found"));
 
+        // Cập nhật trạng thái tổng
         consent.setConsentStatus(dto.getOverallStatus());
         consent.setNote(dto.getNote());
         consent.setUpdatedAt(LocalDateTime.now());
@@ -148,6 +151,8 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
         Map<Long, String> categoryReplies = dto.getCategoryReplies();
         List<CheckupCategoryConsent> categoryConsents = categoryConsentRepository.findAllByConsentId(consentId);
 
+        // Cập nhật từng danh mục
+        List<CheckupCategoryConsent> updatedCategoryConsents = new ArrayList<>();
         for (CheckupCategoryConsent categoryConsent : categoryConsents) {
             Long categoryId = categoryConsent.getEventCategory().getId();
             if (categoryReplies.containsKey(categoryId)) {
@@ -157,12 +162,14 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
                 } else if ("REJECTED".equalsIgnoreCase(reply)) {
                     categoryConsent.setCategoryConsentStatus(CheckupConsentStatus.REJECTED);
                 }
-                categoryConsentRepository.save(categoryConsent);
+                updatedCategoryConsents.add(categoryConsent);
             }
         }
+        categoryConsentRepository.saveAll(updatedCategoryConsents);
 
-        // ✅ Nếu toàn bộ đơn được duyệt, tạo kết quả khám và kết quả từng hạng mục
-        if (dto.getOverallStatus() == CheckupConsentStatus.APPROVED) {
+        // Tạo kết quả nếu phụ huynh đồng ý
+        List<CheckupResultItemDTO> createdItems = new ArrayList<>();
+        if (CheckupConsentStatus.APPROVED.equals(dto.getOverallStatus())) {
             boolean exists = checkupResultRepository.existsByConsentId(consent.getId());
             if (!exists) {
                 CheckupResult result = CheckupResult.builder()
@@ -172,20 +179,25 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
                         .build();
                 result = checkupResultRepository.save(result);
 
-                for (CheckupCategoryConsent categoryConsent : categoryConsents) {
+                for (CheckupCategoryConsent categoryConsent : updatedCategoryConsents) {
                     if (categoryConsent.getCategoryConsentStatus() == CheckupConsentStatus.APPROVED) {
                         CheckupResultItem item = new CheckupResultItem();
-                        item.setEventCategory(categoryConsent.getEventCategory()); // ✅ Sửa đúng biến
+                        item.setEventCategory(categoryConsent.getEventCategory());
                         item.setResult(result);
-                        item.setStatus(null); // bạn có thể set null hoặc giữ nguyên
-                        item.setCreatedAt(LocalDateTime.now()); // ✅ BẮT BUỘC
-                        checkupResultItemRepository.save(item);
+                        item.setStatus(ResultStatus.NO_RESULT);
+                        item.setCreatedAt(LocalDateTime.now());
+
+                        item = checkupResultItemRepository.save(item);
+                        createdItems.add(new CheckupResultItemDTO(item));
                     }
                 }
             }
         }
 
-        return new CheckupConsentDTO(consent, categoryConsents);
+        return new ConsentReplyResponse(
+                new CheckupConsentDTO(consent, updatedCategoryConsents),
+                createdItems
+        );
     }
 
     @Override

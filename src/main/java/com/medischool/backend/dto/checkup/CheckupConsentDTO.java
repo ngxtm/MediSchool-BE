@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,6 +18,8 @@ public class CheckupConsentDTO {
     private Long id;
     private String eventTitle;
     private String schoolYear;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String consentStatus;
     private String note;
     private LocalDateTime createdAt;
@@ -44,6 +47,8 @@ public class CheckupConsentDTO {
         this.id = entity.getId();
         this.eventTitle = entity.getEvent().getEventTitle();
         this.schoolYear = entity.getEvent().getSchoolYear();
+        this.startDate = entity.getEvent().getStartDate();
+        this.endDate = entity.getEvent().getEndDate();
         this.consentStatus = entity.getConsentStatus().name();
         this.note = entity.getNote();
         this.createdAt = entity.getCreatedAt();

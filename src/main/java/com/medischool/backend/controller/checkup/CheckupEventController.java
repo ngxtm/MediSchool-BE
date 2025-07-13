@@ -2,6 +2,7 @@ package com.medischool.backend.controller.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
+import com.medischool.backend.model.enums.EventStatus;
 import com.medischool.backend.service.checkup.CheckupEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,11 @@ public class CheckupEventController {
         return ResponseEntity.ok(checkupEventService.getAllEvents());
     }
 
+    @GetMapping("/pending")
+    public ResponseEntity<List<CheckupEvent>> getPendingEvent() {
+        return ResponseEntity.ok(checkupEventService.getPendingEvent("PENDING"));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get checkup event by ID")
     public ResponseEntity<CheckupEvent> getEventById(@PathVariable Long id) {
@@ -48,5 +54,22 @@ public class CheckupEventController {
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         checkupEventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{eventId}/status")
+    @Operation(summary = "Update health checkup event status")
+    public ResponseEntity<CheckupEvent> updateEventStatus(
+            @PathVariable Long eventId,
+            @RequestParam String status,
+            @RequestParam(required = false) String rejectionReason
+    ) {
+        try {
+            CheckupEvent updated = checkupEventService.updateEventStatus(eventId, status, rejectionReason);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 } 
