@@ -1,24 +1,34 @@
 package com.medischool.backend.controller;
 
+import java.nio.file.AccessDeniedException;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.medischool.backend.annotation.LogActivity;
 import com.medischool.backend.dto.medication.MedicationDispensationDTO;
 import com.medischool.backend.dto.medication.MedicationRequestDTO;
 import com.medischool.backend.dto.medication.MedicationStatsDTO;
+import com.medischool.backend.model.ActivityLog.ActivityType;
+import com.medischool.backend.model.ActivityLog.EntityType;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
 import com.medischool.backend.service.MedicationService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.AccessDeniedException;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,28 +37,30 @@ class MedicationController {
     @Autowired
     private MedicationService service;
 
-    //stat
     @GetMapping("/stats")
     public ResponseEntity<MedicationStatsDTO> getRequestStats() {
         MedicationStatsDTO stats = service.getRequestStats();
         return ResponseEntity.ok(stats);
     }
 
-    //Nurse view all requests
+    @GetMapping("/pending/count")
+    public ResponseEntity<Long> getPendingCount() {
+        long count = service.getRequestsByStatus(MedicationStatus.PENDING).size();
+        return ResponseEntity.ok(count);
+    }
+
     @GetMapping("/all")
 //    @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationRequest>> getAllRequests() {
         return ResponseEntity.ok(service.getAllRequests());
     }
 
-    //Nurse view pending requests
     @GetMapping("/pending")
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationRequest>> getPendingRequests() {
         return ResponseEntity.ok(service.getRequestsByStatus(MedicationStatus.PENDING));
     }
 
-    //Nurse view approved requests
     @GetMapping("/approved")
 //    @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationRequest>> getApprovedRequests() {
@@ -58,7 +70,6 @@ class MedicationController {
         return ResponseEntity.ok(approved);
     }
 
-    //Parents view all their requests by student
     @GetMapping("/student/{studentId}")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<List<MedicationRequest>> getRequestsByStudent(
@@ -70,9 +81,13 @@ class MedicationController {
         return ResponseEntity.ok(requests);
     }
 
-    //Parents create a request
     @PostMapping("/create")
     @PreAuthorize("hasRole('PARENT')")
+    @LogActivity(
+        actionType = ActivityType.CREATE,
+        entityType = EntityType.MEDICATION_REQUEST,
+        description = "Tạo yêu cầu thuốc mới"
+    )
     public ResponseEntity<MedicationRequest> createRequest(@RequestBody MedicationRequestDTO dto, Authentication authentication) throws AccessDeniedException {
         UUID parentId = UUID.fromString(authentication.getName());
         return ResponseEntity.ok(service.createRequest(dto, parentId));
@@ -80,6 +95,12 @@ class MedicationController {
 
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('NURSE') || hasRole('MANAGER')")
+    @LogActivity(
+        actionType = ActivityType.APPROVE,
+        entityType = EntityType.MEDICATION_REQUEST,
+        description = "Phê duyệt yêu cầu thuốc",
+        entityIdParam = "id"
+    )
     public ResponseEntity<MedicationRequest> approve(@PathVariable Integer id, Authentication authentication) {
         UUID userId = UUID.fromString(authentication.getName());
         String role = authentication.getAuthorities().stream()
@@ -97,6 +118,12 @@ class MedicationController {
 
     @PutMapping("/{id}/reject")
     @PreAuthorize("hasRole('NURSE')")
+    @LogActivity(
+        actionType = ActivityType.REJECT,
+        entityType = EntityType.MEDICATION_REQUEST,
+        description = "Từ chối yêu cầu thuốc",
+        entityIdParam = "id"
+    )
     public ResponseEntity<MedicationRequest> reject(
             @PathVariable Integer id,
             @RequestParam String rejectReason,
@@ -110,8 +137,13 @@ class MedicationController {
         return ResponseEntity.ok(service.rejectRequest(id, nurseId, rejectReason, role));
     }
 
-    //Nurse dispense medicine
     @PostMapping("/{requestId}/dispense")
+    @LogActivity(
+        actionType = ActivityType.UPDATE,
+        entityType = EntityType.MEDICATION_REQUEST,
+        description = "Phát thuốc cho yêu cầu",
+        entityIdParam = "requestId"
+    )
     public ResponseEntity<?> dispenseMedication(
             @PathVariable Integer requestId,
             @RequestBody MedicationDispensationDTO dto,
@@ -122,21 +154,18 @@ class MedicationController {
         return ResponseEntity.ok().build();
     }
 
-    //Nurse mark done request
     @PutMapping("/{id}/done")
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<MedicationRequest> markDone(@PathVariable Integer id) {
         return ResponseEntity.ok(service.markAsDone(id));
     }
 
-    //Search
     @GetMapping("/search")
     public ResponseEntity<List<MedicationRequest>> searchRequests(@RequestParam String keyword) {
         return ResponseEntity.ok(service.searchRequests(keyword));
     }
 
 
-    //View dispen history
     @GetMapping("/dispensations/by-request/{requestId}")
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationDispensation>> getDispensationsByRequest(@PathVariable Integer requestId) {
@@ -145,7 +174,6 @@ class MedicationController {
     }
 
 
-    //View detail
     @GetMapping("/{id}")
     public ResponseEntity<MedicationRequestDTO> getMedicationRequestDetail(@PathVariable Integer id) {
         MedicationRequestDTO dto = service.getRequestDetail(id);
@@ -159,6 +187,12 @@ class MedicationController {
     }
 
     @PutMapping("/{id}/update")
+    @LogActivity(
+        actionType = ActivityType.UPDATE,
+        entityType = EntityType.MEDICATION_REQUEST,
+        description = "Cập nhật yêu cầu thuốc",
+        entityIdParam = "id"
+    )
     public ResponseEntity<MedicationRequestDTO> updateRequest(@PathVariable Integer id, @RequestBody MedicationRequestDTO dto) {
         MedicationRequestDTO updated = service.updateRequest(id, dto);
         return ResponseEntity.ok(updated);
