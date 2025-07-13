@@ -2,6 +2,9 @@ package com.medischool.backend.controller;
 
 import java.util.Map;
 
+import com.medischool.backend.model.LoginHistory;
+import com.medischool.backend.service.GeolocationService;
+import com.medischool.backend.service.LoginHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +31,12 @@ public class AuthController {
     @Autowired
     private SupabaseAuthService supabaseAuthService;
 
+    @Autowired
+    private LoginHistoryService loginHistoryService;
+
+    @Autowired
+    private GeolocationService geolocationService;
+
     @PostMapping("/signin")
     @Operation(summary = "Sign in with email and password")
     @com.medischool.backend.annotation.LogActivity(
@@ -35,11 +44,40 @@ public class AuthController {
         entityType = com.medischool.backend.model.ActivityLog.EntityType.USER,
         description = "Đăng nhập hệ thống"
     )
-    public ResponseEntity<AuthResponse> signIn(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponse> signIn(@RequestBody AuthRequest request, HttpServletRequest httpRequest) {
         AuthResponse authResponse = supabaseAuthService.signInWithEmail(
                 request.getEmail(),
                 request.getPassword(),
                 request.isRememberMe());
+        try {
+            String ip = getClientIpAddress(httpRequest);
+            String location = geolocationService.getLocationFromIp(ip);
+
+            if (authResponse.getUser() != null && authResponse.getToken() != null) {
+                loginHistoryService.createLoginRecord(
+                        authResponse.getUser().getId(),
+                        authResponse.getUser().getEmail(),
+                        ip,
+                        httpRequest.getHeader("User-Agent"),
+                        location,
+                        LoginHistory.LoginStatus.SUCCESS,
+                        null
+                );
+            } else {
+                loginHistoryService.createLoginRecord(
+                        null,
+                        request.getEmail(),
+                        ip,
+                        httpRequest.getHeader("User-Agent"),
+                        location,
+                        LoginHistory.LoginStatus.FAILED,
+                        "Authentication failed"
+                );
+            }
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(AuthController.class)
+                    .error("Failed to record login history: {}", e.getMessage(), e);
+        }
         return ResponseEntity.ok(authResponse);
     }
 
@@ -124,5 +162,19 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "An unexpected error occurred"));
         }
+    }
+
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
     }
 }
