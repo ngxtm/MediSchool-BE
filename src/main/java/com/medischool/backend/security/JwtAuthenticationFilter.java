@@ -54,9 +54,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (userOpt.isPresent()) {
                         UserProfile user = userOpt.get();
                         
-                        if (user.getIsActive() != null && !user.getIsActive()) {
+                        if (user.getIsActive() != null && !user.getIsActive() || user.getDeletedAt() != null) {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.getWriter().write("User account has been deactivated. Please contact administrator.");
+                            response.getWriter().write("User account has been deactivated or deleted. Please contact administrator.");
                             return;
                         }
                         
