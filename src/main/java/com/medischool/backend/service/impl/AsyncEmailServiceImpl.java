@@ -1,13 +1,5 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.service.AsyncEmailService;
-import com.medischool.backend.service.EmailService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -15,6 +7,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import com.medischool.backend.service.AsyncEmailService;
+import com.medischool.backend.service.EmailService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -58,15 +60,23 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
                             String toEmail = (String) notification.get("email");
                             String parentName = (String) notification.get("parentName");
                             String studentName = (String) notification.get("studentName");
-                            String vaccineName = (String) notification.get("vaccineName");
-                            String eventDate = (String) notification.get("eventDate");
-                            String eventLocation = (String) notification.get("eventLocation");
-                            String consentUrl = (String) notification.get("consentUrl");
+                            String subject = (String) notification.get("subject");
+                            String content = (String) notification.get("content");
+                            String template = (String) notification.get("template");
                             
-                            emailService.sendVaccineConsentNotification(
-                                toEmail, parentName, studentName, vaccineName, 
-                                eventDate, eventLocation, consentUrl
-                            );
+                            if (subject != null && content != null) {
+                                emailService.sendCustomEmail(toEmail, subject, content);
+                            } else {
+                                String vaccineName = (String) notification.get("vaccineName");
+                                String eventDate = (String) notification.get("eventDate");
+                                String eventLocation = (String) notification.get("eventLocation");
+                                String consentUrl = (String) notification.get("consentUrl");
+                                
+                                emailService.sendVaccineConsentNotification(
+                                    toEmail, parentName, studentName, vaccineName, 
+                                    eventDate, eventLocation, consentUrl
+                                );
+                            }
                             
                             successCount.incrementAndGet();
                             log.debug("Email sent successfully to: {}", toEmail);
@@ -102,15 +112,23 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
             String toEmail = (String) notification.get("email");
             String parentName = (String) notification.get("parentName");
             String studentName = (String) notification.get("studentName");
-            String vaccineName = (String) notification.get("vaccineName");
-            String eventDate = (String) notification.get("eventDate");
-            String eventLocation = (String) notification.get("eventLocation");
-            String consentUrl = (String) notification.get("consentUrl");
+            String subject = (String) notification.get("subject");
+            String content = (String) notification.get("content");
+            String template = (String) notification.get("template");
             
-            emailService.sendVaccineConsentNotification(
-                toEmail, parentName, studentName, vaccineName, 
-                eventDate, eventLocation, consentUrl
-            );
+            if (subject != null && content != null) {
+                emailService.sendCustomEmail(toEmail, subject, content);
+            } else {
+                String vaccineName = (String) notification.get("vaccineName");
+                String eventDate = (String) notification.get("eventDate");
+                String eventLocation = (String) notification.get("eventLocation");
+                String consentUrl = (String) notification.get("consentUrl");
+                
+                emailService.sendVaccineConsentNotification(
+                    toEmail, parentName, studentName, vaccineName, 
+                    eventDate, eventLocation, consentUrl
+                );
+            }
             
             log.info("Async email sent successfully to: {}", toEmail);
         } catch (Exception e) {
@@ -143,15 +161,23 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
                             String toEmail = (String) notification.get("email");
                             String parentName = (String) notification.get("parentName");
                             String studentName = (String) notification.get("studentName");
-                            String vaccineName = (String) notification.get("vaccineName");
-                            String eventDate = (String) notification.get("eventDate");
-                            String eventLocation = (String) notification.get("eventLocation");
-                            String consentUrl = (String) notification.get("consentUrl");
+                            String subject = (String) notification.get("subject");
+                            String content = (String) notification.get("content");
+                            String template = (String) notification.get("template");
                             
-                            emailService.sendVaccineConsentNotification(
-                                toEmail, parentName, studentName, vaccineName, 
-                                eventDate, eventLocation, consentUrl
-                            );
+                            if (subject != null && content != null) {
+                                emailService.sendCustomEmail(toEmail, subject, content);
+                            } else {
+                                String vaccineName = (String) notification.get("vaccineName");
+                                String eventDate = (String) notification.get("eventDate");
+                                String eventLocation = (String) notification.get("eventLocation");
+                                String consentUrl = (String) notification.get("consentUrl");
+                                
+                                emailService.sendVaccineConsentNotification(
+                                    toEmail, parentName, studentName, vaccineName, 
+                                    eventDate, eventLocation, consentUrl
+                                );
+                            }
                             
                             successCount.incrementAndGet();
                             log.debug("Email sent successfully to: {}", toEmail);

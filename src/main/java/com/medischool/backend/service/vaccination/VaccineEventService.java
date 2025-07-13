@@ -117,6 +117,10 @@ public class VaccineEventService {
         return vaccineEventRepository.findAll();
     }
 
+    public long getVaccineEventCount() {
+        return vaccineEventRepository.count();
+    }
+
     public VaccineEvent updateEventStatus(Long eventId, String status) {
         return updateEventStatus(eventId, status, null);
     }

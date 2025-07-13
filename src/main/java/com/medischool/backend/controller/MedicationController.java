@@ -48,16 +48,9 @@ class MedicationController {
         return ResponseEntity.ok(service.getRequestsByStatus(MedicationStatus.PENDING));
     }
 
-    //Manager view reviewed requests
-    @GetMapping("/reviewed")
-    @PreAuthorize("hasRole('MANAGER')")
-    public ResponseEntity<List<MedicationRequest>> getReviewedRequests() {
-        return ResponseEntity.ok(service.getRequestsByStatus(MedicationStatus.REVIEWED));
-    }
-
     //Nurse view approved requests
     @GetMapping("/approved")
-    @PreAuthorize("hasRole('NURSE')")
+//    @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationRequest>> getApprovedRequests() {
         List<MedicationRequest> approved = service.getRequestsByStatus(MedicationStatus.APPROVED);
         List<MedicationRequest> dispensing = service.getRequestsByStatus(MedicationStatus.DISPENSING);
@@ -103,7 +96,7 @@ class MedicationController {
     }
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasRole('NURSE') || hasRole('MANAGER')")
+    @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<MedicationRequest> reject(
             @PathVariable Integer id,
             @RequestParam String rejectReason,

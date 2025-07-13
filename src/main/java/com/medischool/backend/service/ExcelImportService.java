@@ -39,4 +39,11 @@ public interface ExcelImportService {
      * @return true if valid, false otherwise
      */
     boolean validateExcelFormat(MultipartFile file);
+    
+    /**
+     * Import students from Excel file
+     * @param file Excel file containing student data
+     * @return Import result with success/failure counts and detailed errors
+     */
+    UserImportResponseDTO importStudentsFromExcel(MultipartFile file);
 } 
