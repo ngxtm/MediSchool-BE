@@ -115,8 +115,7 @@ public class LoginHistoryController {
     
     @GetMapping("/stats/failed-today")
     public ResponseEntity<Long> getFailedLoginsToday() {
-        long count = loginHistoryService.getFailedLoginsToday();
-        return ResponseEntity.ok(count);
+        return ResponseEntity.ok(loginHistoryService.getFailedLoginsToday());
     }
     
 
