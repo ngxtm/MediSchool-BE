@@ -9,10 +9,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "http://localhost:8080", "https://medischool-be.onrender.com")
+                .allowedOrigins("http://localhost:5173", "http://localhost:8080", "https://medischool-be.onrender.com", "https://medischool-be.onrender.com/api", "https://medischool.vercel.app/")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders("*")
-                .allowedOrigins("*");
-
+                .allowedHeaders("*");
     }
 }

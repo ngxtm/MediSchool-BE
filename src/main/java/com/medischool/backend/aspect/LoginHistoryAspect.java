@@ -1,9 +1,10 @@
 package com.medischool.backend.aspect;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.UUID;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -126,19 +127,6 @@ public class LoginHistoryAspect {
                         log.info("Updated logout time for session ID: {}", active.getId());
                     }
                 }
-                
-                String ip = getClientIpAddress(request);
-                String location = geolocationService.getLocationFromIp(ip);
-                loginHistoryService.createLoginRecord(
-                    userInfo.getUserId(),
-                    userInfo.getUserEmail(),
-                    ip,
-                    request.getHeader("User-Agent"),
-                    location,
-                    LoginStatus.SUCCESS,
-                    null
-                );
-                log.info("Logout record created for user: {}", userInfo.getUserEmail());
             }
         } catch (Exception e) {
             log.error("Error in LoginHistoryAspect for logout: {}", e.getMessage(), e);
@@ -147,25 +135,26 @@ public class LoginHistoryAspect {
     
     private UserInfo extractUserInfoFromToken(String token) {
         try {
-            Map<String, Object> userInfo = supabaseAuthService.extractUserInfoFromToken(token);
-            if (userInfo != null) {
-                String userIdStr = (String) userInfo.get("id");
-                String userEmail = (String) userInfo.get("email");
-                
-                UUID userId = null;
-                if (userIdStr != null) {
-                    userId = UUID.fromString(userIdStr);
-                }
-                if (userEmail == null) {
-                    userEmail = "unknown";
-                }
-                
-                return new UserInfo(userId, userEmail);
+            Claims claims = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            UUID userId = null;
+            if (claims.getSubject() != null) {
+                userId = UUID.fromString(claims.getSubject());
             }
+            String userEmail = claims.get("email", String.class);
+            if (userEmail == null) {
+                userEmail = "unknown";
+            }
+
+            return new UserInfo(userId, userEmail);
         } catch (Exception e) {
             log.warn("Could not extract user info from token: {}", e.getMessage());
+            return new UserInfo(null, "unknown");
         }
-        return new UserInfo(null, "unknown");
     }
     
     private static class UserInfo {
