@@ -130,7 +130,7 @@ public class VaccineEventService {
         try {
             newStatus = EventStatus.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Status must be one of: APPROVED, CANCELLED, PENDING, COMPLETED");
+            throw new IllegalArgumentException("Status must be one of: APPROVED, REJECTED, PENDING, COMPLETED");
         }
 
         VaccineEvent event = vaccineEventRepository.findById(eventId)
@@ -138,9 +138,9 @@ public class VaccineEventService {
 
         event.setStatus(newStatus);
 
-        if (newStatus == EventStatus.CANCELLED && rejectionReason != null && !rejectionReason.trim().isEmpty()) {
+        if (newStatus == EventStatus.REJECTED && rejectionReason != null && !rejectionReason.trim().isEmpty()) {
             event.setRejectionReason(rejectionReason.trim());
-        } else if (newStatus != EventStatus.CANCELLED) {
+        } else if (newStatus != EventStatus.REJECTED) {
             event.setRejectionReason(null);
         }
 
