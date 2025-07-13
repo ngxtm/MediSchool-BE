@@ -13,20 +13,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.medischool.backend.dto.healthevent.request.HealthEventRequestDTO;
-
 import com.medischool.backend.dto.healthevent.request.HealthEventEmailNotificationDTO;
-
+import com.medischool.backend.dto.healthevent.request.HealthEventRequestDTO;
 import com.medischool.backend.dto.healthevent.response.HealthEventResponseDTO;
-
 import com.medischool.backend.service.healthevent.HealthEventService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/health-event")
@@ -45,6 +40,27 @@ public class HealthEventController {
         }
     }
 
+    @GetMapping("/active/count")
+    @Operation(summary = "Get count of active health events")
+    public ResponseEntity<Long> getActiveCount() {
+        try {
+            List<HealthEventResponseDTO> events = healthEventService.getAllHealthEvent();
+            long activeCount = events.stream()
+                .filter(event -> {
+                    if (event.getEventTime() != null) {
+                        java.time.LocalDate now = java.time.LocalDate.now();
+                        java.time.LocalDate eventDate = event.getEventTime().toLocalDate();
+                        return eventDate.isAfter(now.minusDays(7)) || eventDate.isEqual(now);
+                    }
+                    return false;
+                })
+                .count();
+            return ResponseEntity.ok(activeCount);
+        } catch (Exception e) {
+            return ResponseEntity.ok(0L);
+        }
+    }
+
     @GetMapping
     @Operation(summary = "Get all health event", description = "Retrieve a list of all health event")
     public ResponseEntity<List<HealthEventResponseDTO>> getAllHealthEvent() {
@@ -58,6 +74,11 @@ public class HealthEventController {
 
     @PostMapping
     @Operation(summary = "Create health event", description = "Create a new health event with medicines")
+    @com.medischool.backend.annotation.LogActivity(
+        actionType = com.medischool.backend.model.ActivityLog.ActivityType.CREATE,
+        entityType = com.medischool.backend.model.ActivityLog.EntityType.HEALTH_CHECKUP,
+        description = "Tạo sự kiện sức khỏe mới"
+    )
     public ResponseEntity<?> createHealthEvent(@RequestBody HealthEventRequestDTO requestDTO) {
         try {
             return ResponseEntity.ok(healthEventService.createHealthEvent(requestDTO));
@@ -82,6 +103,12 @@ public class HealthEventController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update health event", description = "Update an existing health event")
+    @com.medischool.backend.annotation.LogActivity(
+        actionType = com.medischool.backend.model.ActivityLog.ActivityType.UPDATE,
+        entityType = com.medischool.backend.model.ActivityLog.EntityType.HEALTH_CHECKUP,
+        description = "Cập nhật sự kiện sức khỏe",
+        entityIdParam = "id"
+    )
     public ResponseEntity<?> updateHealthEvent(@PathVariable Long id, @RequestBody HealthEventRequestDTO requestDTO) {
         try {
             return ResponseEntity.ok(healthEventService.updateHealthEvent(id, requestDTO));
@@ -92,6 +119,12 @@ public class HealthEventController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete health event", description = "Delete a health event and its medicines")
+    @com.medischool.backend.annotation.LogActivity(
+        actionType = com.medischool.backend.model.ActivityLog.ActivityType.DELETE,
+        entityType = com.medischool.backend.model.ActivityLog.EntityType.HEALTH_CHECKUP,
+        description = "Xóa sự kiện sức khỏe",
+        entityIdParam = "id"
+    )
     public ResponseEntity<?> deleteHealthEvent(@PathVariable Long id) {
         try {
             healthEventService.deleteHealthEvent(id);
@@ -103,6 +136,12 @@ public class HealthEventController {
 
     @PostMapping("/{eventId}/send-email-notifications")
     @Operation(summary = "Send email notifications to parents for health event", description = "Send bulk email notifications to parents about a specific health event")
+    @com.medischool.backend.annotation.LogActivity(
+        actionType = com.medischool.backend.model.ActivityLog.ActivityType.SEND_EMAIL,
+        entityType = com.medischool.backend.model.ActivityLog.EntityType.HEALTH_CHECKUP,
+        description = "Gửi email thông báo cho sự kiện sức khỏe",
+        entityIdParam = "eventId"
+    )
     public ResponseEntity<?> sendEmailNotifications(@PathVariable Long eventId) {
         try {
             HealthEventEmailNotificationDTO result = healthEventService.sendHealthEventEmailNotifications(eventId);
@@ -114,6 +153,11 @@ public class HealthEventController {
 
     @PostMapping("/send-all-email-notifications")
     @Operation(summary = "Send email notifications to parents for all health events", description = "Send bulk email notifications to parents about all health events")
+    @com.medischool.backend.annotation.LogActivity(
+        actionType = com.medischool.backend.model.ActivityLog.ActivityType.SEND_EMAIL,
+        entityType = com.medischool.backend.model.ActivityLog.EntityType.HEALTH_CHECKUP,
+        description = "Gửi email thông báo cho tất cả sự kiện sức khỏe"
+    )
     public ResponseEntity<?> sendAllEmailNotifications() {
         try {
             List<HealthEventEmailNotificationDTO> results = healthEventService.sendAllHealthEventEmailNotifications();

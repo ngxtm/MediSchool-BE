@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import com.medischool.backend.model.ActivityLog.ActivityType;
+import com.medischool.backend.model.ActivityLog.EntityType;
+import com.medischool.backend.annotation.LogActivity;
 
 @RestController
 @RequestMapping("/api/medicines")
@@ -45,6 +48,11 @@ public class MedicineController {
 
     @PostMapping
     @Operation(summary = "Create new medicine", description = "Create a new medicine record")
+    @LogActivity(
+        actionType = ActivityType.CREATE,
+        entityType = EntityType.MEDICINE,
+        description = "Tạo thuốc mới: {medicineName}"
+    )
     public ResponseEntity<Medicine> createMedicine(@RequestBody Medicine medicine) {
         try {
             Medicine createdMedicine = medicineService.createMedicine(medicine);
@@ -56,6 +64,12 @@ public class MedicineController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update medicine", description = "Update an existing medicine record")
+    @LogActivity(
+        actionType = ActivityType.UPDATE,
+        entityType = EntityType.MEDICINE,
+        description = "Cập nhật thuốc: {medicineName}",
+        entityIdParam = "id"
+    )
     public ResponseEntity<Medicine> updateMedicine(@PathVariable Long id, @RequestBody Medicine medicine) {
         try {
             Medicine updatedMedicine = medicineService.updateMedicine(id, medicine);
@@ -70,6 +84,12 @@ public class MedicineController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete medicine", description = "Delete a medicine record")
+    @LogActivity(
+        actionType = ActivityType.DELETE,
+        entityType = EntityType.MEDICINE,
+        description = "Xóa thuốc: {id}",
+        entityIdParam = "id"
+    )
     public ResponseEntity<Void> deleteMedicine(@PathVariable Long id) {
         try {
             medicineService.deleteMedicine(id);

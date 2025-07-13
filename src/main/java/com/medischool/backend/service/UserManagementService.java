@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.medischool.backend.dto.CreateUserRequestDTO;
 import com.medischool.backend.model.UserProfile;
 
 public interface UserManagementService {
@@ -30,6 +31,8 @@ public interface UserManagementService {
     boolean isUserActive(UUID userId);
     
     UserProfile createUser(UserProfile user);
+    
+    UserProfile createUserWithPassword(CreateUserRequestDTO createUserRequest);
     
     UserProfile updateUser(UUID id, UserProfile user);
 } 

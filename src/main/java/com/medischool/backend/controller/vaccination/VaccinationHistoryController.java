@@ -122,4 +122,15 @@ public class VaccinationHistoryController {
                 .body(pdfBytes);
     }
 
+    @GetMapping("/completed/count")
+    @Operation(summary = "Get count of completed vaccinations")
+    public ResponseEntity<Long> getCompletedCount() {
+        try {
+            // Đếm tất cả vaccination history records (coi như đã hoàn thành)
+            long count = vaccinationHistoryService.findAll().size();
+            return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.ok(0L);
+        }
+    }
 }

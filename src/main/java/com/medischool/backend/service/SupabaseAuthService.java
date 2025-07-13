@@ -508,7 +508,7 @@ public class SupabaseAuthService {
         }
     }
 
-    private Map<String, Object> extractUserInfoFromToken(String token) {
+    public Map<String, Object> extractUserInfoFromToken(String token) {
         HttpHeaders headers = new HttpHeaders();
         headers.set("apikey", supabaseApiKey);
         headers.set("Authorization", "Bearer " + token);

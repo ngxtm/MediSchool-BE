@@ -1,18 +1,30 @@
 package com.medischool.backend.controller.vaccination;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.medischool.backend.annotation.LogActivity;
 import com.medischool.backend.dto.vaccination.VaccineDTO;
-import com.medischool.backend.service.vaccination.VaccinationConsentService;
+import com.medischool.backend.model.ActivityLog.ActivityType;
+import com.medischool.backend.model.ActivityLog.EntityType;
+import com.medischool.backend.model.vaccine.VaccineCategory;
+import com.medischool.backend.repository.vaccination.VaccineCategoryRepository;
 import com.medischool.backend.service.vaccination.VaccineService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.medischool.backend.model.vaccine.VaccineCategory;
-import com.medischool.backend.repository.vaccination.VaccineCategoryRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/vaccines")
@@ -21,8 +33,7 @@ import java.util.Optional;
 public class VaccineController {
 
     private final VaccineService vaccineService;
-    private final VaccinationConsentService vaccinationConsentService;
-
+    
     @Autowired
     private VaccineCategoryRepository categoryRepository;
 
@@ -41,6 +52,11 @@ public class VaccineController {
 
     @PostMapping
     @Operation(summary = "Create a new vaccine")
+    @LogActivity(
+        actionType = ActivityType.CREATE,
+        entityType = EntityType.VACCINE,
+        description = "Tạo vaccine mới: {vaccineName}"
+    )
     public ResponseEntity<VaccineDTO> createVaccine(@RequestBody VaccineDTO vaccineDTO) {
         VaccineDTO created = vaccineService.createVaccine(vaccineDTO);
         return ResponseEntity.ok(created);
@@ -48,6 +64,12 @@ public class VaccineController {
 
     @DeleteMapping("{id}")
     @Operation(summary = "Delete a vaccine by id")
+    @LogActivity(
+        actionType = ActivityType.DELETE,
+        entityType = EntityType.VACCINE,
+        description = "Xóa vaccine: {id}",
+        entityIdParam = "id"
+    )
     public ResponseEntity<Void> deleteVaccine(@PathVariable int id) {
         boolean deleted = vaccineService.deleteVaccine(id);
         if (deleted) {
@@ -59,6 +81,12 @@ public class VaccineController {
 
     @PutMapping("{id}")
     @Operation(summary = "Update a vaccine by id")
+    @LogActivity(
+        actionType = ActivityType.UPDATE,
+        entityType = EntityType.VACCINE,
+        description = "Cập nhật vaccine: {vaccineName}",
+        entityIdParam = "id"
+    )
     public ResponseEntity<VaccineDTO> updateVaccine(
             @PathVariable int id,
             @RequestBody VaccineDTO vaccineDTO) {
@@ -75,6 +103,12 @@ public class VaccineController {
     }
 
     @PutMapping("/categories/{categoryId}")
+    @LogActivity(
+        actionType = ActivityType.UPDATE,
+        entityType = EntityType.VACCINE,
+        description = "Cập nhật danh mục vaccine: {categoryId}",
+        entityIdParam = "categoryId"
+    )
     public VaccineCategory updateCategory(@PathVariable Integer categoryId, @RequestBody VaccineCategory update) {
         Optional<VaccineCategory> opt = categoryRepository.findById(categoryId);
         if (opt.isEmpty()) throw new RuntimeException("Category not found");
