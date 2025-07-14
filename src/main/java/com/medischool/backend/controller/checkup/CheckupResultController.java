@@ -1,8 +1,5 @@
 package com.medischool.backend.controller.checkup;
 
-import com.medischool.backend.dto.checkup.CheckupResultDTO;
-import com.medischool.backend.dto.checkup.CheckupResultItemDTO;
-import com.medischool.backend.dto.checkup.CheckupResultUpdateDTO;
 import com.medischool.backend.service.checkup.CheckupResultService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.Data;
@@ -18,46 +15,20 @@ import java.util.List;
 public class CheckupResultController {
     private final CheckupResultService checkupResultService;
 
-//    @PutMapping("/{resultId}")
-//    @Operation(summary = "Record checkup result")
-//    public ResponseEntity<?> recordResult(
-//            @PathVariable Long resultId,
-//            @RequestBody CheckupResultRequest body
-//    ) {
-//        checkupResultService.updateResultById(resultId, body.getResultData());
-//        return ResponseEntity.ok().build();
-//    }
-//
-//    @GetMapping("/event/{eventId}/student/{studentId}")
-//    @Operation(summary = "Get checkup results for student in event")
-//    public ResponseEntity<List<?>> getResultsForStudentInEvent(@PathVariable Long eventId, @PathVariable Integer studentId) {
-//        return ResponseEntity.ok(checkupResultService.getResultsForStudentInEvent(eventId, studentId));
-//    }
-
-    @GetMapping("/event/{eventId}")
-    @Operation(summary = "Get all results for an event")
-    public ResponseEntity<List<CheckupResultDTO>> getResultsByEventId(@PathVariable Long eventId) {
-        return ResponseEntity.ok(checkupResultService.getResultsByEventId(eventId));
-    }
-
-    @GetMapping("/student/{studentId}")
-    @Operation(summary = "Get all results for a student")
-    public ResponseEntity<List<CheckupResultDTO>> getResultsByStudentId(@PathVariable Integer studentId) {
-        return ResponseEntity.ok(checkupResultService.getResultsByStudentId(studentId));
-    }
-
-    @PatchMapping("/items/{itemId}")
-    public ResponseEntity<CheckupResultItemDTO> updateResultItem(
-            @PathVariable Long itemId,
-            @RequestBody CheckupResultUpdateDTO dto
+    @PutMapping("/{resultId}")
+    @Operation(summary = "Record checkup result")
+    public ResponseEntity<?> recordResult(
+            @PathVariable Long resultId,
+            @RequestBody CheckupResultRequest body
     ) {
-        return ResponseEntity.ok(checkupResultService.updateResultItem(itemId, dto));
+        checkupResultService.updateResultById(resultId, body.getResultData());
+        return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{resultId}")
-    public ResponseEntity<CheckupResultDTO> getResultDetail(@PathVariable Long resultId) {
-        CheckupResultDTO dto = checkupResultService.getResultDetail(resultId);
-        return ResponseEntity.ok(dto);
+    @GetMapping("/event/{eventId}/student/{studentId}")
+    @Operation(summary = "Get checkup results for student in event")
+    public ResponseEntity<List<?>> getResultsForStudentInEvent(@PathVariable Long eventId, @PathVariable Integer studentId) {
+        return ResponseEntity.ok(checkupResultService.getResultsForStudentInEvent(eventId, studentId));
     }
 
     @Data

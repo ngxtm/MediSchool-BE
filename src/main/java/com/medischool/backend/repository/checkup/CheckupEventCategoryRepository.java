@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CheckupEventCategoryRepository extends JpaRepository<CheckupEventCategory, Long> {
-    java.util.List<CheckupEventCategory> findByEventId(Long eventId);
+    java.util.List<CheckupEventCategory> findByEvent_Id(Long eventId);
 } 
