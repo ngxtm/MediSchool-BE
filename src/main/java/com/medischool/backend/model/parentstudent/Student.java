@@ -29,7 +29,6 @@ public class Student {
     @Column(name = "class_code")
     private String classCode;
 
-    private Integer grade;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;

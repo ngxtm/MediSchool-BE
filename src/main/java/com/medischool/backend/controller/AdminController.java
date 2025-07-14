@@ -464,6 +464,7 @@ public class AdminController {
         }
     }
 
+    // -------- EXCEL IMPORT --------
     @PostMapping("/students/import")
     @Operation(summary = "Import students from Excel file")
     @ApiResponses(value = {
@@ -471,27 +472,29 @@ public class AdminController {
             @ApiResponse(responseCode = "400", description = "Invalid file format or data"),
             @ApiResponse(responseCode = "500", description = "Server error during import")
     })
-    @LogActivity(
-        actionType = ActivityType.IMPORT,
-        entityType = EntityType.STUDENT,
-        description = "Nhập thành công {successCount} học sinh từ file {file}"
-    )
-    public ResponseEntity<UserImportResponseDTO> importStudentsFromExcel(
-            @Parameter(description = "Excel file (.xlsx or .xls)") @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<com.medischool.backend.dto.student.StudentImportResponseDTO> importStudentsFromExcel(
+            @io.swagger.v3.oas.annotations.Parameter(description = "Excel file (.xlsx or .xls)") @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
-            log.info("Import students request - File: {}, Size: {} bytes", file.getOriginalFilename(), file.getSize());
-            
-            UserImportResponseDTO response = excelImportService.importStudentsFromExcel(file);
-            
-            log.info("Import students completed - Success: {}", response.getSuccessCount());
-            
+            com.medischool.backend.dto.student.StudentImportResponseDTO response = excelImportService.importStudentsFromExcel(file);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Error importing students: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(UserImportResponseDTO.builder()
-                    .success(false)
-                    .message("Error importing students: " + e.getMessage())
-                    .build());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/students/import/template")
+    @Operation(summary = "Download Excel file of all students in database")
+    @ApiResponse(responseCode = "200", description = "Excel file of all students downloaded successfully")
+    public ResponseEntity<byte[]> downloadStudentListExcel() {
+        try {
+            List<com.medischool.backend.model.parentstudent.Student> students = studentRepository.findAll();
+            byte[] excelBytes = excelImportService.generateStudentListExcel(students);
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=student_list.xlsx")
+                    .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    .body(excelBytes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -789,6 +792,7 @@ public class AdminController {
             return ResponseEntity.status(500).build();
         }
     }
+
 
 
 
