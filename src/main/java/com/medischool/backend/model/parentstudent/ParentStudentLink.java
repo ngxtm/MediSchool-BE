@@ -1,5 +1,6 @@
 package com.medischool.backend.model.parentstudent;
 
+import com.medischool.backend.model.enums.Relationship;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,5 +23,6 @@ public class ParentStudentLink {
     @Column(name = "student_id")
     private Integer studentId;
 
-    private String relationship;
+    @Enumerated(EnumType.STRING)
+    private Relationship relationship;
 }

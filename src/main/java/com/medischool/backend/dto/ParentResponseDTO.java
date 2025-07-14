@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import com.medischool.backend.model.enums.Gender;
+import com.medischool.backend.model.enums.Relationship;
 
 import lombok.*;
 
@@ -22,5 +23,5 @@ public class ParentResponseDTO {
     private Gender gender;
     private String job;
     private String jobPlace;
-    private String relationship;
+    private Relationship relationship;
 } 

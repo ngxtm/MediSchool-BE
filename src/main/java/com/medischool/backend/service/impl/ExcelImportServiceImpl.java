@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -36,10 +37,15 @@ import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.Gender;
 import com.medischool.backend.model.enums.StudentStatus;
 import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.model.parentstudent.Parent;
+import com.medischool.backend.model.parentstudent.ParentStudentLink;
 import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.repository.StudentRepository;
+import com.medischool.backend.repository.ParentRepository;
+import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.service.ExcelImportService;
 import com.medischool.backend.service.SupabaseAuthService;
+import com.medischool.backend.model.enums.Relationship;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,10 +62,14 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     private final UserProfileRepository userProfileRepository;
     private final SupabaseAuthService supabaseAuthService;
     private final StudentRepository studentRepository;
+    private final ParentRepository parentRepository;
+    private final ParentStudentLinkRepository parentStudentLinkRepository;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter DATE_FORMATTER_ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter DATE_FORMATTER_2 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER_2 = DateTimeFormatter.ofPattern("d/M/yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER_3 = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER_4 = DateTimeFormatter.ofPattern("d-M-yyyy");
 
     private static final String[] EXPECTED_HEADERS = {
             "Full Name", "Email", "Phone", "Role", "Address", "Gender", "Date of Birth", "Password"
@@ -391,6 +401,81 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         }
     }
 
+    @Transactional
+    private UserProfile createUserAccount(UserImportDTO userImport, LocalDate dobRaw) throws Exception {
+        log.info("Creating user account for: {}", userImport.getEmail());
+
+        String password = userImport.getPassword();
+        if (isBlank(password)) {
+            password = generateTemporaryPassword();
+            log.info("No password provided, generating temporary password for user: {}", userImport.getEmail());
+        }
+
+        Map<String, Object> userMetadata = new HashMap<>();
+        userMetadata.put("full_name", userImport.getFullName());
+        userMetadata.put("role", userImport.getRole().toUpperCase());
+
+        UUID supabaseUserId;
+        try {
+            supabaseUserId = supabaseAuthService.createUserInSupabase(
+                    userImport.getEmail(),
+                    password,
+                    userMetadata);
+            log.info("✅ Successfully created user in Supabase auth.users: {} with ID: {}",
+                    userImport.getEmail(), supabaseUserId);
+        } catch (Exception e) {
+            log.error("❌ Failed to create user in Supabase: {}", e.getMessage());
+            throw new RuntimeException("Failed to create Supabase account: " + e.getMessage(), e);
+        }
+
+        UserProfile user = new UserProfile();
+        user.setId(supabaseUserId);
+        user.setFullName(userImport.getFullName());
+        user.setEmail(userImport.getEmail());
+        user.setPhone(userImport.getPhone());
+        user.setRole(userImport.getRole().toUpperCase());
+        user.setAddress(userImport.getAddress());
+
+        if (!isBlank(userImport.getGender())) {
+            user.setGender(Gender.valueOf(userImport.getGender().toUpperCase()));
+        }
+
+        if (dobRaw != null) {
+            user.setDateOfBirth(dobRaw);
+        } else if (!isBlank(userImport.getDateOfBirth())) {
+            try {
+                LocalDate dateOfBirth = parseDate(userImport.getDateOfBirth());
+                user.setDateOfBirth(dateOfBirth);
+            } catch (Exception e) {
+                log.warn("Could not parse date of birth for user {}: {}", userImport.getEmail(), e.getMessage());
+            }
+        }
+
+        user.setIsActive(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        try {
+            UserProfile savedUser = userProfileRepository.save(user);
+            log.info("✅ Successfully created user_profile: {} ({}) with ID: {}",
+                    savedUser.getFullName(), savedUser.getEmail(), savedUser.getId());
+
+            return savedUser;
+        } catch (Exception e) {
+            log.error("❌ Failed to create user_profile, will cleanup Supabase user: {}", e.getMessage());
+
+            try {
+                supabaseAuthService.deleteUserFromSupabase(supabaseUserId);
+                log.info("✅ Cleaned up Supabase user after profile creation failure");
+            } catch (Exception cleanupError) {
+                log.warn("⚠️ Failed to cleanup Supabase user after profile creation failure: {}",
+                        cleanupError.getMessage());
+            }
+
+            throw new RuntimeException("Failed to create user profile: " + e.getMessage(), e);
+        }
+    }
+
     private String getCellValueAsString(Cell cell) {
         if (cell == null)
             return null;
@@ -566,7 +651,11 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 if (studentImport.isValid()) {
                     try {
                         Student student = convertToStudent(studentImport);
-                        studentRepository.save(student);
+                        student = studentRepository.save(student);
+                        // Xử lý parent (bố)
+                        handleParentImport(student, studentImport, true);
+                        // Xử lý parent (mẹ)
+                        handleParentImport(student, studentImport, false);
                         successCount++;
                     } catch (Exception e) {
                         studentImport.setValid(false);
@@ -616,6 +705,24 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             studentImport.setEmergencyPhone(getStringCellValue(row.getCell(8), "Emergency Phone"));
             studentImport.setStatus(getStringCellValue(row.getCell(9), "Status"));
             studentImport.setAvatar(getStringCellValue(row.getCell(10), "Avatar"));
+            // Father columns (11-18)
+            studentImport.setFatherName(getStringCellValue(row.getCell(11), "Father Name"));
+            studentImport.setFatherEmail(getStringCellValue(row.getCell(12), "Father Email"));
+            studentImport.setFatherPhone(getStringCellValue(row.getCell(13), "Father Phone"));
+            studentImport.setFatherAddress(getStringCellValue(row.getCell(14), "Father Address"));
+            studentImport.setFatherDateOfBirth(getDateCellValue(row.getCell(15), "Father DateOfBirth"));
+            studentImport.setFatherGender(getStringCellValue(row.getCell(16), "Father Gender"));
+            studentImport.setFatherJob(getStringCellValue(row.getCell(17), "Father Job"));
+            studentImport.setFatherJobPlace(getStringCellValue(row.getCell(18), "Father JobPlace"));
+            // Mother columns (19-26)
+            studentImport.setMotherName(getStringCellValue(row.getCell(19), "Mother Name"));
+            studentImport.setMotherEmail(getStringCellValue(row.getCell(20), "Mother Email"));
+            studentImport.setMotherPhone(getStringCellValue(row.getCell(21), "Mother Phone"));
+            studentImport.setMotherAddress(getStringCellValue(row.getCell(22), "Mother Address"));
+            studentImport.setMotherDateOfBirth(getDateCellValue(row.getCell(23), "Mother DateOfBirth"));
+            studentImport.setMotherGender(getStringCellValue(row.getCell(24), "Mother Gender"));
+            studentImport.setMotherJob(getStringCellValue(row.getCell(25), "Mother Job"));
+            studentImport.setMotherJobPlace(getStringCellValue(row.getCell(26), "Mother JobPlace"));
             validateStudentImport(studentImport);
         } catch (Exception e) {
             studentImport.setValid(false);
@@ -630,7 +737,12 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             case STRING:
                 return cell.getStringCellValue().trim();
             case NUMERIC:
-                return String.valueOf((int) cell.getNumericCellValue());
+                double value = cell.getNumericCellValue();
+                if (value == Math.floor(value)) {
+                    return String.valueOf((long) value);
+                } else {
+                    return String.valueOf(value);
+                }
             default:
                 return null;
         }
@@ -666,7 +778,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                     return LocalDate.parse(value, DATE_FORMATTER);
                 } catch (DateTimeParseException e1) {
                     try {
-                        return LocalDate.parse(value, DATE_FORMATTER_2);
+                        return LocalDate.parse(value, DATE_FORMATTER_ISO);
                     } catch (DateTimeParseException e2) {
                         return null;
                     }
@@ -738,7 +850,11 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             Row headerRow = sheet.createRow(0);
             String[] headers = {
                 "Student Code", "Full Name", "Class Code", "Date of Birth", 
-                "Address", "Gender", "Enrollment Date", "Emergency Contact", "Emergency Phone", "Status", "Avatar"
+                "Address", "Gender", "Enrollment Date", "Emergency Contact", "Emergency Phone", "Status", "Avatar",
+                // Father
+                "Father Name", "Father Email", "Father Phone", "Father Address", "Father DateOfBirth", "Father Gender", "Father Job", "Father JobPlace",
+                // Mother
+                "Mother Name", "Mother Email", "Mother Phone", "Mother Address", "Mother DateOfBirth", "Mother Gender", "Mother Job", "Mother JobPlace"
             };
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
@@ -772,12 +888,143 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 row.createCell(8).setCellValue(s.getEmergencyPhone() != null ? s.getEmergencyPhone() : "");
                 row.createCell(9).setCellValue(s.getStatus() != null ? s.getStatus().name() : "");
                 row.createCell(10).setCellValue(s.getAvatar() != null ? s.getAvatar() : "");
+                // Lấy thông tin bố mẹ
+                List<ParentStudentLink> links = parentStudentLinkRepository.findByStudentId(s.getStudentId());
+                UserProfile fatherProfile = null, motherProfile = null;
+                Parent fatherParent = null, motherParent = null;
+                for (ParentStudentLink link : links) {
+                    Optional<UserProfile> up = userProfileRepository.findById(link.getParentId());
+                    Optional<Parent> p = parentRepository.findByParentId(link.getParentId());
+                    if (link.getRelationship() != null && link.getRelationship() == Relationship.FATHER) {
+                        fatherProfile = up.orElse(null);
+                        fatherParent = p.orElse(null);
+                    }
+                    if (link.getRelationship() != null && link.getRelationship() == Relationship.MOTHER) {
+                        motherProfile = up.orElse(null);
+                        motherParent = p.orElse(null);
+                    }
+                }
+                // Father columns
+                int col = 11;
+                row.createCell(col++).setCellValue(fatherProfile != null ? fatherProfile.getFullName() : "");
+                row.createCell(col++).setCellValue(fatherProfile != null ? fatherProfile.getEmail() : "");
+                row.createCell(col++).setCellValue(fatherProfile != null ? fatherProfile.getPhone() : "");
+                row.createCell(col++).setCellValue(fatherProfile != null ? fatherProfile.getAddress() : "");
+                row.createCell(col++).setCellValue(fatherProfile != null && fatherProfile.getDateOfBirth() != null ? fatherProfile.getDateOfBirth().toString() : "");
+                row.createCell(col++).setCellValue(fatherProfile != null && fatherProfile.getGender() != null ? fatherProfile.getGender().name() : "");
+                row.createCell(col++).setCellValue(fatherParent != null ? fatherParent.getJob() : "");
+                row.createCell(col++).setCellValue(fatherParent != null ? fatherParent.getJobPlace() : "");
+                // Mother columns
+                row.createCell(col++).setCellValue(motherProfile != null ? motherProfile.getFullName() : "");
+                row.createCell(col++).setCellValue(motherProfile != null ? motherProfile.getEmail() : "");
+                row.createCell(col++).setCellValue(motherProfile != null ? motherProfile.getPhone() : "");
+                row.createCell(col++).setCellValue(motherProfile != null ? motherProfile.getAddress() : "");
+                row.createCell(col++).setCellValue(motherProfile != null && motherProfile.getDateOfBirth() != null ? motherProfile.getDateOfBirth().toString() : "");
+                row.createCell(col++).setCellValue(motherProfile != null && motherProfile.getGender() != null ? motherProfile.getGender().name() : "");
+                row.createCell(col++).setCellValue(motherParent != null ? motherParent.getJob() : "");
+                row.createCell(col++).setCellValue(motherParent != null ? motherParent.getJobPlace() : "");
             }
             workbook.write(outputStream);
             outputStream.flush();
             return outputStream.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Excel student list", e);
+        }
+    }
+
+    private void handleParentImport(Student student, StudentImportDTO dto, boolean isFather) {
+        String name = isFather ? dto.getFatherName() : dto.getMotherName();
+        String email = isFather ? dto.getFatherEmail() : dto.getMotherEmail();
+        String phone = isFather ? dto.getFatherPhone() : dto.getMotherPhone();
+        String address = isFather ? dto.getFatherAddress() : dto.getMotherAddress();
+        LocalDate dob = isFather ? dto.getFatherDateOfBirth() : dto.getMotherDateOfBirth();
+        String gender = isFather ? dto.getFatherGender() : dto.getMotherGender();
+        String job = isFather ? dto.getFatherJob() : dto.getMotherJob();
+        String jobPlace = isFather ? dto.getFatherJobPlace() : dto.getMotherJobPlace();
+        String relationship = isFather ? "FATHER" : "MOTHER";
+        if (email == null || email.isBlank()) {
+            return;
+        }
+        // Tìm hoặc tạo UserProfile (ưu tiên theo email)
+        UserProfile parentProfile = userProfileRepository.findByEmail(email).orElse(null);
+        boolean isNewUser = false;
+        if (parentProfile == null) {
+            // Tạo user trên Supabase và UserProfile
+            UserImportDTO userImport = UserImportDTO.builder()
+                    .fullName(name)
+                    .email(email)
+                    .phone(phone)
+                    .role("PARENT")
+                    .address(address)
+                    .gender(gender)
+                    .dateOfBirth(null) // không cần truyền chuỗi, sẽ set trực tiếp LocalDate
+                    .password(null) // sẽ tự sinh mật khẩu tạm thời
+                    .isValid(true)
+                    .build();
+            try {
+                parentProfile = createUserAccount(userImport, dob);
+                isNewUser = true;
+            } catch (Exception e) {
+                log.error("Failed to create parent user for email {}: {}", email, e.getMessage());
+                return;
+            }
+        } else {
+            // Cập nhật các trường thông tin nếu có dữ liệu mới từ file Excel
+            boolean changed = false;
+            if (name != null && !name.isBlank() && !name.equals(parentProfile.getFullName())) {
+                parentProfile.setFullName(name);
+                changed = true;
+            }
+            if (phone != null && !phone.isBlank() && !phone.equals(parentProfile.getPhone())) {
+                parentProfile.setPhone(phone);
+                changed = true;
+            }
+            if (address != null && !address.isBlank() && !address.equals(parentProfile.getAddress())) {
+                parentProfile.setAddress(address);
+                changed = true;
+            }
+            if (dob != null && (parentProfile.getDateOfBirth() == null || !dob.equals(parentProfile.getDateOfBirth()))) {
+                parentProfile.setDateOfBirth(dob);
+                changed = true;
+            }
+            if (gender != null && !gender.isBlank()) {
+                try {
+                    Gender g = Gender.valueOf(gender.toUpperCase());
+                    if (parentProfile.getGender() == null || !g.equals(parentProfile.getGender())) {
+                        parentProfile.setGender(g);
+                        changed = true;
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (changed) {
+                userProfileRepository.save(parentProfile);
+            }
+        }
+        // Tìm hoặc tạo Parent
+        Parent parent = parentRepository.findByParentId(parentProfile.getId()).orElse(null);
+        if (parent == null) {
+            parent = new Parent();
+            parent.setParentId(parentProfile.getId());
+        }
+        boolean parentChanged = false;
+        if (job != null && !job.equals(parent.getJob())) {
+            parent.setJob(job);
+            parentChanged = true;
+        }
+        if (jobPlace != null && !jobPlace.equals(parent.getJobPlace())) {
+            parent.setJobPlace(jobPlace);
+            parentChanged = true;
+        }
+        if (parentChanged || parent.getParentId() == null) {
+            parentRepository.save(parent);
+        }
+        // Tạo ParentStudentLink nếu chưa có
+        if (!parentStudentLinkRepository.existsByParentIdAndStudentId(parentProfile.getId(), student.getStudentId())) {
+            ParentStudentLink link = new ParentStudentLink();
+            link.setParentId(parentProfile.getId());
+            link.setStudentId(student.getStudentId());
+            link.setRelationship(isFather ? Relationship.FATHER : Relationship.MOTHER);
+            parentStudentLinkRepository.save(link);
         }
     }
 }
