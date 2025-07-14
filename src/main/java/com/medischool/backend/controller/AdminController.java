@@ -485,9 +485,19 @@ public class AdminController {
             @io.swagger.v3.oas.annotations.Parameter(description = "Excel file (.xlsx or .xls)") @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
             com.medischool.backend.dto.student.StudentImportResponseDTO response = excelImportService.importStudentsFromExcel(file);
+            // Luôn trả về 200, kể cả khi có lỗi ở một số dòng
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            // Nếu lỗi hệ thống, trả về 200 với message lỗi tổng quát
+            com.medischool.backend.dto.student.StudentImportResponseDTO errorRes = com.medischool.backend.dto.student.StudentImportResponseDTO.builder()
+                .success(false)
+                .totalRows(0)
+                .successCount(0)
+                .errorCount(0)
+                .errors(new java.util.ArrayList<>())
+                .message("Server error: " + e.getMessage())
+                .build();
+            return ResponseEntity.ok(errorRes);
         }
     }
 

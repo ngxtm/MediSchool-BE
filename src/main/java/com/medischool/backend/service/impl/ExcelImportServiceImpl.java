@@ -634,7 +634,6 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     }
 
     @Override
-    @Transactional
     public StudentImportResponseDTO importStudentsFromExcel(MultipartFile file) {
         List<StudentImportDTO> errors = new ArrayList<>();
         int successCount = 0;
