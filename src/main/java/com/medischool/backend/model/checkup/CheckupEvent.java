@@ -1,7 +1,7 @@
 package com.medischool.backend.model.checkup;
 
 import com.medischool.backend.model.UserProfile;
-import com.medischool.backend.model.enums.CheckupEventScope;
+import com.medischool.backend.model.enums.EventScope;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -47,5 +47,6 @@ public class CheckupEvent {
     private java.util.List<Long> categoryIds;
 
     @Enumerated(EnumType.STRING)
-    private CheckupEventScope scope;
+    @Column(name = "event_scope")
+    private EventScope eventScope;
 } 

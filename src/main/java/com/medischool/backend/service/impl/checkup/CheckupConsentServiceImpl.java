@@ -2,7 +2,7 @@ package com.medischool.backend.service.impl.checkup;
 
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.checkup.*;
-import com.medischool.backend.model.enums.CheckupEventScope;
+import com.medischool.backend.model.enums.EventScope;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.parentstudent.ParentStudentLink;
 import com.medischool.backend.model.parentstudent.Student;
@@ -132,6 +132,7 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
                             return c;
                         });
                 consent.setConsentStatus(ConsentStatus.valueOf(req.consentStatus));
+                if (req.note != null) consent.setNote(req.note);
                 consent.setFullyRejected(false);
                 checkupConsentRepository.save(consent);
                 // Nếu consentStatus là APPROVE, tạo CheckupResult nếu chưa có
@@ -155,42 +156,39 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
 
     @Override
     @Transactional
-    public void sendConsentToAllParents(Long eventId) {
+    public com.medischool.backend.service.checkup.SendConsentResult sendConsentToAllParents(Long eventId) {
         CheckupEvent event = checkupEventRepository.findById(eventId).orElseThrow();
         // Lấy categoryIds từ bảng trung gian
         List<CheckupEventCategory> eventCategories = checkupEventCategoryRepository.findByEvent_Id(eventId);
         List<Long> categoryIds = eventCategories.stream().map(ec -> ec.getCategory().getId()).toList();
-        if (categoryIds == null || categoryIds.isEmpty()) return;
+        if (categoryIds == null || categoryIds.isEmpty()) return new com.medischool.backend.service.checkup.SendConsentResult(0, 0);
         List<CheckupCategory> categories = checkupCategoryRepository.findAllById(categoryIds);
         List<ParentStudentLink> links = parentStudentLinkRepository.findAll();
+        int success = 0;
+        int failed = 0;
         for (ParentStudentLink link : links) {
             Integer studentId = link.getStudentId();
-            UserProfile parent = userProfileRepository.findById(link.getParentId()).orElseThrow();
-            boolean shouldSend = true;
-            if (event.getScope() == CheckupEventScope.NEED_RECHECK) {
-                boolean hasAnyResult = checkupResultRepository.findByStudent_StudentId(studentId).size() > 0;
-                boolean hasApprovedConsent = checkupConsentRepository.findByStudent_StudentId(studentId)
-                    .stream()
-                    .anyMatch(c -> c.getConsentStatus() == ConsentStatus.APPROVE);
-                shouldSend = !hasAnyResult || !hasApprovedConsent;
-            }
-            if (!shouldSend) continue;
+            UserProfile parent = userProfileRepository.findById(link.getParentId()).orElse(null);
+            if (parent == null) { failed++; continue; }
+            // Nếu đã có consent cho event này và student này thì không gửi nữa
+            boolean alreadyHasConsent = checkupConsentRepository.findByEvent_IdAndStudent_StudentId(eventId, studentId).size() > 0;
+            if (alreadyHasConsent) { failed++; continue; }
+            boolean sent = false;
             for (CheckupCategory category : categories) {
-                boolean exists = checkupConsentRepository.findByEvent_IdAndStudent_StudentId(eventId, studentId)
-                    .stream().anyMatch(c -> c.getCategory().getId().equals(category.getId()));
-                if (!exists) {
-                    CheckupConsent consent = CheckupConsent.builder()
-                        .event(event)
-                        .student(studentRepository.findById(studentId).orElseThrow())
-                        .parent(parent)
-                        .category(category)
-                        .consentStatus(null)
-                        .fullyRejected(false)
-                        .createdAt(LocalDateTime.now())
-                        .build();
-                    checkupConsentRepository.save(consent);
-                }
+                CheckupConsent consent = CheckupConsent.builder()
+                    .event(event)
+                    .student(studentRepository.findById(studentId).orElseThrow())
+                    .parent(parent)
+                    .category(category)
+                    .consentStatus(null)
+                    .fullyRejected(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+                checkupConsentRepository.save(consent);
+                sent = true;
             }
+            if (sent) success++; else failed++;
         }
+        return new com.medischool.backend.service.checkup.SendConsentResult(success, failed);
     }
 } 

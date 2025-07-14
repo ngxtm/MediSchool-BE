@@ -113,4 +113,24 @@ public class CheckupResultServiceImpl implements CheckupResultService {
             }
         }
     }
+
+    @Override
+    public void upsertResult(Long eventId, Integer studentId, Long categoryId, String resultData, String checkedAt) {
+        CheckupResult result = checkupResultRepository.findByEvent_IdAndStudent_StudentIdAndCategory_Id(eventId, studentId, categoryId);
+        java.time.LocalDateTime checkedAtTime = checkedAt != null ? java.time.LocalDateTime.parse(checkedAt) : java.time.LocalDateTime.now();
+        if (result != null) {
+            result.setResultData(resultData);
+            result.setCheckedAt(checkedAtTime);
+            checkupResultRepository.save(result);
+        } else {
+            result = CheckupResult.builder()
+                .event(checkupEventRepository.findById(eventId).orElseThrow())
+                .student(studentRepository.findById(studentId).orElseThrow())
+                .category(checkupCategoryRepository.findById(categoryId).orElseThrow())
+                .resultData(resultData)
+                .checkedAt(checkedAtTime)
+                .build();
+            checkupResultRepository.save(result);
+        }
+    }
 } 

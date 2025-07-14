@@ -10,4 +10,5 @@ public interface CheckupResultService {
     void updateResult(Long eventId, Integer studentId, Long categoryId, String resultData);
     void updateResultById(Long resultId, String resultData);
     List<CheckupResult> getResultsForStudentInEvent(Long eventId, Integer studentId);
+    void upsertResult(Long eventId, Integer studentId, Long categoryId, String resultData, String checkedAt);
 } 

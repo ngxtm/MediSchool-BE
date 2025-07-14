@@ -41,6 +41,15 @@ public class CheckupEventController {
         return ResponseEntity.ok(checkupEventService.updateEvent(id, event));
     }
 
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "Update status of checkup event (Manager approve)")
+    public ResponseEntity<CheckupEvent> updateStatus(@PathVariable Long id, @RequestParam String status) {
+        CheckupEvent event = checkupEventService.getEventById(id);
+        if (event == null) return ResponseEntity.notFound().build();
+        event.setStatus(status);
+        return ResponseEntity.ok(checkupEventService.updateEvent(id, event));
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete checkup event")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
