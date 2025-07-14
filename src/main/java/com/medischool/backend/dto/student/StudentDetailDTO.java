@@ -26,6 +26,5 @@ public class StudentDetailDTO {
     private String emergencyContact;
     private String emergencyPhone;
     private String address;
-    private Integer grade;
     private String avatar;
 }

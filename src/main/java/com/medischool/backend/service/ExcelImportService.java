@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.medischool.backend.dto.UserImportResponseDTO;
+import com.medischool.backend.dto.student.StudentImportResponseDTO;
 import com.medischool.backend.model.UserProfile;
+import com.medischool.backend.model.parentstudent.Student;
 
 /**
  * Service interface for Excel import/export operations related to user management
@@ -45,5 +47,12 @@ public interface ExcelImportService {
      * @param file Excel file containing student data
      * @return Import result with success/failure counts and detailed errors
      */
-    UserImportResponseDTO importStudentsFromExcel(MultipartFile file);
+    StudentImportResponseDTO importStudentsFromExcel(MultipartFile file);
+
+    /**
+     * Export all students to Excel file for backup or analysis
+     * @param students List of students to export
+     * @return Byte array of Excel file
+     */
+    byte[] generateStudentListExcel(List<Student> students);
 } 

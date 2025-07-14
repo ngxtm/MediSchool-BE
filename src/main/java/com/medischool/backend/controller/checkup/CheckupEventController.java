@@ -1,6 +1,5 @@
 package com.medischool.backend.controller.checkup;
 
-import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
 import com.medischool.backend.service.checkup.CheckupEventService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,16 +10,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/health-checkup")
+@RequestMapping("/api/checkup-events")
 @RequiredArgsConstructor
 public class CheckupEventController {
     private final CheckupEventService checkupEventService;
 
-    @PostMapping("/create")
+    @PostMapping
     @Operation(summary = "Create a new checkup event")
-    public ResponseEntity<CheckupEvent> createEvent(@RequestBody CheckupEventRequestDTO requestDTO) {
-        CheckupEvent created = checkupEventService.createEvent(requestDTO);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<CheckupEvent> createEvent(@RequestBody CheckupEvent event) {
+        return ResponseEntity.ok(checkupEventService.createEvent(event, event.getCategoryIds()));
     }
 
     @GetMapping
