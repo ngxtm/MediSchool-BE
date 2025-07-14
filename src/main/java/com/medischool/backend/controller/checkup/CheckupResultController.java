@@ -25,6 +25,18 @@ public class CheckupResultController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("")
+    @Operation(summary = "Upsert checkup result by eventId, studentId, categoryId")
+    public ResponseEntity<?> upsertResult(
+            @RequestParam Long eventId,
+            @RequestParam Integer studentId,
+            @RequestParam Long categoryId,
+            @RequestBody CheckupResultRequest body
+    ) {
+        checkupResultService.upsertResult(eventId, studentId, categoryId, body.getResultData(), body.getCheckedAt());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/event/{eventId}/student/{studentId}")
     @Operation(summary = "Get checkup results for student in event")
     public ResponseEntity<List<?>> getResultsForStudentInEvent(@PathVariable Long eventId, @PathVariable Integer studentId) {

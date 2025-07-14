@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import com.medischool.backend.service.checkup.SendConsentResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,9 +32,9 @@ public class CheckupConsentController {
 
     @PostMapping("/event/{eventId}/send-all")
     @Operation(summary = "Send consents to all parents")
-    public ResponseEntity<Void> sendConsentToAllParents(@PathVariable Long eventId) {
-        checkupConsentService.sendConsentToAllParents(eventId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<SendConsentResult> sendConsentToAllParents(@PathVariable Long eventId) {
+        SendConsentResult result = checkupConsentService.sendConsentToAllParents(eventId);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{consentId}")
