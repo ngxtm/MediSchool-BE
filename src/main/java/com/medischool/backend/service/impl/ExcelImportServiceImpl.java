@@ -329,7 +329,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     }
 
     @Transactional
-    private UserProfile createUserAccount(UserImportDTO userImport) throws Exception {
+    protected UserProfile createUserAccount(UserImportDTO userImport) throws Exception {
         log.info("Creating user account for: {}", userImport.getEmail());
 
         String password = userImport.getPassword();
@@ -402,7 +402,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     }
 
     @Transactional
-    private UserProfile createUserAccount(UserImportDTO userImport, LocalDate dobRaw) throws Exception {
+    protected UserProfile createUserAccount(UserImportDTO userImport, LocalDate dobRaw) throws Exception {
         log.info("Creating user account for: {}", userImport.getEmail());
 
         String password = userImport.getPassword();
@@ -696,7 +696,6 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             studentImport.setStudentCode(getStringCellValue(row.getCell(0), "Student Code"));
             studentImport.setFullName(getStringCellValue(row.getCell(1), "Full Name"));
             studentImport.setClassCode(getStringCellValue(row.getCell(2), "Class Code"));
-            // Bỏ qua grade
             studentImport.setDateOfBirth(getDateCellValue(row.getCell(3), "Date of Birth"));
             studentImport.setAddress(getStringCellValue(row.getCell(4), "Address"));
             studentImport.setGender(getStringCellValue(row.getCell(5), "Gender"));
@@ -774,13 +773,27 @@ public class ExcelImportServiceImpl implements ExcelImportService {
                 return null;
             case STRING:
                 String value = cell.getStringCellValue().trim();
+                if (value.isEmpty()) return null;
                 try {
                     return LocalDate.parse(value, DATE_FORMATTER);
                 } catch (DateTimeParseException e1) {
                     try {
                         return LocalDate.parse(value, DATE_FORMATTER_ISO);
                     } catch (DateTimeParseException e2) {
-                        return null;
+                        try {
+                            return LocalDate.parse(value, DATE_FORMATTER_3); // MM/dd/yyyy
+                        } catch (DateTimeParseException e3) {
+                            try {
+                                return LocalDate.parse(value, DATE_FORMATTER_2); // d/M/yyyy
+                            } catch (DateTimeParseException e4) {
+                                try {
+                                    return LocalDate.parse(value, DATE_FORMATTER_4); // d-M-yyyy
+                                } catch (DateTimeParseException e5) {
+                                    log.warn("[IMPORT] Không parse được ngày tháng cho trường '{}': '{}' (row {})", fieldName, value, cell.getRowIndex()+1);
+                                    return null;
+                                }
+                            }
+                        }
                     }
                 }
             default:

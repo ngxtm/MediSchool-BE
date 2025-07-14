@@ -1,10 +1,18 @@
 package com.medischool.backend.controller;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -44,6 +52,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Workbook;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -793,8 +802,64 @@ public class AdminController {
         }
     }
 
-
-
+    @PostMapping("/test-date-import")
+    public ResponseEntity<List<String>> testDateImport(@RequestParam("file") MultipartFile file) {
+        List<String> results = new ArrayList<>();
+        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null) continue;
+                Cell cell = row.getCell(3); // Cột Date of Birth (index 3)
+                String value = null;
+                if (cell != null) {
+                    switch (cell.getCellType()) {
+                        case NUMERIC:
+                            if (DateUtil.isCellDateFormatted(cell)) {
+                                value = cell.getLocalDateTimeCellValue().toLocalDate().toString();
+                            } else {
+                                value = "NUMERIC_NOT_DATE";
+                            }
+                            break;
+                        case STRING:
+                            String str = cell.getStringCellValue().trim();
+                            value = str;
+                            // Thử parse các định dạng
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("d/M/yyyy"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("d-M-yyyy"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            break;
+                        default:
+                            value = "UNSUPPORTED_TYPE";
+                    }
+                } else {
+                    value = "NULL_CELL";
+                }
+                results.add("Row " + (rowIndex+1) + ": " + value);
+            }
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            results.add("ERROR: " + e.getMessage());
+            return ResponseEntity.badRequest().body(results);
+        }
+    }
 
 
 }
