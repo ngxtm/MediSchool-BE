@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,7 @@ import com.medischool.backend.dto.UserImportResponseDTO;
 import com.medischool.backend.model.ActivityLog.ActivityType;
 import com.medischool.backend.model.ActivityLog.EntityType;
 import com.medischool.backend.model.UserProfile;
+import com.medischool.backend.model.parentstudent.ParentStudentLinkId;
 import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.repository.StudentRepository;
@@ -52,7 +54,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Workbook;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -470,6 +471,29 @@ public class AdminController {
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/parent-student-link")
+    @Operation(summary = "Delete parent-student relationship by parentId and studentId")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Relationship deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Relationship not found")
+    })
+    @LogActivity(
+        actionType = ActivityType.DELETE,
+        entityType = EntityType.USER,
+        description = "Xóa quan hệ phụ huynh-học sinh"
+    )
+    public ResponseEntity<Void> deleteParentStudentLink(
+            @RequestParam UUID parentId,
+            @RequestParam Integer studentId) {
+        ParentStudentLinkId linkId = new ParentStudentLinkId(parentId, studentId);
+        if (parentStudentLinkRepository.existsById(linkId)) {
+            parentStudentLinkRepository.deleteById(linkId);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
         }
     }
 
