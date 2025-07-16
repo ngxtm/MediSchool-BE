@@ -7,7 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "checkup_event_category")
+@Table(
+        name = "checkup_event_category",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"event_id", "category_id"})
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,4 +27,4 @@ public class CheckupEventCategory {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private CheckupCategory category;
-} 
+}

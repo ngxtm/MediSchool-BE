@@ -37,8 +37,6 @@ public class CheckupBasicInfoServiceImpl implements CheckupBasicInfoService {
             existing.setWeight(info.getWeight());
             existing.setVisionLeft(info.getVisionLeft());
             existing.setVisionRight(info.getVisionRight());
-            existing.setUnderlyingDiseases(info.getUnderlyingDiseases());
-            existing.setAllergies(info.getAllergies());
             existing.setUpdatedAt(LocalDateTime.now());
             return checkupBasicInfoRepository.save(existing);
         }

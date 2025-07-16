@@ -1,6 +1,9 @@
 package com.medischool.backend.controller.checkup;
 
+import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
+import com.medischool.backend.dto.checkup.CheckupStatsDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
+import com.medischool.backend.model.enums.EventStatus;
 import com.medischool.backend.service.checkup.CheckupEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -10,21 +13,33 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/checkup-events")
+@RequestMapping("/api/health-checkup")
 @RequiredArgsConstructor
 public class CheckupEventController {
     private final CheckupEventService checkupEventService;
 
-    @PostMapping
+    @GetMapping("/stats")
+    public ResponseEntity<CheckupStatsDTO> getRequestStats() {
+        CheckupStatsDTO stats = checkupEventService.getStats();
+        return ResponseEntity.ok(stats);
+    }
+
+    @PostMapping("/create")
     @Operation(summary = "Create a new checkup event")
-    public ResponseEntity<CheckupEvent> createEvent(@RequestBody CheckupEvent event) {
-        return ResponseEntity.ok(checkupEventService.createEvent(event, event.getCategoryIds()));
+    public ResponseEntity<CheckupEvent> createEvent(@RequestBody CheckupEventRequestDTO requestDTO) {
+        CheckupEvent created = checkupEventService.createEvent(requestDTO);
+        return ResponseEntity.ok(created);
     }
 
     @GetMapping
-    @Operation(summary = "Get all checkup events")
+    @Operation(summary = "Get all checkup events with student stats")
     public ResponseEntity<List<CheckupEvent>> getAllEvents() {
         return ResponseEntity.ok(checkupEventService.getAllEvents());
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<CheckupEvent>> getPendingEvent() {
+        return ResponseEntity.ok(checkupEventService.getPendingEvent("PENDING"));
     }
 
     @GetMapping("/{id}")
@@ -41,19 +56,27 @@ public class CheckupEventController {
         return ResponseEntity.ok(checkupEventService.updateEvent(id, event));
     }
 
-    @PatchMapping("/{id}/status")
-    @Operation(summary = "Update status of checkup event (Manager approve)")
-    public ResponseEntity<CheckupEvent> updateStatus(@PathVariable Long id, @RequestParam String status) {
-        CheckupEvent event = checkupEventService.getEventById(id);
-        if (event == null) return ResponseEntity.notFound().build();
-        event.setStatus(status);
-        return ResponseEntity.ok(checkupEventService.updateEvent(id, event));
-    }
-
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete checkup event")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         checkupEventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{eventId}/status")
+    @Operation(summary = "Update health checkup event status")
+    public ResponseEntity<CheckupEvent> updateEventStatus(
+            @PathVariable Long eventId,
+            @RequestParam String status,
+            @RequestParam(required = false) String rejectionReason
+    ) {
+        try {
+            CheckupEvent updated = checkupEventService.updateEventStatus(eventId, status, rejectionReason);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 } 

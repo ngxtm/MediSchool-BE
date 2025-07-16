@@ -24,4 +24,4 @@ public class ParentResponseDTO {
     private String job;
     private String jobPlace;
     private Relationship relationship;
-} 
+}

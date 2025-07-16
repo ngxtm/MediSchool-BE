@@ -1,22 +1,17 @@
 package com.medischool.backend.service.checkup;
 
-import com.medischool.backend.model.checkup.CheckupConsent;
-
+import com.medischool.backend.dto.checkup.CheckupConsentDTO;
+import com.medischool.backend.dto.checkup.CheckupConsentResponseDTO;
+import com.medischool.backend.dto.checkup.CheckupResultDTO;
+import com.medischool.backend.dto.checkup.ConsentReplyResponse;
+import com.medischool.backend.model.checkup.CheckupEventConsent;
 import java.util.List;
+import java.util.Map;
 
 public interface CheckupConsentService {
-    List<CheckupConsent> getConsentsForStudentInEvent(Long eventId, Integer studentId);
-    void submitConsents(Long eventId, Integer studentId, List<ConsentRequest> consents, Boolean fullyRejected);
-    SendConsentResult sendConsentToAllParents(Long eventId);
-    
-    // Methods for parent operations
-    CheckupConsent getConsentById(Long consentId);
-    void submitConsentById(Long consentId, String consentStatus, String note);
-    void submitAllConsentsForStudent(Long eventId, Integer studentId, String consentStatus, String note);
-
-    class ConsentRequest {
-        public Long categoryId;
-        public String consentStatus;
-        public String note; // Ghi chú khi từ chối từng danh mục
-    }
+    List<CheckupConsentDTO> getAllConsentsForEvent(Long eventId);
+    Map<String, Object> sendConsentsToAllStudents(Long eventId);
+    CheckupConsentDTO getConsentById(Long id);
+    ConsentReplyResponse submitParentConsentReply(Long consentId, CheckupConsentResponseDTO dto);
+    List<CheckupConsentDTO> getConsentsByStudentId(Integer studentId);
 } 

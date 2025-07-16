@@ -119,9 +119,9 @@ public class AdminController {
     ) {
         try {
             log.info("Get users request - keyword: {}, includeDeleted: {}", keyword, includeDeleted);
-            
+
             List<UserProfile> users;
-            
+
             if (includeDeleted) {
                 users = userManagementService.getAllUsers(true);
                 log.info("Retrieved {} users (including deleted)", users.size());
@@ -129,19 +129,19 @@ public class AdminController {
                 users = userManagementService.getAllActiveUsers();
                 log.info("Retrieved {} active users", users.size());
             }
-            
+
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String searchTerm = keyword.toLowerCase().trim();
                 int beforeFilter = users.size();
                 users = users.stream()
-                        .filter(user -> 
-                            (user.getFullName() != null && user.getFullName().toLowerCase().contains(searchTerm)) ||
-                            (user.getEmail() != null && user.getEmail().toLowerCase().contains(searchTerm))
+                        .filter(user ->
+                                (user.getFullName() != null && user.getFullName().toLowerCase().contains(searchTerm)) ||
+                                        (user.getEmail() != null && user.getEmail().toLowerCase().contains(searchTerm))
                         )
                         .toList();
                 log.info("Filtered users from {} to {} with keyword: {}", beforeFilter, users.size(), keyword);
             }
-            
+
             log.info("Returning {} users", users.size());
             return ResponseEntity.ok(users);
         } catch (Exception e) {
@@ -157,9 +157,9 @@ public class AdminController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @LogActivity(
-        actionType = ActivityType.CREATE,
-        entityType = EntityType.USER,
-        description = "Tạo người dùng mới: {fullName} ({email})"
+            actionType = ActivityType.CREATE,
+            entityType = EntityType.USER,
+            description = "Tạo người dùng mới: {fullName} ({email})"
     )
     public ResponseEntity<UserProfile> createUser(@RequestBody UserProfile user) {
         try {
@@ -177,9 +177,9 @@ public class AdminController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @LogActivity(
-        actionType = ActivityType.CREATE,
-        entityType = EntityType.USER,
-        description = "Tạo người dùng mới với mật khẩu: {fullName} ({email})"
+            actionType = ActivityType.CREATE,
+            entityType = EntityType.USER,
+            description = "Tạo người dùng mới với mật khẩu: {fullName} ({email})"
     )
     public ResponseEntity<UserProfile> createUserWithPassword(@RequestBody CreateUserRequestDTO createUserRequest) {
         try {
@@ -197,13 +197,13 @@ public class AdminController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @LogActivity(
-        actionType = ActivityType.UPDATE,
-        entityType = EntityType.USER,
-        description = "Cập nhật thông tin người dùng",
-        entityIdParam = "id"
+            actionType = ActivityType.UPDATE,
+            entityType = EntityType.USER,
+            description = "Cập nhật thông tin người dùng",
+            entityIdParam = "id"
     )
     public ResponseEntity<UserProfile> updateUser(
-            @Parameter(description = "User ID") @PathVariable UUID id, 
+            @Parameter(description = "User ID") @PathVariable UUID id,
             @RequestBody UserProfile user) {
         try {
             UserProfile updated = userManagementService.updateUser(id, user);
@@ -221,10 +221,10 @@ public class AdminController {
             @ApiResponse(responseCode = "400", description = "Bad request")
     })
     @LogActivity(
-        actionType = ActivityType.DELETE,
-        entityType = EntityType.USER,
-        description = "Xóa mềm người dùng",
-        entityIdParam = "id"
+            actionType = ActivityType.DELETE,
+            entityType = EntityType.USER,
+            description = "Xóa mềm người dùng",
+            entityIdParam = "id"
     )
     public ResponseEntity<Map<String, Object>> softDeleteUser(
             @Parameter(description = "User ID") @PathVariable UUID id,
@@ -233,27 +233,27 @@ public class AdminController {
         try {
             String currentUserEmail = authentication.getName();
             log.info("Soft delete user request - User ID: {}, Requested by: {}", id, currentUserEmail);
-            
+
             boolean result = userManagementService.softDeleteUser(id, id, request.getReason());
-            
+
             if (result) {
                 log.info("User {} soft deleted successfully by {}", id, currentUserEmail);
                 return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "User soft deleted successfully"
+                        "success", true,
+                        "message", "User soft deleted successfully"
                 ));
             } else {
                 log.warn("Failed to soft delete user {} by {}: {}", id, currentUserEmail, "User not found or already deleted");
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "User not found or already deleted"
+                        "success", false,
+                        "message", "User not found or already deleted"
                 ));
             }
         } catch (Exception e) {
             log.error("Error soft deleting user {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Internal server error: " + e.getMessage()
+                    "success", false,
+                    "message", "Internal server error: " + e.getMessage()
             ));
         }
     }
@@ -266,36 +266,36 @@ public class AdminController {
             @ApiResponse(responseCode = "400", description = "Bad request")
     })
     @LogActivity(
-        actionType = ActivityType.UPDATE,
-        entityType = EntityType.USER,
-        description = "Khôi phục người dùng đã xóa",
-        entityIdParam = "id"
+            actionType = ActivityType.UPDATE,
+            entityType = EntityType.USER,
+            description = "Khôi phục người dùng đã xóa",
+            entityIdParam = "id"
     )
     public ResponseEntity<Map<String, Object>> restoreUser(
             @Parameter(description = "User ID") @PathVariable UUID id) {
         try {
             log.info("Restore user request - User ID: {}", id);
-            
+
             boolean result = userManagementService.restoreUser(id);
-            
+
             if (result) {
                 log.info("User {} restored successfully", id);
                 return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "message", "User restored successfully"
+                        "success", true,
+                        "message", "User restored successfully"
                 ));
             } else {
                 log.warn("Failed to restore user {}: {}", id, "User not found or already active");
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "User not found or already active"
+                        "success", false,
+                        "message", "User not found or already active"
                 ));
             }
         } catch (Exception e) {
             log.error("Error restoring user {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Internal server error: " + e.getMessage()
+                    "success", false,
+                    "message", "Internal server error: " + e.getMessage()
             ));
         }
     }
@@ -311,33 +311,33 @@ public class AdminController {
             @Parameter(description = "User ID") @PathVariable UUID id) {
         try {
             log.info("Check Supabase status request - User ID: {}", id);
-            
+
             Optional<UserProfile> userOpt = userProfileRepository.findById(id);
             if (userOpt.isEmpty()) {
                 log.warn("User {} not found in local database", id);
                 return ResponseEntity.status(404).body(Map.of(
-                    "success", false,
-                    "message", "User not found in local database"
+                        "success", false,
+                        "message", "User not found in local database"
                 ));
             }
-            
+
             UserProfile user = userOpt.get();
             boolean existsInSupabase = userManagementService.checkUserExistsInSupabase(user.getId());
-            
+
             Map<String, Object> response = Map.of(
-                "success", true,
-                "userEmail", user.getEmail(),
-                "existsInSupabase", existsInSupabase,
-                "localUserActive", user.getIsActive()
+                    "success", true,
+                    "userEmail", user.getEmail(),
+                    "existsInSupabase", existsInSupabase,
+                    "localUserActive", user.getIsActive()
             );
-            
+
             log.info("Supabase status check completed for user {}: existsInSupabase={}", id, existsInSupabase);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error checking Supabase status for user {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Error checking Supabase status: " + e.getMessage()
+                    "success", false,
+                    "message", "Error checking Supabase status: " + e.getMessage()
             ));
         }
     }
@@ -351,10 +351,10 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "Supabase deletion failed")
     })
     @LogActivity(
-        actionType = ActivityType.DELETE,
-        entityType = EntityType.USER,
-        description = "Xóa vĩnh viễn người dùng",
-        entityIdParam = "id"
+            actionType = ActivityType.DELETE,
+            entityType = EntityType.USER,
+            description = "Xóa vĩnh viễn người dùng",
+            entityIdParam = "id"
     )
     public ResponseEntity<Map<String, Object>> hardDeleteUser(
             @Parameter(description = "User ID") @PathVariable UUID id,
@@ -362,24 +362,24 @@ public class AdminController {
         try {
             String currentUserEmail = authentication.getName();
             log.info("Hard delete user request - User ID: {}, Requested by: {}", id, currentUserEmail);
-            
+
             boolean result = userManagementService.hardDeleteUser(id);
-            
+
             if (result) {
                 log.info("User {} hard deleted successfully by {}", id, currentUserEmail);
                 return ResponseEntity.status(204).build();
             } else {
                 log.warn("Failed to hard delete user {} by {}: {}", id, currentUserEmail, "User not found or deletion failed");
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "User not found or deletion failed"
+                        "success", false,
+                        "message", "User not found or deletion failed"
                 ));
             }
         } catch (Exception e) {
             log.error("Error hard deleting user {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Internal server error: " + e.getMessage()
+                    "success", false,
+                    "message", "Internal server error: " + e.getMessage()
             ));
         }
     }
@@ -409,9 +409,9 @@ public class AdminController {
             @ApiResponse(responseCode = "400", description = "Invalid input data")
     })
     @LogActivity(
-        actionType = ActivityType.CREATE,
-        entityType = EntityType.STUDENT,
-        description = "Tạo học sinh mới"
+            actionType = ActivityType.CREATE,
+            entityType = EntityType.STUDENT,
+            description = "Tạo học sinh mới"
     )
     public ResponseEntity<Student> createStudent(@RequestBody Student student) {
         try {
@@ -429,13 +429,13 @@ public class AdminController {
             @ApiResponse(responseCode = "404", description = "Student not found")
     })
     @LogActivity(
-        actionType = ActivityType.UPDATE,
-        entityType = EntityType.STUDENT,
-        description = "Cập nhật thông tin học sinh",
-        entityIdParam = "id"
+            actionType = ActivityType.UPDATE,
+            entityType = EntityType.STUDENT,
+            description = "Cập nhật thông tin học sinh",
+            entityIdParam = "id"
     )
     public ResponseEntity<Student> updateStudent(
-            @Parameter(description = "Student ID") @PathVariable Integer id, 
+            @Parameter(description = "Student ID") @PathVariable Integer id,
             @RequestBody Student student) {
         try {
             if (studentRepository.existsById(id)) {
@@ -456,10 +456,10 @@ public class AdminController {
             @ApiResponse(responseCode = "404", description = "Student not found")
     })
     @LogActivity(
-        actionType = ActivityType.DELETE,
-        entityType = EntityType.STUDENT,
-        description = "Xóa học sinh",
-        entityIdParam = "id"
+            actionType = ActivityType.DELETE,
+            entityType = EntityType.STUDENT,
+            description = "Xóa học sinh",
+            entityIdParam = "id"
     )
     public ResponseEntity<Void> deleteStudent(@Parameter(description = "Student ID") @PathVariable Integer id) {
         try {
@@ -477,13 +477,13 @@ public class AdminController {
     @DeleteMapping("/parent-student-link")
     @Operation(summary = "Delete parent-student relationship by parentId and studentId")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Relationship deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "Relationship not found")
+            @ApiResponse(responseCode = "204", description = "Relationship deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Relationship not found")
     })
     @LogActivity(
-        actionType = ActivityType.DELETE,
-        entityType = EntityType.USER,
-        description = "Xóa quan hệ phụ huynh-học sinh"
+            actionType = ActivityType.DELETE,
+            entityType = EntityType.USER,
+            description = "Xóa quan hệ phụ huynh-học sinh"
     )
     public ResponseEntity<Void> deleteParentStudentLink(
             @RequestParam UUID parentId,
@@ -514,13 +514,13 @@ public class AdminController {
         } catch (Exception e) {
             // Nếu lỗi hệ thống, trả về 200 với message lỗi tổng quát
             com.medischool.backend.dto.student.StudentImportResponseDTO errorRes = com.medischool.backend.dto.student.StudentImportResponseDTO.builder()
-                .success(false)
-                .totalRows(0)
-                .successCount(0)
-                .errorCount(0)
-                .errors(new java.util.ArrayList<>())
-                .message("Server error: " + e.getMessage())
-                .build();
+                    .success(false)
+                    .totalRows(0)
+                    .successCount(0)
+                    .errorCount(0)
+                    .errors(new java.util.ArrayList<>())
+                    .message("Server error: " + e.getMessage())
+                    .build();
             return ResponseEntity.ok(errorRes);
         }
     }
@@ -549,19 +549,19 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "Server error during import")
     })
     @LogActivity(
-        actionType = ActivityType.IMPORT,
-        entityType = EntityType.USER,
-        description = "Nhập danh sách người dùng từ file Excel"
+            actionType = ActivityType.IMPORT,
+            entityType = EntityType.USER,
+            description = "Nhập danh sách người dùng từ file Excel"
     )
     public ResponseEntity<UserImportResponseDTO> importUsersFromExcel(
             @Parameter(description = "Excel file (.xlsx or .xls)") @RequestParam("file") MultipartFile file) {
         try {
             log.info("Import users request - File: {}, Size: {} bytes", file.getOriginalFilename(), file.getSize());
-            
+
             UserImportResponseDTO response = excelImportService.importUsersFromExcel(file);
-            
+
             log.info("Import users completed - Success: {}", response.getSuccessCount());
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error importing users: {}", e.getMessage(), e);
@@ -576,9 +576,9 @@ public class AdminController {
     @Operation(summary = "Download Excel template for user import")
     @ApiResponse(responseCode = "200", description = "Excel template downloaded successfully")
     @LogActivity(
-        actionType = ActivityType.DOWNLOAD,
-        entityType = EntityType.USER,
-        description = "Tải xuống template Excel cho import người dùng"
+            actionType = ActivityType.DOWNLOAD,
+            entityType = EntityType.USER,
+            description = "Tải xuống template Excel cho import người dùng"
     )
     public ResponseEntity<byte[]> downloadUserImportTemplate() {
         try {
@@ -599,9 +599,9 @@ public class AdminController {
     @Operation(summary = "Download Excel file of all users in database")
     @ApiResponse(responseCode = "200", description = "Excel file of all users downloaded successfully")
     @LogActivity(
-        actionType = ActivityType.EXPORT,
-        entityType = EntityType.USER,
-        description = "Xuất danh sách người dùng ra file Excel"
+            actionType = ActivityType.EXPORT,
+            entityType = EntityType.USER,
+            description = "Xuất danh sách người dùng ra file Excel"
     )
     public ResponseEntity<byte[]> downloadUserListExcel() {
         try {
@@ -625,9 +625,9 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "Server error during email sending")
     })
     @LogActivity(
-        actionType = ActivityType.SEND_EMAIL,
-        entityType = EntityType.EMAIL,
-        description = "Gửi email thông báo cho {recipientCount} người nhận"
+            actionType = ActivityType.SEND_EMAIL,
+            entityType = EntityType.EMAIL,
+            description = "Gửi email thông báo cho {recipientCount} người nhận"
     )
     public ResponseEntity<Map<String, Object>> sendBulkEmails(
             @RequestBody Map<String, Object> request) {
@@ -636,42 +636,42 @@ public class AdminController {
             List<String> recipientEmails = (List<String>) request.get("recipientEmails");
             String subject = (String) request.get("subject");
             String content = (String) request.get("content");
-            
+
             if (recipientEmails == null || recipientEmails.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "No recipients specified"
+                        "success", false,
+                        "message", "No recipients specified"
                 ));
             }
-            
+
             if (subject == null || subject.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Subject is required"
+                        "success", false,
+                        "message", "Subject is required"
                 ));
             }
-            
+
             if (content == null || content.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Content is required"
+                        "success", false,
+                        "message", "Content is required"
                 ));
             }
-            
+
             log.info("Send bulk emails request - Recipients: {}, Subject: {}", recipientEmails.size(), subject);
-            
+
             log.info("Bulk email sending requested for {} recipients", recipientEmails.size());
-            
+
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Emails queued for sending",
-                "recipientCount", recipientEmails.size()
+                    "success", true,
+                    "message", "Emails queued for sending",
+                    "recipientCount", recipientEmails.size()
             ));
         } catch (Exception e) {
             log.error("Error sending bulk emails: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Error sending emails: " + e.getMessage()
+                    "success", false,
+                    "message", "Error sending emails: " + e.getMessage()
             ));
         }
     }
@@ -684,9 +684,9 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "Server error during email sending")
     })
     @LogActivity(
-        actionType = ActivityType.SEND_EMAIL,
-        entityType = EntityType.EMAIL,
-        description = "Gửi email đơn lẻ"
+            actionType = ActivityType.SEND_EMAIL,
+            entityType = EntityType.EMAIL,
+            description = "Gửi email đơn lẻ"
     )
     public ResponseEntity<Map<String, Object>> sendSingleEmail(
             @RequestBody Map<String, Object> request) {
@@ -694,56 +694,56 @@ public class AdminController {
             String recipientEmail = (String) request.get("recipientEmail");
             String subject = (String) request.get("subject");
             String content = (String) request.get("content");
-            
+
             if (recipientEmail == null || recipientEmail.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Recipient email is required"
+                        "success", false,
+                        "message", "Recipient email is required"
                 ));
             }
-            
+
             if (subject == null || subject.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Subject is required"
+                        "success", false,
+                        "message", "Subject is required"
                 ));
             }
-            
+
             if (content == null || content.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "Content is required"
+                        "success", false,
+                        "message", "Content is required"
                 ));
             }
-            
+
             UserProfile user = userProfileRepository.findByEmail(recipientEmail).orElse(null);
             if (user == null) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "User not found"
+                        "success", false,
+                        "message", "User not found"
                 ));
             }
 
             if (!user.getIsActive()) {
                 return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "User is not active"
+                        "success", false,
+                        "message", "User is not active"
                 ));
             }
 
             emailService.sendCustomEmail(user.getEmail(), subject, content);
 
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Email sent successfully",
-                "recipient", user.getEmail()
+                    "success", true,
+                    "message", "Email sent successfully",
+                    "recipient", user.getEmail()
             ));
 
         } catch (Exception e) {
             log.error("Error sending single email: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Error sending email: " + e.getMessage()
+                    "success", false,
+                    "message", "Error sending email: " + e.getMessage()
             ));
         }
     }
@@ -756,30 +756,30 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "Server error")
     })
     @LogActivity(
-        actionType = ActivityType.VIEW,
-        entityType = EntityType.SYSTEM,
-        description = "Xem hoạt động gần đây"
+            actionType = ActivityType.VIEW,
+            entityType = EntityType.SYSTEM,
+            description = "Xem hoạt động gần đây"
     )
     public ResponseEntity<Map<String, Object>> getRecentActivities(
             @Parameter(description = "Number of activities to retrieve") @RequestParam(defaultValue = "10") int limit,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page) {
         try {
             log.info("Getting recent activities - limit: {}, page: {}", limit, page);
-            
+
             List<ActivityLogDTO> activities = activityLogService.getRecentActivitiesWithPagination(page, limit);
             long totalActivities = activityLogService.getTotalActivityCount();
             int totalPages = (int) Math.ceil((double) totalActivities / limit);
-            
+
             log.info("Returning {} activities, total: {}, totalPages: {}", activities.size(), totalActivities, totalPages);
-            
+
             Map<String, Object> response = Map.of(
-                "activities", activities,
-                "currentPage", page,
-                "totalPages", totalPages,
-                "totalActivities", totalActivities,
-                "pageSize", limit
+                    "activities", activities,
+                    "currentPage", page,
+                    "totalPages", totalPages,
+                    "totalActivities", totalActivities,
+                    "pageSize", limit
             );
-            
+
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error getting recent activities: {}", e.getMessage(), e);
@@ -795,10 +795,10 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "Server error")
     })
     @LogActivity(
-        actionType = ActivityType.VIEW,
-        entityType = EntityType.SYSTEM,
-        description = "Xem hoạt động theo người dùng",
-        entityIdParam = "userId"
+            actionType = ActivityType.VIEW,
+            entityType = EntityType.SYSTEM,
+            description = "Xem hoạt động theo người dùng",
+            entityIdParam = "userId"
     )
     public ResponseEntity<List<ActivityLogDTO>> getUserActivities(
             @Parameter(description = "User ID") @PathVariable UUID userId,
@@ -820,9 +820,9 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "Server error")
     })
     @LogActivity(
-        actionType = ActivityType.VIEW,
-        entityType = EntityType.SYSTEM,
-        description = "Tìm kiếm hoạt động"
+            actionType = ActivityType.VIEW,
+            entityType = EntityType.SYSTEM,
+            description = "Tìm kiếm hoạt động"
     )
     public ResponseEntity<List<ActivityLogDTO>> searchActivities(
             @Parameter(description = "Search keyword") @RequestParam String keyword,
@@ -894,6 +894,4 @@ public class AdminController {
             return ResponseEntity.badRequest().body(results);
         }
     }
-
-
 }

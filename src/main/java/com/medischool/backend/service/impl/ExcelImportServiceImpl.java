@@ -90,7 +90,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         String contentType = file.getContentType();
         return contentType != null
                 && (contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
-                        contentType.equals("application/vnd.ms-excel"));
+                contentType.equals("application/vnd.ms-excel"));
     }
 
     @Override
@@ -164,7 +164,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         log.info("Generating user import template");
 
         try (Workbook workbook = new XSSFWorkbook();
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet("Users");
 
@@ -198,7 +198,7 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         log.info("Exporting {} users to Excel", users.size());
 
         try (Workbook workbook = new XSSFWorkbook();
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet("Users");
             CellStyle headerStyle = createHeaderStyle(workbook);
@@ -861,12 +861,12 @@ public class ExcelImportServiceImpl implements ExcelImportService {
             // Header
             Row headerRow = sheet.createRow(0);
             String[] headers = {
-                "Student Code", "Full Name", "Class Code", "Date of Birth", 
-                "Address", "Gender", "Enrollment Date", "Emergency Contact", "Emergency Phone", "Status", "Avatar",
-                // Father
-                "Father Name", "Father Email", "Father Phone", "Father Address", "Father DateOfBirth", "Father Gender", "Father Job", "Father JobPlace",
-                // Mother
-                "Mother Name", "Mother Email", "Mother Phone", "Mother Address", "Mother DateOfBirth", "Mother Gender", "Mother Job", "Mother JobPlace"
+                    "Student Code", "Full Name", "Class Code", "Date of Birth",
+                    "Address", "Gender", "Enrollment Date", "Emergency Contact", "Emergency Phone", "Status", "Avatar",
+                    // Father
+                    "Father Name", "Father Email", "Father Phone", "Father Address", "Father DateOfBirth", "Father Gender", "Father Job", "Father JobPlace",
+                    // Mother
+                    "Mother Name", "Mother Email", "Mother Phone", "Mother Address", "Mother DateOfBirth", "Mother Gender", "Mother Job", "Mother JobPlace"
             };
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
