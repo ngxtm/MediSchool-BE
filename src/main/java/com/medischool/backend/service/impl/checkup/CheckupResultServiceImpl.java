@@ -59,16 +59,12 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 
                 // Parent info
-                consent.getParent() != null ? consent.getParent().getFullName() : null,
-                consent.getParent() != null ? consent.getParent().getEmail() : null,
-                consent.getParent() != null ? consent.getParent().getPhone() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getFullName() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getEmail() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getPhone() : null,
 
                 // Category items
-                itemDTOs,
-
-                // Note and status
-                consent.getNote(),
-                consent.getConsentStatus().name()
+                itemDTOs
         );
     }
 
@@ -91,13 +87,11 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 student.getGender().name(),
                 student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 
-                consent.getParent() != null ? consent.getParent().getFullName() : null,
-                consent.getParent() != null ? consent.getParent().getEmail() : null,
-                consent.getParent() != null ? consent.getParent().getPhone() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getFullName() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getEmail() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getPhone() : null,
 
-                result.getResultItems().stream().map(CheckupResultItemDTO::new).collect(Collectors.toList()),
-                consent.getNote(),
-                consent.getConsentStatus().name()
+                result.getResultItems().stream().map(CheckupResultItemDTO::new).collect(Collectors.toList())
         );
     }
 
