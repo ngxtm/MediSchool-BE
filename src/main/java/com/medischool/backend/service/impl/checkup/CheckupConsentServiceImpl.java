@@ -34,7 +34,6 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
     private final ParentStudentLinkRepository parentStudentLinkRepository;
     private final UserProfileRepository userProfileRepository;
     private final CheckupEventCategoryRepository checkupEventCategoryRepository;
-    private final CheckupEventClassRepository checkupEventClassRepository;
     private final CheckupCategoryConsentRepository categoryConsentRepository;
     private final CheckupResultRepository checkupResultRepository;
     private final CheckupResultItemRepository checkupResultItemRepository;
@@ -48,15 +47,7 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
             throw new RuntimeException("No categories found for this event");
         }
 
-        List<Student> students = switch (event.getScope()) {
-            case SCHOOL -> studentRepository.findAll();
-            case GRADE, CLASS -> {
-                List<String> allowedClassCodes = checkupEventClassRepository.findByEventId(eventId).stream()
-                        .map(ec -> ((CheckupEventClass) ec).getClassCode())
-                        .toList();
-                yield studentRepository.findByClassCodeIn(allowedClassCodes);
-            }
-        };
+        List<Student> students = studentRepository.findAll();
 
         int createdConsentCount = 0;
         int createdCategoryConsentCount = 0;
@@ -105,8 +96,6 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
                 }
             }
         }
-
-        event.setStatus("UPCOMING");
 
         return Map.of(
                 "success", true,

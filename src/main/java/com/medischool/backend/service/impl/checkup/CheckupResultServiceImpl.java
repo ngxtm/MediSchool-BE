@@ -53,10 +53,6 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 student.getGender().name(),
                 student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 
-                parent.getFullName(),
-                parent.getEmail(),
-                parent.getPhone(),
-
                 itemDTOs
         );
     }
@@ -65,7 +61,6 @@ public class CheckupResultServiceImpl implements CheckupResultService {
     public CheckupResultDTO convertToDTO(CheckupResult result) {
         Student student = result.getStudent();
         CheckupEvent event = result.getEvent();
-        UserProfile parent = result.getConsent().getParent();
 
         return new CheckupResultDTO(
                 event.getEventTitle(),
@@ -77,10 +72,6 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 student.getClassCode(),
                 student.getGender().name(),
                 student.getDateOfBirth().toString(),
-
-                parent != null ? parent.getFullName() : "",
-                parent != null ? parent.getEmail() : "",
-                parent != null ? parent.getPhone() : "",
 
                 result.getResultItems().stream()
                         .map(CheckupResultItemDTO::new)
@@ -205,5 +196,123 @@ public class CheckupResultServiceImpl implements CheckupResultService {
 //            if (updated) {
 //                checkupBasicInfoService.updateByStudentId(studentId, info);
 //            }
+//        }
+//    }
+
+//@Service
+//@RequiredArgsConstructor
+//public class CheckupResultServiceImpl implements CheckupResultService {
+//    private final CheckupResultRepository checkupResultRepository;
+//    private final CheckupEventRepository checkupEventRepository;
+//    private final CheckupCategoryRepository checkupCategoryRepository;
+//    private final StudentRepository studentRepository;
+//    private final CheckupConsentRepository checkupConsentRepository;
+//    private final CheckupBasicInfoService checkupBasicInfoService;
+//
+//    @Override
+//    public boolean isApproved(Long eventId, Integer studentId, Long categoryId) {
+//        return checkupConsentRepository.findByEvent_IdAndStudent_StudentId(eventId, studentId)
+//                .stream()
+//                .anyMatch(c -> c.getCategory().getId().equals(categoryId)
+//                        && c.getConsentStatus() != null
+//                        && c.getConsentStatus() == ConsentStatus.APPROVE);
+//    }
+//
+//    @Override
+//    public void saveResult(Long eventId, Integer studentId, Long categoryId, String resultData, String checkedAt) {
+//        CheckupResult result = CheckupResult.builder()
+//                .event(checkupEventRepository.findById(eventId).orElseThrow())
+//                .student(studentRepository.findById(studentId).orElseThrow())
+//                .category(checkupCategoryRepository.findById(categoryId).orElseThrow())
+//                .resultData(resultData)
+//                .checkedAt(LocalDateTime.now())
+//                .build();
+//        checkupResultRepository.save(result);
+//    }
+//
+//    @Override
+//    public List<CheckupResult> getResultsForStudentInEvent(Long eventId, Integer studentId) {
+//        return checkupResultRepository.findByEvent_IdAndStudent_StudentId(eventId, studentId);
+//    }
+//
+//    @Override
+//    public void updateResult(Long eventId, Integer studentId, Long categoryId, String resultData) {
+//        List<CheckupResult> results = checkupResultRepository.findByEvent_IdAndStudent_StudentId(eventId, studentId);
+//        CheckupResult result = results.stream()
+//                .filter(r -> r.getCategory().getId().equals(categoryId))
+//                .findFirst()
+//                .orElseThrow(() -> new RuntimeException("Checkup result not found"));
+//
+//        result.setResultData(resultData);
+//        result.setCheckedAt(LocalDateTime.now());
+//        checkupResultRepository.save(result);
+//    }
+//
+//    @Override
+//    public void updateResultById(Long resultId, String resultData) {
+//        CheckupResult result = checkupResultRepository.findById(resultId)
+//                .orElseThrow(() -> new RuntimeException("Checkup result not found with ID: " + resultId));
+//
+//        result.setResultData(resultData);
+//        result.setCheckedAt(LocalDateTime.now());
+//        checkupResultRepository.save(result);
+//
+//        // Đồng thời cập nhật CheckupBasicInfo nếu là category cơ bản
+//        Long categoryId = result.getCategory().getId();
+//        Integer studentId = result.getStudent().getStudentId();
+//        if (categoryId != null && studentId != null) {
+//            CheckupBasicInfo info = checkupBasicInfoService.getByStudentId(studentId);
+//            if (info == null) {
+//                info = CheckupBasicInfo.builder().build();
+//            }
+//            boolean updated = false;
+//            switch (categoryId.intValue()) {
+//                case 1:
+//                    try { info.setHeight(resultData); updated = true; } catch (Exception ignored) {}
+//                    break;
+//                case 2:
+//                    try { info.setWeight(resultData); updated = true; } catch (Exception ignored) {}
+//                    break;
+//                case 3:
+//                    info.setBloodType(resultData); updated = true;
+//                    break;
+//                case 4:
+//                    try { info.setVisionLeft(resultData); updated = true; } catch (Exception ignored) {}
+//                    break;
+//                case 5:
+//                    try { info.setVisionRight(resultData); updated = true; } catch (Exception ignored) {}
+//                    break;
+//                case 6:
+//                    info.setUnderlyingDiseases(resultData); updated = true;
+//                    break;
+//                case 7:
+//                    info.setAllergies(resultData); updated = true;
+//                    break;
+//                default:
+//                    break;
+//            }
+//            if (updated) {
+//                checkupBasicInfoService.updateByStudentId(studentId, info);
+//            }
+//        }
+//    }
+//
+//    @Override
+//    public void upsertResult(Long eventId, Integer studentId, Long categoryId, String resultData, String checkedAt) {
+//        CheckupResult result = checkupResultRepository.findByEvent_IdAndStudent_StudentIdAndCategory_Id(eventId, studentId, categoryId);
+//        java.time.LocalDateTime checkedAtTime = checkedAt != null ? java.time.LocalDateTime.parse(checkedAt) : java.time.LocalDateTime.now();
+//        if (result != null) {
+//            result.setResultData(resultData);
+//            result.setCheckedAt(checkedAtTime);
+//            checkupResultRepository.save(result);
+//        } else {
+//            result = CheckupResult.builder()
+//                    .event(checkupEventRepository.findById(eventId).orElseThrow())
+//                    .student(studentRepository.findById(studentId).orElseThrow())
+//                    .category(checkupCategoryRepository.findById(categoryId).orElseThrow())
+//                    .resultData(resultData)
+//                    .checkedAt(checkedAtTime)
+//                    .build();
+//            checkupResultRepository.save(result);
 //        }
 //    }

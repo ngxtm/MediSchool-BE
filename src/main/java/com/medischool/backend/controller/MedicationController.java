@@ -159,7 +159,7 @@ class MedicationController {
             Authentication authentication
     ) {
         UUID nurseId = UUID.fromString(authentication.getName());
-        service.dispenseMedication(dto, nurseId);
+        service.dispenseMedication(requestId, dto, nurseId);
         return ResponseEntity.ok().build();
     }
 

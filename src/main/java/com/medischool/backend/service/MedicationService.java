@@ -1,6 +1,6 @@
 package com.medischool.backend.service;
 
-//import com.medischool.backend.dto.medication.MedicationStatsDTO;
+//import com.medischool.backend.dto.medication.CheckupStatsDTO;
 import com.medischool.backend.dto.medication.MedicationDispensationDTO;
 import com.medischool.backend.dto.medication.MedicationRequestDTO;
 import com.medischool.backend.dto.medication.MedicationStatsDTO;
@@ -24,7 +24,7 @@ public interface MedicationService {
 
     MedicationRequest receiveMedicine(int id);
 
-    MedicationDispensation dispenseMedication(MedicationDispensationDTO dto, UUID nurseId);
+    MedicationDispensation dispenseMedication(Integer requestId, MedicationDispensationDTO dto, UUID nurseId);
 
     MedicationRequest markAsDone(Integer requestId);
 
