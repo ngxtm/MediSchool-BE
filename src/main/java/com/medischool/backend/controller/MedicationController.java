@@ -21,6 +21,8 @@ import com.medischool.backend.annotation.LogActivity;
 import com.medischool.backend.dto.medication.MedicationDispensationDTO;
 import com.medischool.backend.dto.medication.MedicationRequestDTO;
 import com.medischool.backend.dto.medication.MedicationStatsDTO;
+import com.medischool.backend.model.ActivityLog.ActivityType;
+import com.medischool.backend.model.ActivityLog.EntityType;
 import com.medischool.backend.model.enums.MedicationStatus;
 import com.medischool.backend.model.medication.MedicationDispensation;
 import com.medischool.backend.model.medication.MedicationRequest;
@@ -35,7 +37,6 @@ class MedicationController {
     @Autowired
     private MedicationService service;
 
-    //stat
     @GetMapping("/stats")
     public ResponseEntity<MedicationStatsDTO> getRequestStats() {
         MedicationStatsDTO stats = service.getRequestStats();
@@ -54,7 +55,6 @@ class MedicationController {
         return ResponseEntity.ok(service.getAllRequests());
     }
 
-    //Nurse view pending requests
     @GetMapping("/pending")
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationRequest>> getPendingRequests() {
@@ -78,7 +78,6 @@ class MedicationController {
         return ResponseEntity.ok(approved);
     }
 
-    //Parents view all their requests by student
     @GetMapping("/student/{studentId}")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<List<MedicationRequest>> getRequestsByStudent(
@@ -90,7 +89,6 @@ class MedicationController {
         return ResponseEntity.ok(requests);
     }
 
-    //Parents create a request
     @PostMapping("/create")
     @PreAuthorize("hasRole('PARENT')")
     @LogActivity(
@@ -134,7 +132,7 @@ class MedicationController {
         description = "Từ chối yêu cầu thuốc",
         entityIdParam = "id"
     )
-
+  
     public ResponseEntity<MedicationRequest> reject(
             @PathVariable Integer id,
             @RequestParam String rejectReason,
@@ -161,25 +159,22 @@ class MedicationController {
             Authentication authentication
     ) {
         UUID nurseId = UUID.fromString(authentication.getName());
-        service.dispenseMedication(dto, nurseId);
+        service.dispenseMedication(requestId, dto, nurseId);
         return ResponseEntity.ok().build();
     }
 
-    //Nurse mark done request
     @PutMapping("/{id}/done")
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<MedicationRequest> markDone(@PathVariable Integer id) {
         return ResponseEntity.ok(service.markAsDone(id));
     }
 
-    //Search
     @GetMapping("/search")
     public ResponseEntity<List<MedicationRequest>> searchRequests(@RequestParam String keyword) {
         return ResponseEntity.ok(service.searchRequests(keyword));
     }
 
 
-    //View dispen history
     @GetMapping("/dispensations/by-request/{requestId}")
     @PreAuthorize("hasRole('NURSE')")
     public ResponseEntity<List<MedicationDispensation>> getDispensationsByRequest(@PathVariable Integer requestId) {
@@ -188,7 +183,6 @@ class MedicationController {
     }
 
 
-    //View detail
     @GetMapping("/{id}")
     public ResponseEntity<MedicationRequestDTO> getMedicationRequestDetail(@PathVariable Integer id) {
         MedicationRequestDTO dto = service.getRequestDetail(id);
