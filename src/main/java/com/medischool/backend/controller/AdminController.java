@@ -1,10 +1,18 @@
 package com.medischool.backend.controller;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -44,6 +52,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Workbook;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -464,6 +473,7 @@ public class AdminController {
         }
     }
 
+    // -------- EXCEL IMPORT --------
     @PostMapping("/students/import")
     @Operation(summary = "Import students from Excel file")
     @ApiResponses(value = {
@@ -471,27 +481,39 @@ public class AdminController {
             @ApiResponse(responseCode = "400", description = "Invalid file format or data"),
             @ApiResponse(responseCode = "500", description = "Server error during import")
     })
-    @LogActivity(
-        actionType = ActivityType.IMPORT,
-        entityType = EntityType.STUDENT,
-        description = "Nhập thành công {successCount} học sinh từ file {file}"
-    )
-    public ResponseEntity<UserImportResponseDTO> importStudentsFromExcel(
-            @Parameter(description = "Excel file (.xlsx or .xls)") @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<com.medischool.backend.dto.student.StudentImportResponseDTO> importStudentsFromExcel(
+            @io.swagger.v3.oas.annotations.Parameter(description = "Excel file (.xlsx or .xls)") @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
-            log.info("Import students request - File: {}, Size: {} bytes", file.getOriginalFilename(), file.getSize());
-            
-            UserImportResponseDTO response = excelImportService.importStudentsFromExcel(file);
-            
-            log.info("Import students completed - Success: {}", response.getSuccessCount());
-            
+            com.medischool.backend.dto.student.StudentImportResponseDTO response = excelImportService.importStudentsFromExcel(file);
+            // Luôn trả về 200, kể cả khi có lỗi ở một số dòng
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Error importing students: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(UserImportResponseDTO.builder()
-                    .success(false)
-                    .message("Error importing students: " + e.getMessage())
-                    .build());
+            // Nếu lỗi hệ thống, trả về 200 với message lỗi tổng quát
+            com.medischool.backend.dto.student.StudentImportResponseDTO errorRes = com.medischool.backend.dto.student.StudentImportResponseDTO.builder()
+                .success(false)
+                .totalRows(0)
+                .successCount(0)
+                .errorCount(0)
+                .errors(new java.util.ArrayList<>())
+                .message("Server error: " + e.getMessage())
+                .build();
+            return ResponseEntity.ok(errorRes);
+        }
+    }
+
+    @GetMapping("/students/import/template")
+    @Operation(summary = "Download Excel file of all students in database")
+    @ApiResponse(responseCode = "200", description = "Excel file of all students downloaded successfully")
+    public ResponseEntity<byte[]> downloadStudentListExcel() {
+        try {
+            List<com.medischool.backend.model.parentstudent.Student> students = studentRepository.findAll();
+            byte[] excelBytes = excelImportService.generateStudentListExcel(students);
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=student_list.xlsx")
+                    .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    .body(excelBytes);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -790,7 +812,64 @@ public class AdminController {
         }
     }
 
-
+    @PostMapping("/test-date-import")
+    public ResponseEntity<List<String>> testDateImport(@RequestParam("file") MultipartFile file) {
+        List<String> results = new ArrayList<>();
+        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int rowIndex = 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null) continue;
+                Cell cell = row.getCell(3); // Cột Date of Birth (index 3)
+                String value = null;
+                if (cell != null) {
+                    switch (cell.getCellType()) {
+                        case NUMERIC:
+                            if (DateUtil.isCellDateFormatted(cell)) {
+                                value = cell.getLocalDateTimeCellValue().toLocalDate().toString();
+                            } else {
+                                value = "NUMERIC_NOT_DATE";
+                            }
+                            break;
+                        case STRING:
+                            String str = cell.getStringCellValue().trim();
+                            value = str;
+                            // Thử parse các định dạng
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("d/M/yyyy"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            try {
+                                LocalDate d = LocalDate.parse(str, DateTimeFormatter.ofPattern("d-M-yyyy"));
+                                value = d.toString();
+                            } catch (Exception ignore) {}
+                            break;
+                        default:
+                            value = "UNSUPPORTED_TYPE";
+                    }
+                } else {
+                    value = "NULL_CELL";
+                }
+                results.add("Row " + (rowIndex+1) + ": " + value);
+            }
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            results.add("ERROR: " + e.getMessage());
+            return ResponseEntity.badRequest().body(results);
+        }
+    }
 
 
 }
