@@ -36,9 +36,6 @@ public class CheckupEvent {
 
     private String status;
 
-    @Enumerated(EnumType.STRING)
-    private CheckupEventScope scope;
-
     @ManyToOne
     @JoinColumn(name = "created_by")
     private UserProfile createdBy;

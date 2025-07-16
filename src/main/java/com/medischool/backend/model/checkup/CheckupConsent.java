@@ -1,27 +1,29 @@
 package com.medischool.backend.model.checkup;
 
 import com.medischool.backend.model.UserProfile;
-import com.medischool.backend.model.enums.CheckupConsentStatus;
+import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.parentstudent.Student;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "checkup_event_consent")
+@Table(name = "checkup_consent")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CheckupEventConsent {
+public class CheckupConsent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
+    @JoinColumn(name = "event_id")
     private CheckupEvent event;
 
     @ManyToOne
@@ -32,18 +34,18 @@ public class CheckupEventConsent {
     @JoinColumn(name = "parent_id")
     private UserProfile parent;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private CheckupCategory category;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "consent_status")
-    private CheckupConsentStatus consentStatus;
+    private ConsentStatus consentStatus;
 
     private String note;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @OneToMany(mappedBy = "consent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CheckupCategoryConsent> categoryConsents = new ArrayList<>();
+    @Column(name = "fully_rejected")
+    private Boolean fullyRejected = false;
 } 

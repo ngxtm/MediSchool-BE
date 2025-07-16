@@ -143,8 +143,7 @@ public class MedicationServiceImpl implements MedicationService {
         return requestRepo.save(request);
     }
 
-    @Override
-    public MedicationDispensation dispenseMedication(MedicationDispensationDTO dto, UUID nurseId) {
+    public MedicationDispensation dispenseMedication(Integer requestId, MedicationDispensationDTO dto, UUID nurseId) {
         MedicationDispensation dispensation = new MedicationDispensation();
         dispensation.setDosageGiven(dto.getDose());
         dispensation.setNote(dto.getNote());
@@ -152,14 +151,13 @@ public class MedicationServiceImpl implements MedicationService {
         dispensation.setTime(OffsetDateTime.now());
         dispensation.setNurseId(nurseId);
 
-        MedicationRequest request = requestRepo.findById(dto.getRequestId()).orElseThrow();
+        MedicationRequest request = requestRepo.findById(requestId).orElseThrow();
 
         if (dto.getItemId() != null) {
             MedicationRequestItem item = requestItemRepo.findById(dto.getItemId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy item"));
-
             dispensation.setItem(item);
-            dispensation.setRequest(item.getRequest());
+            dispensation.setRequest(request); // link by object
         } else {
             dispensation.setRequest(request);
         }
@@ -231,6 +229,7 @@ public class MedicationServiceImpl implements MedicationService {
             return MedicationDispensationDTO.builder()
                     .nurseName(nursedispen != null ? nursedispen.getFullName() : "Không rõ")
                     .dose(d.getDosageGiven())
+                    .medicineName(d.getItem().getMedicineName())
                     .note(d.getNote())
                     .status(d.getStatus())
                     .time(d.getTime())

@@ -20,9 +20,5 @@ public class CheckupResultDTO {
     private String gender;
     private String dob;
 
-    private String parentName;
-    private String parentEmail;
-    private String parentPhone;
-
     private List<CheckupResultItemDTO> categoryResults;
 }

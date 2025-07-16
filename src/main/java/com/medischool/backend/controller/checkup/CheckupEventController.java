@@ -1,8 +1,8 @@
 package com.medischool.backend.controller.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
+import com.medischool.backend.dto.checkup.CheckupStatsDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
-import com.medischool.backend.model.enums.EventStatus;
 import com.medischool.backend.service.checkup.CheckupEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +17,12 @@ import java.util.List;
 public class CheckupEventController {
     private final CheckupEventService checkupEventService;
 
+    @GetMapping("/stats")
+    public ResponseEntity<CheckupStatsDTO> getRequestStats() {
+        CheckupStatsDTO stats = checkupEventService.getStats();
+        return ResponseEntity.ok(stats);
+    }
+
     @PostMapping("/create")
     @Operation(summary = "Create a new checkup event")
     public ResponseEntity<CheckupEvent> createEvent(@RequestBody CheckupEventRequestDTO requestDTO) {
@@ -25,7 +31,7 @@ public class CheckupEventController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all checkup events")
+    @Operation(summary = "Get all checkup events with student stats")
     public ResponseEntity<List<CheckupEvent>> getAllEvents() {
         return ResponseEntity.ok(checkupEventService.getAllEvents());
     }

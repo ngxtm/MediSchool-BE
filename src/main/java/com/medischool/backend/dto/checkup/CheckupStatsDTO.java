@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CheckupResultUpdateDTO {
-    private String value;
-    private String status;
+public class CheckupStatsDTO {
+    private long sent;
+    private long replied;
+    private long pending;
+    private long categories;
 }

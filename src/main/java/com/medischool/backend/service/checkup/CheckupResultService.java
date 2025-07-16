@@ -17,6 +17,25 @@ public interface CheckupResultService {
     List<CheckupResultDTO> getResultsByEventId(Long eventId);
     List<CheckupResultDTO> getResultsByStudentId(Integer studentId);
     CheckupResultItemDTO updateResultItem(Long itemId, CheckupResultUpdateDTO dto);
-
     CheckupResultDTO convertToDTO(CheckupResult checkupResult);
+
+//    public interface CheckupResultService {
+//        boolean isApproved(Long eventId, Integer studentId, Long categoryId);
+//        void saveResult(Long eventId, Integer studentId, Long categoryId, String resultData, String checkedAt);
+//        void updateResult(Long eventId, Integer studentId, Long categoryId, String resultData);
+//        void updateResultById(Long resultId, String resultData);
+//        List<CheckupResult> getResultsForStudentInEvent(Long eventId, Integer studentId);
+//        void upsertResult(Long eventId, Integer studentId, Long categoryId, String resultData, String checkedAt);
+//    }
+//
+//    package com.medischool.backend.service.checkup;
+//
+//    public class SendConsentResult {
+//        public int success;
+//        public int failed;
+//        public SendConsentResult(int success, int failed) {
+//            this.success = success;
+//            this.failed = failed;
+//        }
+//    }
 } 

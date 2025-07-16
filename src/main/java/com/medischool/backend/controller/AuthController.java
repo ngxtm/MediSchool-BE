@@ -2,9 +2,6 @@ package com.medischool.backend.controller;
 
 import java.util.Map;
 
-import com.medischool.backend.model.LoginHistory;
-import com.medischool.backend.service.GeolocationService;
-import com.medischool.backend.service.LoginHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +14,9 @@ import com.medischool.backend.dto.auth.AuthRequest;
 import com.medischool.backend.dto.auth.AuthResponse;
 import com.medischool.backend.dto.auth.GoogleCallbackRequest;
 import com.medischool.backend.dto.auth.PasswordResetRequest;
+import com.medischool.backend.model.LoginHistory;
+import com.medischool.backend.service.GeolocationService;
+import com.medischool.backend.service.LoginHistoryService;
 import com.medischool.backend.service.SupabaseAuthService;
 
 import io.jsonwebtoken.ExpiredJwtException;
@@ -95,9 +95,37 @@ public class AuthController {
 
     @PostMapping("/google-callback")
     @Operation(summary = "Handle Google Auth callback")
-    public ResponseEntity<AuthResponse> googleCallback(@RequestBody GoogleCallbackRequest request) {
+    public ResponseEntity<AuthResponse> googleCallback(@RequestBody GoogleCallbackRequest request, HttpServletRequest httpRequest) {
         AuthResponse response = supabaseAuthService.handleGoogleCallback(request.getSupabaseSession(),
                 request.isRememberMe());
+        try {
+            String ip = getClientIpAddress(httpRequest);
+            String location = geolocationService.getLocationFromIp(ip);
+            if (response.getUser() != null && response.getToken() != null) {
+                loginHistoryService.createLoginRecord(
+                        response.getUser().getId(),
+                        response.getUser().getEmail(),
+                        ip,
+                        httpRequest.getHeader("User-Agent"),
+                        location,
+                        LoginHistory.LoginStatus.SUCCESS,
+                        null
+                );
+            } else {
+                loginHistoryService.createLoginRecord(
+                        null,
+                        null,
+                        ip,
+                        httpRequest.getHeader("User-Agent"),
+                        location,
+                        LoginHistory.LoginStatus.FAILED,
+                        "Google authentication failed"
+                );
+            }
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(AuthController.class)
+                    .error("Failed to record login history (Google): {}", e.getMessage(), e);
+        }
         return ResponseEntity.ok(response);
     }
 

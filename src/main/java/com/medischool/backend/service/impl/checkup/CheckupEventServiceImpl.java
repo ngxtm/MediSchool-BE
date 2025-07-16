@@ -1,19 +1,14 @@
 package com.medischool.backend.service.impl.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
+import com.medischool.backend.dto.checkup.CheckupStatsDTO;
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.checkup.CheckupEvent;
 import com.medischool.backend.model.checkup.CheckupEventCategory;
 import com.medischool.backend.model.checkup.CheckupCategory;
-import com.medischool.backend.model.checkup.CheckupEventClass;
-import com.medischool.backend.model.enums.EventStatus;
-import com.medischool.backend.model.enums.MedicationStatus;
-import com.medischool.backend.model.medication.MedicationRequest;
+import com.medischool.backend.model.enums.CheckupConsentStatus;
 import com.medischool.backend.repository.UserProfileRepository;
-import com.medischool.backend.repository.checkup.CheckupEventClassRepository;
-import com.medischool.backend.repository.checkup.CheckupEventRepository;
-import com.medischool.backend.repository.checkup.CheckupEventCategoryRepository;
-import com.medischool.backend.repository.checkup.CheckupCategoryRepository;
+import com.medischool.backend.repository.checkup.*;
 import com.medischool.backend.service.checkup.CheckupEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -32,7 +27,16 @@ public class CheckupEventServiceImpl implements CheckupEventService {
     private final CheckupEventCategoryRepository checkupEventCategoryRepository;
     private final CheckupCategoryRepository checkupCategoryRepository;
     private final UserProfileRepository userProfileRepository;
-    private final CheckupEventClassRepository checkupEventClassRepository;
+    private final CheckupConsentRepository checkupConsentRepository;
+
+    @Override
+    public CheckupStatsDTO getStats() {
+        long sent = checkupConsentRepository.count() - checkupConsentRepository.countByConsentStatus(CheckupConsentStatus.NOT_SENT);
+        long replied = sent - checkupConsentRepository.countByConsentStatus(CheckupConsentStatus.PENDING);
+        long pending = checkupConsentRepository.countByConsentStatus(CheckupConsentStatus.PENDING);
+        long categories = checkupConsentRepository.countByConsentStatus(CheckupConsentStatus.REJECTED);
+        return new CheckupStatsDTO(sent, replied, pending, categories);
+    }
 
     @Override
     public CheckupEvent createEvent(CheckupEventRequestDTO requestDTO) {
@@ -45,7 +49,6 @@ public class CheckupEventServiceImpl implements CheckupEventService {
                 .schoolYear(requestDTO.getSchoolYear())
                 .startDate(requestDTO.getStartDate())
                 .endDate(requestDTO.getEndDate())
-                .scope(requestDTO.getScope())
                 .createdBy(createdBy)
                 .createdAt(LocalDateTime.now())
                 .status(getStatus(createdBy, requestDTO.getStatus()))
@@ -63,13 +66,6 @@ public class CheckupEventServiceImpl implements CheckupEventService {
                     .build();
 
             checkupEventCategoryRepository.save(link);
-        }
-
-        for (String classCode : requestDTO.getClassCodes()) {
-            CheckupEventClass link = new CheckupEventClass();
-            link.setEventId(event.getId());
-            link.setClassCode(classCode);
-            checkupEventClassRepository.save(link);
         }
 
         return savedEvent;

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.medischool.backend.dto.student.StudentDetailDTO;
 import com.medischool.backend.model.parentstudent.ParentStudentLink;
 import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.model.enums.Relationship;
 import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.repository.UserProfileRepository;
@@ -33,11 +34,11 @@ public class StudentServiceImpl implements StudentService {
         for (ParentStudentLink link : links) {
             var profile = userProfileRepository.findById(link.getParentId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy phụ huynh"));
-            if ("FATHER".equalsIgnoreCase(link.getRelationship())) {
+            if (link.getRelationship() != null && link.getRelationship() == Relationship.FATHER) {
                 fatherName = profile.getFullName();
                 fatherPhone = profile.getPhone();
             }
-            if ("MOTHER".equalsIgnoreCase(link.getRelationship())) {
+            if (link.getRelationship() != null && link.getRelationship() == Relationship.MOTHER) {
                 motherName = profile.getFullName();
                 motherPhone = profile.getPhone();
             }
@@ -55,7 +56,6 @@ public class StudentServiceImpl implements StudentService {
                 student.getEmergencyContact(),
                 student.getEmergencyPhone(),
                 student.getAddress(),
-                student.getGrade(),
                 student.getAvatar()
         );
     }
