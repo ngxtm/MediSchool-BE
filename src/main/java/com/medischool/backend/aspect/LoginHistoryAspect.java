@@ -45,62 +45,62 @@ public class LoginHistoryAspect {
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
     
-//    @AfterReturning(
-//        pointcut = "execution(* com.medischool.backend.controller.AuthController.signIn(..))",
-//        returning = "result"
-//    )
-//    public void logLoginActivity(JoinPoint joinPoint, Object result) {
-//        try {
-//            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-//            if (result instanceof org.springframework.http.ResponseEntity) {
-//                Object body = ((org.springframework.http.ResponseEntity<?>) result).getBody();
-//                if (body instanceof AuthResponse) {
-//                    AuthResponse authResponse = (AuthResponse) body;
-//                    Object[] args = joinPoint.getArgs();
-//                    String email = "unknown";
-//                    if (args.length > 0 && args[0] instanceof AuthRequest) {
-//                        AuthRequest authRequest = (AuthRequest) args[0];
-//                        email = authRequest.getEmail();
-//                    }
-//                    if (authResponse.getUser() != null && authResponse.getToken() != null) {
-//                        UUID userId = null;
-//                        String userEmail = email;
-//                        if (authResponse.getUser().getId() != null) {
-//                            userId = authResponse.getUser().getId();
-//                        }
-//                        if (authResponse.getUser().getEmail() != null) {
-//                            userEmail = authResponse.getUser().getEmail();
-//                        }
-//                        String ip = getClientIpAddress(request);
-//                        String location = geolocationService.getLocationFromIp(ip);
-//                        loginHistoryService.createLoginRecord(
-//                            userId,
-//                            userEmail,
-//                            ip,
-//                            request.getHeader("User-Agent"),
-//                            location,
-//                            LoginStatus.SUCCESS,
-//                            null
-//                        );
-//                    } else {
-//                        String ip = getClientIpAddress(request);
-//                        String location = geolocationService.getLocationFromIp(ip);
-//                        loginHistoryService.createLoginRecord(
-//                            null,
-//                            email,
-//                            ip,
-//                            request.getHeader("User-Agent"),
-//                            location,
-//                            LoginStatus.FAILED,
-//                            "Authentication failed"
-//                        );
-//                    }
-//                }
-//            }
-//        } catch (Exception e) {
-//            log.error("Error in LoginHistoryAspect: {}", e.getMessage(), e);
-//        }
-//    }
+    @AfterReturning(
+        pointcut = "execution(* com.medischool.backend.controller.AuthController.signIn(..))",
+        returning = "result"
+    )
+    public void logLoginActivity(JoinPoint joinPoint, Object result) {
+        try {
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+            if (result instanceof org.springframework.http.ResponseEntity) {
+                Object body = ((org.springframework.http.ResponseEntity<?>) result).getBody();
+                if (body instanceof AuthResponse) {
+                    AuthResponse authResponse = (AuthResponse) body;
+                    Object[] args = joinPoint.getArgs();
+                    String email = "unknown";
+                    if (args.length > 0 && args[0] instanceof AuthRequest) {
+                        AuthRequest authRequest = (AuthRequest) args[0];
+                        email = authRequest.getEmail();
+                    }
+                    if (authResponse.getUser() != null && authResponse.getToken() != null) {
+                        UUID userId = null;
+                        String userEmail = email;
+                        if (authResponse.getUser().getId() != null) {
+                            userId = authResponse.getUser().getId();
+                        }
+                        if (authResponse.getUser().getEmail() != null) {
+                            userEmail = authResponse.getUser().getEmail();
+                        }
+                        String ip = getClientIpAddress(request);
+                        String location = geolocationService.getLocationFromIp(ip);
+                        loginHistoryService.createLoginRecord(
+                            userId,
+                            userEmail,
+                            ip,
+                            request.getHeader("User-Agent"),
+                            location,
+                            LoginStatus.SUCCESS,
+                            null
+                        );
+                    } else {
+                        String ip = getClientIpAddress(request);
+                        String location = geolocationService.getLocationFromIp(ip);
+                        loginHistoryService.createLoginRecord(
+                            null,
+                            email,
+                            ip,
+                            request.getHeader("User-Agent"),
+                            location,
+                            LoginStatus.FAILED,
+                            "Authentication failed"
+                        );
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error in LoginHistoryAspect: {}", e.getMessage(), e);
+        }
+    }
     
     @AfterReturning(
         pointcut = "execution(* com.medischool.backend.controller.AuthController.signOut(..))"
