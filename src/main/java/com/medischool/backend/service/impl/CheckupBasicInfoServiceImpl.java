@@ -1,15 +1,17 @@
 package com.medischool.backend.service.impl;
 
-import com.medischool.backend.model.checkup.CheckupBasicInfo;
-import com.medischool.backend.model.parentstudent.Student;
-import com.medischool.backend.repository.checkup.CheckupBasicInfoRepository;
-import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.service.checkup.CheckupBasicInfoService;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import com.medischool.backend.model.checkup.CheckupBasicInfo;
+import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.repository.StudentRepository;
+import com.medischool.backend.repository.checkup.CheckupBasicInfoRepository;
+import com.medischool.backend.service.checkup.CheckupBasicInfoService;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,8 @@ public class CheckupBasicInfoServiceImpl implements CheckupBasicInfoService {
             existing.setWeight(info.getWeight());
             existing.setVisionLeft(info.getVisionLeft());
             existing.setVisionRight(info.getVisionRight());
+            existing.setUnderlyingDiseases(info.getUnderlyingDiseases());
+            existing.setAllergies(info.getAllergies());
             existing.setUpdatedAt(LocalDateTime.now());
             return checkupBasicInfoRepository.save(existing);
         }
