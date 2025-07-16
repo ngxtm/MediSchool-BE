@@ -43,6 +43,7 @@ public class CheckupResultServiceImpl implements CheckupResultService {
         var event = result.getEvent();
 
         return new CheckupResultDTO(
+                resultId,
                 event.getEventTitle(),
                 event.getSchoolYear(),
                 event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
@@ -53,6 +54,10 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 student.getGender().name(),
                 student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 
+                parent.getFullName(),
+                parent.getEmail(),
+                parent.getPhone(),
+
                 itemDTOs
         );
     }
@@ -61,8 +66,10 @@ public class CheckupResultServiceImpl implements CheckupResultService {
     public CheckupResultDTO convertToDTO(CheckupResult result) {
         Student student = result.getStudent();
         CheckupEvent event = result.getEvent();
+        UserProfile parent = result.getConsent().getParent();
 
         return new CheckupResultDTO(
+                result.getId(),
                 event.getEventTitle(),
                 event.getSchoolYear(),
                 event.getCreatedAt().toString(),
@@ -72,6 +79,10 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 student.getClassCode(),
                 student.getGender().name(),
                 student.getDateOfBirth().toString(),
+
+                parent.getFullName(),
+                parent.getEmail(),
+                parent.getPhone(),
 
                 result.getResultItems().stream()
                         .map(CheckupResultItemDTO::new)

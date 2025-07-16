@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CheckupResultDTO {
+    private Long resultId;
     private String eventTitle;
     private String academicYear;
     private String createdDate;
@@ -19,6 +20,10 @@ public class CheckupResultDTO {
     private String classCode;
     private String gender;
     private String dob;
+
+    private String parentName;
+    private String parentEmail;
+    private String parentPhone;
 
     private List<CheckupResultItemDTO> categoryResults;
 }
