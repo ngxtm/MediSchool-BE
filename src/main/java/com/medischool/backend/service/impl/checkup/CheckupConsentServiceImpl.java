@@ -16,6 +16,8 @@ import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.service.checkup.CheckupConsentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,15 +55,6 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
         int createdCategoryConsentCount = 0;
 
         for (Student student : students) {
-            UUID parentId = parentStudentLinkRepository.findByStudentId(student.getStudentId()).stream()
-                    .findFirst()
-                    .map(link -> link.getParentId())
-                    .orElse(null);
-            if (parentId == null) continue;
-
-            UserProfile parent = userProfileRepository.findById(parentId).orElse(null);
-            if (parent == null) continue;
-
             Optional<CheckupEventConsent> existingConsentOpt =
                     checkupConsentRepository.findByEvent_IdAndStudent_StudentId(eventId, student.getStudentId());
 
@@ -72,7 +65,6 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
                 consent = CheckupEventConsent.builder()
                         .event(event)
                         .student(student)
-                        .parent(parent)
                         .consentStatus(CheckupConsentStatus.PENDING)
                         .note(null)
                         .createdAt(LocalDateTime.now())
@@ -130,6 +122,13 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
     public ConsentReplyResponse submitParentConsentReply(Long consentId, CheckupConsentResponseDTO dto) {
         CheckupEventConsent consent = checkupConsentRepository.findById(consentId)
                 .orElseThrow(() -> new RuntimeException("Consent not found"));
+
+        // Gán parent tại thời điểm phản hồi
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID parentId = UUID.fromString(authentication.getName());
+        UserProfile parent = userProfileRepository.findById(parentId)
+                .orElseThrow(() -> new RuntimeException("Parent not found"));
+        consent.setParent(parent);
 
         // Cập nhật trạng thái tổng
         consent.setConsentStatus(dto.getOverallStatus());

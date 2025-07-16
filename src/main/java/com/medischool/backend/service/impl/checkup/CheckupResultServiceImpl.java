@@ -1,23 +1,23 @@
 package com.medischool.backend.service.impl.checkup;
 
+import com.medischool.backend.dto.checkup.CheckupOverallResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultItemDTO;
 import com.medischool.backend.dto.checkup.CheckupResultUpdateDTO;
 import com.medischool.backend.model.UserProfile;
-import com.medischool.backend.model.checkup.CheckupEvent;
-import com.medischool.backend.model.checkup.CheckupResult;
-import com.medischool.backend.model.checkup.CheckupResultItem;
+import com.medischool.backend.model.checkup.*;
+import com.medischool.backend.model.enums.CheckupConsentStatus;
 import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.enums.ResultStatus;
 import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.repository.checkup.*;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.service.checkup.CheckupResultService;
-import com.medischool.backend.model.checkup.CheckupBasicInfo;
 import com.medischool.backend.service.checkup.CheckupBasicInfoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,23 +27,60 @@ import java.util.stream.Collectors;
 public class CheckupResultServiceImpl implements CheckupResultService {
     private final CheckupResultRepository checkupResultRepository;
     private final CheckupResultItemRepository checkupResultItemRepository;
+    private final CheckupConsentRepository checkupConsentRepository;
 
     @Override
     public CheckupResultDTO getResultDetail(Long resultId) {
         CheckupResult result = checkupResultRepository.findById(resultId)
                 .orElseThrow(() -> new RuntimeException("Result not found"));
 
+        CheckupEvent event = result.getEvent();
+        Student student = result.getStudent();
+        CheckupEventConsent consent = result.getConsent(); // Quan trọng!
+
         List<CheckupResultItem> items = checkupResultItemRepository.findByResultId(resultId);
         List<CheckupResultItemDTO> itemDTOs = items.stream()
                 .map(CheckupResultItemDTO::new)
                 .collect(Collectors.toList());
 
-        var student = result.getStudent();
-        var parent = result.getConsent().getParent();
-        var event = result.getEvent();
+        return new CheckupResultDTO(
+                result.getId(),
+
+                // Event info
+                event.getEventTitle(),
+                event.getSchoolYear(),
+                event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+
+                // Student info
+                student.getFullName(),
+                student.getStudentCode(),
+                student.getClassCode(),
+                student.getGender().name(),
+                student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+
+                // Parent info
+                consent.getParent() != null ? consent.getParent().getFullName() : null,
+                consent.getParent() != null ? consent.getParent().getEmail() : null,
+                consent.getParent() != null ? consent.getParent().getPhone() : null,
+
+                // Category items
+                itemDTOs,
+
+                // Note and status
+                consent.getNote(),
+                consent.getConsentStatus().name()
+        );
+    }
+
+    @Override
+    public CheckupResultDTO convertToDTO(CheckupResult result) {
+        Student student = result.getStudent();
+        CheckupEvent event = result.getEvent();
+        CheckupEventConsent consent = result.getConsent();
 
         return new CheckupResultDTO(
-                resultId,
+                result.getId(),
+
                 event.getEventTitle(),
                 event.getSchoolYear(),
                 event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
@@ -54,39 +91,13 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 student.getGender().name(),
                 student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 
-                parent.getFullName(),
-                parent.getEmail(),
-                parent.getPhone(),
+                consent.getParent() != null ? consent.getParent().getFullName() : null,
+                consent.getParent() != null ? consent.getParent().getEmail() : null,
+                consent.getParent() != null ? consent.getParent().getPhone() : null,
 
-                itemDTOs
-        );
-    }
-
-    @Override
-    public CheckupResultDTO convertToDTO(CheckupResult result) {
-        Student student = result.getStudent();
-        CheckupEvent event = result.getEvent();
-        UserProfile parent = result.getConsent().getParent();
-
-        return new CheckupResultDTO(
-                result.getId(),
-                event.getEventTitle(),
-                event.getSchoolYear(),
-                event.getCreatedAt().toString(),
-
-                student.getFullName(),
-                student.getStudentCode(),
-                student.getClassCode(),
-                student.getGender().name(),
-                student.getDateOfBirth().toString(),
-
-                parent.getFullName(),
-                parent.getEmail(),
-                parent.getPhone(),
-
-                result.getResultItems().stream()
-                        .map(CheckupResultItemDTO::new)
-                        .collect(Collectors.toList())
+                result.getResultItems().stream().map(CheckupResultItemDTO::new).collect(Collectors.toList()),
+                consent.getNote(),
+                consent.getConsentStatus().name()
         );
     }
 
@@ -106,6 +117,29 @@ public class CheckupResultServiceImpl implements CheckupResultService {
         return results.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public CheckupResultDTO updateOverallResult(Long resultId, CheckupOverallResultDTO dto) {
+        CheckupResult result = checkupResultRepository.findById(resultId)
+                .orElseThrow(() -> new RuntimeException("Result not found"));
+
+        CheckupEventConsent consent = result.getConsent();
+        if (consent == null) {
+            throw new RuntimeException("Consent not found for this result");
+        }
+
+        if (dto.getStatus() != null) {
+            consent.setConsentStatus(CheckupConsentStatus.valueOf(dto.getStatus()));
+        }
+
+        consent.setNote(dto.getNote());
+        consent.setUpdatedAt(LocalDateTime.now());
+
+        checkupConsentRepository.save(consent);
+
+        // Trả về DTO đã cập nhật
+        return convertToDTO(result);
     }
 
     public CheckupResultItemDTO updateResultItem(Long itemId, CheckupResultUpdateDTO dto) {

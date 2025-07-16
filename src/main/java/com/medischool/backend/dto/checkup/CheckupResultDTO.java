@@ -26,4 +26,7 @@ public class CheckupResultDTO {
     private String parentPhone;
 
     private List<CheckupResultItemDTO> categoryResults;
+
+    private String note;
+    private String status;
 }

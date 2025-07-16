@@ -1,5 +1,6 @@
 package com.medischool.backend.controller.checkup;
 
+import com.medischool.backend.dto.checkup.CheckupOverallResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultItemDTO;
 import com.medischool.backend.dto.checkup.CheckupResultUpdateDTO;
@@ -53,6 +54,16 @@ public class CheckupResultController {
     ) {
         return ResponseEntity.ok(checkupResultService.updateResultItem(itemId, dto));
     }
+
+    @PatchMapping("/overall/{resultId}")
+    public ResponseEntity<Void> updateOverallResult(
+            @PathVariable Long resultId,
+            @RequestBody CheckupOverallResultDTO dto
+    ) {
+        checkupResultService.updateOverallResult(resultId, dto);
+        return ResponseEntity.ok().build();
+    }
+
 
     @GetMapping("/{resultId}")
     public ResponseEntity<CheckupResultDTO> getResultDetail(@PathVariable Long resultId) {
