@@ -31,13 +31,18 @@ import org.springframework.web.multipart.MultipartFile;
 import com.medischool.backend.annotation.LogActivity;
 import com.medischool.backend.dto.ActivityLogDTO;
 import com.medischool.backend.dto.CreateUserRequestDTO;
+import com.medischool.backend.dto.ParentUserRequestDTO;
 import com.medischool.backend.dto.SoftDeleteRequestDTO;
 import com.medischool.backend.dto.UserImportResponseDTO;
 import com.medischool.backend.model.ActivityLog.ActivityType;
 import com.medischool.backend.model.ActivityLog.EntityType;
 import com.medischool.backend.model.UserProfile;
+import com.medischool.backend.model.enums.Relationship;
+import com.medischool.backend.model.parentstudent.Parent;
+import com.medischool.backend.model.parentstudent.ParentStudentLink;
 import com.medischool.backend.model.parentstudent.ParentStudentLinkId;
 import com.medischool.backend.model.parentstudent.Student;
+import com.medischool.backend.repository.ParentRepository;
 import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.repository.UserProfileRepository;
@@ -69,6 +74,7 @@ public class AdminController {
     private final AsyncEmailService asyncEmailService;
     private final EmailService emailService;
     private final ActivityLogService activityLogService;
+    private final ParentRepository parentRepository;
 
     @GetMapping("/users/count")
     @Operation(summary = "Get total count of users")
@@ -474,6 +480,43 @@ public class AdminController {
         }
     }
 
+    @PostMapping("/parent-student-link")
+    @Operation(summary = "Assign or update parent-student relationship")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Relationship created successfully"),
+            @ApiResponse(responseCode = "200", description = "Relationship updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
+    @LogActivity(
+            actionType = ActivityType.CREATE,
+            entityType = EntityType.USER,
+            description = "Gán hoặc cập nhật quan hệ phụ huynh-học sinh"
+    )
+    public ResponseEntity<?> assignParentStudentLink(
+            @RequestBody Map<String, Object> request) {
+        try {
+            UUID parentId = UUID.fromString(request.get("parentId").toString());
+            Integer studentId = Integer.parseInt(request.get("studentId").toString());
+            String relationshipStr = request.get("relationship").toString();
+            Relationship relationship = Relationship.valueOf(relationshipStr);
+            ParentStudentLinkId linkId = new ParentStudentLinkId(parentId, studentId);
+            ParentStudentLink link;
+            boolean exists = parentStudentLinkRepository.existsById(linkId);
+            if (exists) {
+                link = parentStudentLinkRepository.findById(linkId).orElseThrow();
+                link.setRelationship(relationship);
+                parentStudentLinkRepository.save(link);
+                return ResponseEntity.ok(Map.of("message", "Relationship updated successfully"));
+            } else {
+                link = new ParentStudentLink(parentId, studentId, relationship);
+                parentStudentLinkRepository.save(link);
+                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Relationship created successfully"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/parent-student-link")
     @Operation(summary = "Delete parent-student relationship by parentId and studentId")
     @ApiResponses(value = {
@@ -833,6 +876,44 @@ public class AdminController {
         } catch (Exception e) {
             log.error("Error searching activities: {}", e.getMessage(), e);
             return ResponseEntity.status(500).build();
+        }
+    }
+
+    @PostMapping("/parent-user")
+    @Operation(summary = "Create a new parent user and parent object")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Parent user created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
+    @LogActivity(
+            actionType = ActivityType.CREATE,
+            entityType = EntityType.USER,
+            description = "Tạo phụ huynh mới: {fullName} ({email})"
+    )
+    public ResponseEntity<?> createParentUser(@RequestBody ParentUserRequestDTO request) {
+        try {
+            CreateUserRequestDTO userDto = CreateUserRequestDTO.builder()
+                    .fullName(request.getFullName())
+                    .phone(request.getPhone())
+                    .email(request.getEmail())
+                    .address(request.getAddress())
+                    .dateOfBirth(request.getDateOfBirth())
+                    .gender(request.getGender())
+                    .role("PARENT")
+                    .password(request.getPassword())
+                    .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                    .build();
+            UserProfile user = userManagementService.createUserWithPassword(userDto);
+
+            Parent parent = new Parent();
+            parent.setParentId(user.getId());
+            parent.setJob(request.getJob());
+            parent.setJobPlace(request.getJobPlace());
+            parentRepository.save(parent);
+
+            return new ResponseEntity<>(user, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
