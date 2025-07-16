@@ -14,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MedicationDispensationDTO {
     private Integer requestId;
+    private String medicineName;
     private Integer itemId;
     private String dose;
     private String note;
