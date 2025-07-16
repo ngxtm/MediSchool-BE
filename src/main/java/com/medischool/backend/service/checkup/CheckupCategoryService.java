@@ -1,6 +1,7 @@
 package com.medischool.backend.service.checkup;
 
 import com.medischool.backend.model.checkup.CheckupCategory;
+
 import java.util.List;
 
 public interface CheckupCategoryService {
@@ -9,5 +10,4 @@ public interface CheckupCategoryService {
     CheckupCategory getCategoryById(Long id);
     CheckupCategory updateCategory(Long id, CheckupCategory category);
     void deleteCategory(Long id);
-    List<CheckupCategory> getCategoriesByEvent(Long eventId);
 } 
