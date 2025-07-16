@@ -14,6 +14,7 @@ public class CheckupResultDTO {
     private String eventTitle;
     private String academicYear;
     private String createdDate;
+    private String eventDate;
 
     private String studentName;
     private String studentCode;
@@ -26,4 +27,7 @@ public class CheckupResultDTO {
     private String parentPhone;
 
     private List<CheckupResultItemDTO> categoryResults;
+
+    private String status;
+    private String note;
 }

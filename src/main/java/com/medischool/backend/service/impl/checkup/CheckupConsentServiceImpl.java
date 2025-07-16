@@ -164,6 +164,7 @@ public class CheckupConsentServiceImpl implements CheckupConsentService {
                         .consent(consent)
                         .student(consent.getStudent())
                         .event(consent.getEvent())
+                        .status(ResultStatus.NO_RESULT)
                         .build();
                 result = checkupResultRepository.save(result);
 

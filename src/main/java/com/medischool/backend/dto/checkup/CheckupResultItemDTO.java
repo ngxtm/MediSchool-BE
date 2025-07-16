@@ -11,11 +11,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CheckupResultItemDTO {
+    private Long id;
     private String name;
     private String value;
     private String status;
 
     public CheckupResultItemDTO(CheckupResultItem entity) {
+        this.id = entity.getId();
         this.name = entity.getEventCategory().getCategory().getName();
         this.value = entity.getValue();
         ResultStatus status = entity.getStatus();

@@ -4,16 +4,13 @@ import com.medischool.backend.dto.checkup.CheckupOverallResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultItemDTO;
 import com.medischool.backend.dto.checkup.CheckupResultUpdateDTO;
-import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.checkup.*;
 import com.medischool.backend.model.enums.CheckupConsentStatus;
-import com.medischool.backend.model.enums.ConsentStatus;
 import com.medischool.backend.model.enums.ResultStatus;
 import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.repository.checkup.*;
-import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.service.checkup.CheckupResultService;
 import com.medischool.backend.service.checkup.CheckupBasicInfoService;
+import com.medischool.backend.service.checkup.CheckupResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +25,7 @@ public class CheckupResultServiceImpl implements CheckupResultService {
     private final CheckupResultRepository checkupResultRepository;
     private final CheckupResultItemRepository checkupResultItemRepository;
     private final CheckupConsentRepository checkupConsentRepository;
+    private final CheckupBasicInfoService checkupBasicInfoService;
 
     @Override
     public CheckupResultDTO getResultDetail(Long resultId) {
@@ -50,6 +48,7 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 event.getEventTitle(),
                 event.getSchoolYear(),
                 event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                result.getEventDate() != null ? result.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "/",
 
                 // Student info
                 student.getFullName(),
@@ -64,7 +63,10 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 (consent != null && consent.getParent() != null) ? consent.getParent().getPhone() : null,
 
                 // Category items
-                itemDTOs
+                itemDTOs,
+
+                result.getStatus().name(),
+                result.getNote()
         );
     }
 
@@ -80,6 +82,7 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 event.getEventTitle(),
                 event.getSchoolYear(),
                 event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                result.getEventDate() != null ? result.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "/",
 
                 student.getFullName(),
                 student.getStudentCode(),
@@ -91,7 +94,9 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 (consent != null && consent.getParent() != null) ? consent.getParent().getEmail() : null,
                 (consent != null && consent.getParent() != null) ? consent.getParent().getPhone() : null,
 
-                result.getResultItems().stream().map(CheckupResultItemDTO::new).collect(Collectors.toList())
+                result.getResultItems().stream().map(CheckupResultItemDTO::new).collect(Collectors.toList()),
+                result.getStatus().name(),
+                result.getNote()
         );
     }
 
@@ -124,30 +129,88 @@ public class CheckupResultServiceImpl implements CheckupResultService {
         }
 
         if (dto.getStatus() != null) {
-            consent.setConsentStatus(CheckupConsentStatus.valueOf(dto.getStatus()));
+            try {
+                CheckupConsentStatus statusEnum = CheckupConsentStatus.valueOf(dto.getStatus());
+                consent.setConsentStatus(statusEnum);
+            } catch (IllegalArgumentException ex) {
+                throw new RuntimeException("Invalid consent status: " + dto.getStatus());
+            }
         }
 
-        consent.setNote(dto.getNote());
-        consent.setUpdatedAt(LocalDateTime.now());
+        if (dto.getNote() != null) {
+            result.setNote(dto.getNote());
+        }
+
+        if (dto.getEventDate() != null) {
+            result.setEventDate(dto.getEventDate());
+        }
 
         checkupConsentRepository.save(consent);
+        checkupResultRepository.save(result);
 
-        // Trả về DTO đã cập nhật
         return convertToDTO(result);
     }
 
+    @Override
     public CheckupResultItemDTO updateResultItem(Long itemId, CheckupResultUpdateDTO dto) {
         CheckupResultItem item = checkupResultItemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Result item not found"));
 
         item.setValue(dto.getValue());
         item.setStatus(ResultStatus.valueOf(dto.getStatus()));
-
         checkupResultItemRepository.save(item);
+
+        updateBasicInfoIfNeeded(item); // <- auto cập nhật nếu là category cơ bản
+
         return new CheckupResultItemDTO(item);
     }
 
+    @Override
+    public void updateBasicInfoIfNeeded(CheckupResultItem item) {
+        CheckupResult result = item.getResult();
+        Long categoryId = item.getEventCategory().getCategory().getId();
+        Integer studentId = result.getStudent().getStudentId();
+        String value = item.getValue();
 
+        if (categoryId == null || studentId == null || value == null) return;
+
+        CheckupBasicInfo info = checkupBasicInfoService.getByStudentId(studentId);
+        if (info == null) {
+            info = CheckupBasicInfo.builder().build();
+        }
+
+        boolean updated = false;
+
+        switch (categoryId.intValue()) {
+            case 1: // Chiều cao
+                try { info.setHeight(value); updated = true; } catch (Exception ignored) {}
+                break;
+            case 2: // Cân nặng
+                try { info.setWeight(value); updated = true; } catch (Exception ignored) {}
+                break;
+            case 3: // Nhóm máu
+                info.setBloodType(value); updated = true;
+                break;
+            case 4: // Thị lực trái
+                try { info.setVisionLeft(value); updated = true; } catch (Exception ignored) {}
+                break;
+            case 5: // Thị lực phải
+                try { info.setVisionRight(value); updated = true; } catch (Exception ignored) {}
+                break;
+            case 6: // Bệnh nền
+                info.setUnderlyingDiseases(value); updated = true;
+                break;
+            case 7: // Dị ứng
+                info.setAllergies(value); updated = true;
+                break;
+            default:
+                break;
+        }
+
+        if (updated) {
+            checkupBasicInfoService.updateByStudentId(studentId, info);
+        }
+    }
 }
 
 //    @Override
