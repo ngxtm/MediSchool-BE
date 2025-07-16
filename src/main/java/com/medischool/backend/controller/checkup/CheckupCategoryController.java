@@ -35,6 +35,12 @@ public class CheckupCategoryController {
         return ResponseEntity.ok(category);
     }
 
+    @GetMapping("/by-event/{eventId}")
+    @Operation(summary = "Get checkup categories by event ID")
+    public ResponseEntity<List<CheckupCategory>> getCategoriesByEvent(@PathVariable Long eventId) {
+        return ResponseEntity.ok(checkupCategoryService.getCategoriesByEvent(eventId));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Update checkup category")
     public ResponseEntity<CheckupCategory> updateCategory(@PathVariable Long id, @RequestBody CheckupCategory category) {
