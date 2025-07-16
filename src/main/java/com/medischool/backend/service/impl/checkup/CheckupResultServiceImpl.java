@@ -130,10 +130,10 @@ public class CheckupResultServiceImpl implements CheckupResultService {
 
         if (dto.getStatus() != null) {
             try {
-                CheckupConsentStatus statusEnum = CheckupConsentStatus.valueOf(dto.getStatus());
-                consent.setConsentStatus(statusEnum);
+                ResultStatus resultStatus =ResultStatus.valueOf(dto.getStatus());
+                result.setStatus(resultStatus);
             } catch (IllegalArgumentException ex) {
-                throw new RuntimeException("Invalid consent status: " + dto.getStatus());
+                throw new RuntimeException("Invalid result status: " + dto.getStatus());
             }
         }
 

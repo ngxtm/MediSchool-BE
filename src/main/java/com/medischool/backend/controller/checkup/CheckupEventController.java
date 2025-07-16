@@ -1,6 +1,7 @@
 package com.medischool.backend.controller.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
+import com.medischool.backend.dto.checkup.CheckupEventResponseStatsDTO;
 import com.medischool.backend.dto.checkup.CheckupStatsDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
 import com.medischool.backend.model.enums.EventStatus;
@@ -48,6 +49,11 @@ public class CheckupEventController {
         CheckupEvent event = checkupEventService.getEventById(id);
         if (event == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(event);
+    }
+
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<CheckupEventResponseStatsDTO> getEventStats(@PathVariable Long id) {
+        return ResponseEntity.ok(checkupEventService.getEventStats(id));
     }
 
     @PutMapping("/{id}")

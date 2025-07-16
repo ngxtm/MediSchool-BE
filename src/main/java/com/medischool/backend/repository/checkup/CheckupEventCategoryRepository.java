@@ -4,7 +4,10 @@ import com.medischool.backend.model.checkup.CheckupEventCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface CheckupEventCategoryRepository extends JpaRepository<CheckupEventCategory, Long> {
-    java.util.List<CheckupEventCategory> findByEventId(Long eventId);
+    List<CheckupEventCategory> findByEventId(Long eventId);
+    int countByEventId(Long eventId);
 } 

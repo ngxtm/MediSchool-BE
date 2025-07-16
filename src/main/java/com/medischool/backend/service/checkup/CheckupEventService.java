@@ -1,6 +1,7 @@
 package com.medischool.backend.service.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
+import com.medischool.backend.dto.checkup.CheckupEventResponseStatsDTO;
 import com.medischool.backend.dto.checkup.CheckupStatsDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
 
@@ -15,4 +16,5 @@ public interface CheckupEventService {
     List<CheckupEvent> getPendingEvent(String status);
     CheckupEvent updateEventStatus(Long eventId, String status, String rejectionReason);
     public CheckupStatsDTO getStats();
+    CheckupEventResponseStatsDTO getEventStats(Long eventId);
 } 

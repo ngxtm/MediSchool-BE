@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student, Integer> {
     Optional<Student> findByStudentId(Integer studentId);
     List<Student> findByClassCodeIn(List<String> classCodes);
+    long count();
 }

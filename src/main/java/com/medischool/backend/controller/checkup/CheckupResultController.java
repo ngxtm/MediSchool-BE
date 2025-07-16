@@ -31,7 +31,7 @@ public class CheckupResultController {
         return ResponseEntity.ok(checkupResultService.getResultsByStudentId(studentId));
     }
 
-    @PatchMapping("/items/{itemId}")
+    @PutMapping("/items/{itemId}")
     public ResponseEntity<CheckupResultItemDTO> updateResultItem(
             @PathVariable Long itemId,
             @RequestBody CheckupResultUpdateDTO dto
@@ -39,7 +39,7 @@ public class CheckupResultController {
         return ResponseEntity.ok(checkupResultService.updateResultItem(itemId, dto));
     }
 
-    @PatchMapping("/overall/{resultId}")
+    @PutMapping("/overall/{resultId}")
     public ResponseEntity<Void> updateOverallResult(
             @PathVariable Long resultId,
             @RequestBody CheckupOverallResultDTO dto
