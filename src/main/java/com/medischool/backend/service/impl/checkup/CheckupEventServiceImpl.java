@@ -13,6 +13,7 @@ import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.repository.checkup.*;
 import com.medischool.backend.service.checkup.CheckupEventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,7 @@ public class CheckupEventServiceImpl implements CheckupEventService {
     }
 
     @Override
-    public CheckupEvent createEvent(CheckupEventRequestDTO requestDTO) {
+    public CheckupEvent createEvent(String role,CheckupEventRequestDTO requestDTO) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UUID userId = UUID.fromString(auth.getName());
         UserProfile createdBy = userProfileRepository.findSingleById(userId);
@@ -55,7 +56,13 @@ public class CheckupEventServiceImpl implements CheckupEventService {
                 .createdBy(createdBy)
                 .createdAt(LocalDateTime.now())
                 .build();
-        event.setStatus("PENDING");
+
+        if(role.equalsIgnoreCase("role_nurse")) {
+            event.setStatus("PENDING");
+        } else if (role.equalsIgnoreCase("role_manager")){
+                event.setStatus("APPROVED");
+        }
+
         CheckupEvent savedEvent = checkupEventRepository.save(event);
 
         for (Long categoryId : requestDTO.getCategoryIds()) {
@@ -146,5 +153,4 @@ public class CheckupEventServiceImpl implements CheckupEventService {
                 .totalNotReplied(totalNotReplied)
                 .build();
     }
-
-} 
+}

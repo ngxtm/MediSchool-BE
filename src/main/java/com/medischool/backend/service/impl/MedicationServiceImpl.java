@@ -126,7 +126,7 @@ public class MedicationServiceImpl implements MedicationService {
         request.setMedicationStatus(MedicationStatus.REJECTED);
         request.setUpdateAt(OffsetDateTime.now());
         request.setRejectReason(reason);
-        if(role.equalsIgnoreCase("nurse")){
+        if(role.equalsIgnoreCase("role_nurse")){
             request.setReviewBy(userId);
         } else {
             request.setReviewBy(userId);

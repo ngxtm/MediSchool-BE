@@ -8,13 +8,13 @@ import com.medischool.backend.model.checkup.CheckupEvent;
 import java.util.List;
 
 public interface CheckupEventService {
-    CheckupEvent createEvent(CheckupEventRequestDTO dto);
+    CheckupEvent createEvent(String role, CheckupEventRequestDTO dto);
     List<CheckupEvent> getAllEvents();
     CheckupEvent getEventById(Long id);
     CheckupEvent updateEvent(Long id, CheckupEvent event);
     void deleteEvent(Long id);
     List<CheckupEvent> getPendingEvent(String status);
     CheckupEvent updateEventStatus(Long eventId, String status, String rejectionReason);
-    public CheckupStatsDTO getStats();
+    CheckupStatsDTO getStats();
     CheckupEventResponseStatsDTO getEventStats(Long eventId);
-} 
+}

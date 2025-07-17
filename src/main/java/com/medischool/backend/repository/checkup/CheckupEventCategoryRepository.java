@@ -10,4 +10,5 @@ import java.util.List;
 public interface CheckupEventCategoryRepository extends JpaRepository<CheckupEventCategory, Long> {
     List<CheckupEventCategory> findByEventId(Long eventId);
     int countByEventId(Long eventId);
+    void deleteByEventId(Long eventId);
 } 
