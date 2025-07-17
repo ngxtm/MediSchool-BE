@@ -1,6 +1,7 @@
 package com.medischool.backend.controller.checkup;
 
 import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
+import com.medischool.backend.dto.checkup.CheckupEventResponseStatsDTO;
 import com.medischool.backend.dto.checkup.CheckupStatsDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
 import com.medischool.backend.model.enums.EventStatus;
@@ -8,9 +9,11 @@ import com.medischool.backend.service.checkup.CheckupEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/health-checkup")
@@ -27,7 +30,13 @@ public class CheckupEventController {
     @PostMapping("/create")
     @Operation(summary = "Create a new checkup event")
     public ResponseEntity<CheckupEvent> createEvent(@RequestBody CheckupEventRequestDTO requestDTO) {
-        CheckupEvent created = checkupEventService.createEvent(requestDTO);
+        Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        UUID uId = UUID.fromString(authentication.getName());
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse("UNKNOWN");
+        CheckupEvent created = checkupEventService.createEvent(role, requestDTO);
         return ResponseEntity.ok(created);
     }
 
@@ -48,6 +57,11 @@ public class CheckupEventController {
         CheckupEvent event = checkupEventService.getEventById(id);
         if (event == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(event);
+    }
+
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<CheckupEventResponseStatsDTO> getEventStats(@PathVariable Long id) {
+        return ResponseEntity.ok(checkupEventService.getEventStats(id));
     }
 
     @PutMapping("/{id}")

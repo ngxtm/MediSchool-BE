@@ -61,9 +61,9 @@ public class CheckupConsentDTO {
         this.gender = entity.getStudent().getGender().name();
         this.dob = entity.getStudent().getDateOfBirth().toString();
 
-        this.parentName = entity.getParent().getFullName();
-        this.parentEmail = entity.getParent().getEmail();
-        this.parentPhone = entity.getParent().getPhone();
+        this.parentName = entity.getParent() != null ? entity.getParent().getFullName() : "";
+        this.parentEmail = entity.getParent() != null ? entity.getParent().getEmail() : "";
+        this.parentPhone = entity.getParent() != null ? entity.getParent().getPhone() : "";
 
         this.replied = entity.getConsentStatus() != CheckupConsentStatus.PENDING;
         this.accepted = entity.getConsentStatus() == CheckupConsentStatus.APPROVED;

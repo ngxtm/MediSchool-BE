@@ -1,9 +1,12 @@
 package com.medischool.backend.service.checkup;
 
+import com.medischool.backend.dto.checkup.CheckupOverallResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultItemDTO;
 import com.medischool.backend.dto.checkup.CheckupResultUpdateDTO;
 import com.medischool.backend.model.checkup.CheckupResult;
+import com.medischool.backend.model.checkup.CheckupResultItem;
+
 import java.util.List;
 
 public interface CheckupResultService {
@@ -18,6 +21,8 @@ public interface CheckupResultService {
     List<CheckupResultDTO> getResultsByStudentId(Integer studentId);
     CheckupResultItemDTO updateResultItem(Long itemId, CheckupResultUpdateDTO dto);
     CheckupResultDTO convertToDTO(CheckupResult checkupResult);
+    CheckupResultDTO updateOverallResult(Long resultId, CheckupOverallResultDTO dto);
+    void updateBasicInfoIfNeeded(CheckupResultItem item);
 
 //    public interface CheckupResultService {
 //        boolean isApproved(Long eventId, Integer studentId, Long categoryId);

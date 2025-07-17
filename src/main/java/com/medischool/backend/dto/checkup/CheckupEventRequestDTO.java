@@ -18,7 +18,6 @@ public class CheckupEventRequestDTO {
     private String schoolYear;
     private LocalDate startDate;
     private LocalDate endDate;
-    private String status;
     private List<Long> categoryIds;
 }
 

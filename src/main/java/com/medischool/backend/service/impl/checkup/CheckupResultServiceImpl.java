@@ -1,23 +1,20 @@
 package com.medischool.backend.service.impl.checkup;
 
+import com.medischool.backend.dto.checkup.CheckupOverallResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultDTO;
 import com.medischool.backend.dto.checkup.CheckupResultItemDTO;
 import com.medischool.backend.dto.checkup.CheckupResultUpdateDTO;
-import com.medischool.backend.model.UserProfile;
-import com.medischool.backend.model.checkup.CheckupEvent;
-import com.medischool.backend.model.checkup.CheckupResult;
-import com.medischool.backend.model.checkup.CheckupResultItem;
-import com.medischool.backend.model.enums.ConsentStatus;
+import com.medischool.backend.model.checkup.*;
+import com.medischool.backend.model.enums.CheckupConsentStatus;
 import com.medischool.backend.model.enums.ResultStatus;
 import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.repository.checkup.*;
-import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.service.checkup.CheckupResultService;
-import com.medischool.backend.model.checkup.CheckupBasicInfo;
 import com.medischool.backend.service.checkup.CheckupBasicInfoService;
+import com.medischool.backend.service.checkup.CheckupResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,38 +24,49 @@ import java.util.stream.Collectors;
 public class CheckupResultServiceImpl implements CheckupResultService {
     private final CheckupResultRepository checkupResultRepository;
     private final CheckupResultItemRepository checkupResultItemRepository;
+    private final CheckupConsentRepository checkupConsentRepository;
+    private final CheckupBasicInfoService checkupBasicInfoService;
 
     @Override
     public CheckupResultDTO getResultDetail(Long resultId) {
         CheckupResult result = checkupResultRepository.findById(resultId)
                 .orElseThrow(() -> new RuntimeException("Result not found"));
 
+        CheckupEvent event = result.getEvent();
+        Student student = result.getStudent();
+        CheckupEventConsent consent = result.getConsent(); // Quan trọng!
+
         List<CheckupResultItem> items = checkupResultItemRepository.findByResultId(resultId);
         List<CheckupResultItemDTO> itemDTOs = items.stream()
                 .map(CheckupResultItemDTO::new)
                 .collect(Collectors.toList());
 
-        var student = result.getStudent();
-        var parent = result.getConsent().getParent();
-        var event = result.getEvent();
-
         return new CheckupResultDTO(
-                resultId,
+                result.getId(),
+
+                // Event info
                 event.getEventTitle(),
                 event.getSchoolYear(),
                 event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                result.getEventDate() != null ? result.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "/",
 
+                // Student info
                 student.getFullName(),
                 student.getStudentCode(),
                 student.getClassCode(),
                 student.getGender().name(),
                 student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 
-                parent.getFullName(),
-                parent.getEmail(),
-                parent.getPhone(),
+                // Parent info
+                (consent != null && consent.getParent() != null) ? consent.getParent().getFullName() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getEmail() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getPhone() : null,
 
-                itemDTOs
+                // Category items
+                itemDTOs,
+
+                result.getStatus().name(),
+                result.getNote()
         );
     }
 
@@ -66,27 +74,29 @@ public class CheckupResultServiceImpl implements CheckupResultService {
     public CheckupResultDTO convertToDTO(CheckupResult result) {
         Student student = result.getStudent();
         CheckupEvent event = result.getEvent();
-        UserProfile parent = result.getConsent().getParent();
+        CheckupEventConsent consent = result.getConsent();
 
         return new CheckupResultDTO(
                 result.getId(),
+
                 event.getEventTitle(),
                 event.getSchoolYear(),
-                event.getCreatedAt().toString(),
+                event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                result.getEventDate() != null ? result.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "/",
 
                 student.getFullName(),
                 student.getStudentCode(),
                 student.getClassCode(),
                 student.getGender().name(),
-                student.getDateOfBirth().toString(),
+                student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
 
-                parent.getFullName(),
-                parent.getEmail(),
-                parent.getPhone(),
+                (consent != null && consent.getParent() != null) ? consent.getParent().getFullName() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getEmail() : null,
+                (consent != null && consent.getParent() != null) ? consent.getParent().getPhone() : null,
 
-                result.getResultItems().stream()
-                        .map(CheckupResultItemDTO::new)
-                        .collect(Collectors.toList())
+                result.getResultItems().stream().map(CheckupResultItemDTO::new).collect(Collectors.toList()),
+                result.getStatus().name(),
+                result.getNote()
         );
     }
 
@@ -108,18 +118,99 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public CheckupResultDTO updateOverallResult(Long resultId, CheckupOverallResultDTO dto) {
+        CheckupResult result = checkupResultRepository.findById(resultId)
+                .orElseThrow(() -> new RuntimeException("Result not found"));
+
+        CheckupEventConsent consent = result.getConsent();
+        if (consent == null) {
+            throw new RuntimeException("Consent not found for this result");
+        }
+
+        if (dto.getStatus() != null) {
+            try {
+                ResultStatus resultStatus =ResultStatus.valueOf(dto.getStatus());
+                result.setStatus(resultStatus);
+            } catch (IllegalArgumentException ex) {
+                throw new RuntimeException("Invalid result status: " + dto.getStatus());
+            }
+        }
+
+        if (dto.getNote() != null) {
+            result.setNote(dto.getNote());
+        }
+
+        if (dto.getEventDate() != null) {
+            result.setEventDate(dto.getEventDate());
+        }
+
+        checkupConsentRepository.save(consent);
+        checkupResultRepository.save(result);
+
+        return convertToDTO(result);
+    }
+
+    @Override
     public CheckupResultItemDTO updateResultItem(Long itemId, CheckupResultUpdateDTO dto) {
         CheckupResultItem item = checkupResultItemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Result item not found"));
 
         item.setValue(dto.getValue());
         item.setStatus(ResultStatus.valueOf(dto.getStatus()));
-
         checkupResultItemRepository.save(item);
+
+        updateBasicInfoIfNeeded(item); // <- auto cập nhật nếu là category cơ bản
+
         return new CheckupResultItemDTO(item);
     }
 
+    @Override
+    public void updateBasicInfoIfNeeded(CheckupResultItem item) {
+        CheckupResult result = item.getResult();
+        Long categoryId = item.getEventCategory().getCategory().getId();
+        Integer studentId = result.getStudent().getStudentId();
+        String value = item.getValue();
 
+        if (categoryId == null || studentId == null || value == null) return;
+
+        CheckupBasicInfo info = checkupBasicInfoService.getByStudentId(studentId);
+        if (info == null) {
+            info = CheckupBasicInfo.builder().build();
+        }
+
+        boolean updated = false;
+
+        switch (categoryId.intValue()) {
+            case 1: // Chiều cao
+                try { info.setHeight(value); updated = true; } catch (Exception ignored) {}
+                break;
+            case 2: // Cân nặng
+                try { info.setWeight(value); updated = true; } catch (Exception ignored) {}
+                break;
+            case 3: // Nhóm máu
+                info.setBloodType(value); updated = true;
+                break;
+            case 4: // Thị lực trái
+                try { info.setVisionLeft(value); updated = true; } catch (Exception ignored) {}
+                break;
+            case 5: // Thị lực phải
+                try { info.setVisionRight(value); updated = true; } catch (Exception ignored) {}
+                break;
+            case 6: // Bệnh nền
+                info.setUnderlyingDiseases(value); updated = true;
+                break;
+            case 7: // Dị ứng
+                info.setAllergies(value); updated = true;
+                break;
+            default:
+                break;
+        }
+
+        if (updated) {
+            checkupBasicInfoService.updateByStudentId(studentId, info);
+        }
+    }
 }
 
 //    @Override
