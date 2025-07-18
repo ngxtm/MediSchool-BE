@@ -15,4 +15,8 @@ public interface EmailService {
                                     String extent, String eventDate, String eventLocation);
     
     void sendCustomEmail(String toEmail, String subject, String content);
+    
+    void sendHealthCheckupNotification(String toEmail, String parentName, String studentName,
+                                      String eventTitle, String startDate, String endDate, 
+                                      String consentUrl);
 } 
