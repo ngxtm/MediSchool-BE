@@ -129,7 +129,7 @@ public class EmailServiceImpl implements EmailService {
                                                                     📞 Thông tin liên hệ hỗ trợ
                                                                   </h4>
                                                                   <div style="color: #6c757d; font-size: 13px; line-height: 1.6;">
-                                                                    <p style="margin: 4px 0;">📧 Email: medischool@gmail.com</p>
+                                                                    <p style="margin: 4px 0;">📧 Email: medischoolvn@gmail.com</p>
                                                                     <p style="margin: 4px 0;">📱 Hotline: 19009999</p>
                                                                     <p style="margin: 4px 0;">🕐 Thời gian hỗ trợ: 7:00 - 17:00 (Thứ 2 - Thứ 6)</p>
                                                                   </div>
@@ -322,7 +322,7 @@ public class EmailServiceImpl implements EmailService {
                             📞 Thông tin liên hệ hỗ trợ
                           </h4>
                           <div style="color: #6c757d; font-size: 13px; line-height: 1.6;">
-                            <p style="margin: 4px 0;">📧 Email: medischool@gmail.com</p>
+                            <p style="margin: 4px 0;">📧 Email: medischoolvn@gmail.com</p>
                             <p style="margin: 4px 0;">📱 Hotline: 19009999</p>
                             <p style="margin: 4px 0;">🕐 Thời gian hỗ trợ: 7:00 - 17:00 (Thứ 2 - Thứ 6)</p>
                           </div>
@@ -410,7 +410,7 @@ public class EmailServiceImpl implements EmailService {
                           </tr>
                           <tr>
                             <td style=\"background:#f6f8fa;color:#888;text-align:center;padding:18px 24px;font-size:13px;\">
-                              <div>Liên hệ hỗ trợ: <a href=\"mailto:medischool@gmail.com\" style=\"color:#1976d2;text-decoration:none;\">medischool@gmail.com</a> | Hotline: 19009999</div>
+                              <div>Liên hệ hỗ trợ: <a href="mailto:medischoolvn@gmail.com" style="color:#1976d2;text-decoration:none;">medischoolvn@gmail.com</a> | Hotline: 19009999</div>
                               <div style=\"margin-top:6px;\">© 2024 MediSchool. Email này được gửi tự động, vui lòng không phản hồi.</div>
                             </td>
                           </tr>
@@ -533,7 +533,7 @@ public class EmailServiceImpl implements EmailService {
                               📞 Thông tin liên hệ hỗ trợ
                             </h4>
                             <div style="color: #6c757d; font-size: 13px; line-height: 1.6;">
-                              <p style="margin: 4px 0;">📧 Email: medischool@gmail.com</p>
+                              <p style="margin: 4px 0;">📧 Email: medischoolvn@gmail.com</p>
                               <p style="margin: 4px 0;">📱 Hotline: 19009999</p>
                               <p style="margin: 4px 0;">🕐 Thời gian hỗ trợ: 7:00 - 17:00 (Thứ 2 - Thứ 6)</p>
                             </div>
@@ -585,6 +585,36 @@ public class EmailServiceImpl implements EmailService {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException("Email sending interrupted", ie);
                 }
+            }
+        }
+    }
+
+    public void sendRawHtmlEmail(String toEmail, String subject, String htmlContent) {
+        int maxRetries = 3;
+        int retryCount = 0;
+        while (retryCount < maxRetries) {
+            try {
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+                helper.setFrom(fromEmail);
+                helper.setTo(toEmail);
+                helper.setSubject(subject);
+                helper.setText(htmlContent, true);
+                ClassPathResource image = new ClassPathResource("static/logo.png");
+                helper.addInline("logoImage", image);
+
+                mailSender.send(mimeMessage);
+                log.info("Raw HTML email sent successfully to: {} (attempt {})", toEmail, retryCount + 1);
+                return;
+            } catch (Exception e) {
+                retryCount++;
+                log.warn("Failed to send raw HTML email to: {} (attempt {}/{}): {}", toEmail, retryCount, maxRetries, e.getMessage());
+                if (retryCount >= maxRetries) {
+                    log.error("Failed to send raw HTML email to: {} after {} attempts", toEmail, maxRetries, e);
+                    throw new RuntimeException("Failed to send email after " + maxRetries + " attempts: " + e.getMessage());
+                }
+                try { Thread.sleep(2000 * retryCount); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); throw new RuntimeException("Email sending interrupted", ie); }
             }
         }
     }
