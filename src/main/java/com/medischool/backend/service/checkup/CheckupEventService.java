@@ -1,11 +1,13 @@
 package com.medischool.backend.service.checkup;
 
+import java.util.List;
+
+import com.medischool.backend.dto.EmailNotificationResponseDTO;
 import com.medischool.backend.dto.checkup.CheckupEventRequestDTO;
 import com.medischool.backend.dto.checkup.CheckupEventResponseStatsDTO;
 import com.medischool.backend.dto.checkup.CheckupStatsDTO;
+import com.medischool.backend.dto.healthevent.request.SelectiveEmailRequestDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
-
-import java.util.List;
 
 public interface CheckupEventService {
     CheckupEvent createEvent(String role, CheckupEventRequestDTO dto);
@@ -17,4 +19,16 @@ public interface CheckupEventService {
     CheckupEvent updateEventStatus(Long eventId, String status, String rejectionReason);
     CheckupStatsDTO getStats();
     CheckupEventResponseStatsDTO getEventStats(Long eventId);
+    
+    /**
+     * Send selective email notifications to specific health checkup consents
+     * 
+     * @param eventId    The health checkup event ID
+     * @param consentIds List of consent IDs to send emails to
+     * @param request    Optional request containing custom message and template
+     *                   type
+     * @return Email notification result
+     */
+    EmailNotificationResponseDTO sendSelectiveHealthCheckupEmailNotifications(Long eventId, List<Long> consentIds,
+            SelectiveEmailRequestDTO request);
 }

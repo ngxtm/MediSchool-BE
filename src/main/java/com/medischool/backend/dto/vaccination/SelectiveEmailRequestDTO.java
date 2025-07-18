@@ -13,4 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SelectiveEmailRequestDTO {
     private List<Long> consentIds;
+    private String customMessage;
+    private String templateType;
 } 

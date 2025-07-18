@@ -1,5 +1,15 @@
 package com.medischool.backend.service;
 
+import java.io.ByteArrayOutputStream;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -11,23 +21,18 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryWithStudentDTO;
+import com.medischool.backend.model.checkup.CheckupEvent;
+import com.medischool.backend.model.checkup.CheckupEventConsent;
+import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.model.vaccine.VaccinationHistory;
-import com.medischool.backend.repository.vaccination.VaccineEventRepository;
 import com.medischool.backend.model.vaccine.VaccineEvent;
+import com.medischool.backend.repository.StudentRepository;
+import com.medischool.backend.repository.checkup.CheckupConsentRepository;
+import com.medischool.backend.repository.checkup.CheckupEventRepository;
+import com.medischool.backend.repository.vaccination.VaccineEventRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import com.medischool.backend.repository.StudentRepository;
-import com.medischool.backend.model.parentstudent.Student;
-import com.itextpdf.io.font.PdfEncodings;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +41,8 @@ public class PdfExportService {
 
     private final VaccineEventRepository vaccineEventRepository;
     private final StudentRepository studentRepository;
+    private final CheckupEventRepository checkupEventRepository;
+    private final CheckupConsentRepository checkupConsentRepository;
 
     public byte[] exportVaccinationHistoryByEvent(Long eventId, List<VaccinationHistoryWithStudentDTO> histories) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -345,6 +352,177 @@ public class PdfExportService {
         } catch (Exception e) {
             log.error("Error generating PDF for student {}: {}", studentId, e.getMessage(), e);
             throw new RuntimeException("Failed to generate PDF", e);
+        }
+    }
+
+    /**
+     * Generate PDF report for health checkup consents
+     * 
+     * @param eventId The health checkup event ID
+     * @return PDF content as byte array
+     * @throws Exception if PDF generation fails
+     */
+    public byte[] generateHealthCheckupConsentsPDF(Long eventId) throws Exception {
+        // Get health checkup event and consent data
+        CheckupEvent checkupEvent = checkupEventRepository.findById(eventId)
+                .orElseThrow(() -> new IllegalArgumentException("Health checkup event not found with ID: " + eventId));
+
+        List<CheckupEventConsent> consents = checkupConsentRepository.findByEventId(eventId);
+
+        if (consents.isEmpty()) {
+            throw new IllegalArgumentException("No consent records found for health checkup event ID: " + eventId);
+        }
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            
+            // Load font for Vietnamese characters
+            java.io.InputStream fontStream = getClass().getClassLoader().getResourceAsStream("fonts/DejaVuSans.ttf");
+            if (fontStream == null) throw new RuntimeException("Font DejaVuSans.ttf not found in resources/fonts");
+            java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+            int nRead;
+            byte[] data = new byte[16384];
+            while ((nRead = fontStream.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+            byte[] fontBytes = buffer.toByteArray();
+            PdfFont unicodeFont = PdfFontFactory.createFont(fontBytes, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+            
+            Document document = new Document(pdf);
+            document.setFont(unicodeFont);
+
+            // Add title
+            Paragraph title = new Paragraph("BÁO CÁO ĐỒNG THUẬN KHÁM SỨC KHỎE")
+                    .setFontSize(18)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setBold();
+            document.add(title);
+
+            // Add event information
+            document.add(new Paragraph(""));
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            Paragraph eventInfo = new Paragraph("Sự kiện: " + checkupEvent.getEventTitle())
+                    .setFontSize(12);
+            document.add(eventInfo);
+
+            Paragraph dateInfo = new Paragraph("Thời gian: " +
+                    checkupEvent.getStartDate().format(formatter) + " - " + checkupEvent.getEndDate().format(formatter))
+                    .setFontSize(12);
+            document.add(dateInfo);
+
+
+
+            document.add(new Paragraph(""));
+
+            // Create table for consent data
+            Table table = new Table(UnitValue.createPercentArray(new float[]{8, 20, 12, 20, 20, 12, 8}))
+                    .useAllAvailableWidth();
+
+            // Add table headers
+            table.addHeaderCell(new Cell().add(new Paragraph("STT")).setBold());
+            table.addHeaderCell(new Cell().add(new Paragraph("Học sinh")).setBold());
+            table.addHeaderCell(new Cell().add(new Paragraph("Lớp")).setBold());
+            table.addHeaderCell(new Cell().add(new Paragraph("Phụ huynh")).setBold());
+            table.addHeaderCell(new Cell().add(new Paragraph("Liên lạc")).setBold());
+            table.addHeaderCell(new Cell().add(new Paragraph("Trạng thái")).setBold());
+            table.addHeaderCell(new Cell().add(new Paragraph("Ngày phản hồi")).setBold());
+
+            // Add data rows
+            int counter = 1;
+
+            for (CheckupEventConsent consent : consents) {
+                // STT
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(counter++))));
+
+                // Student name
+                String studentName = consent.getStudent().getFullName() + "\n(" + consent.getStudent().getStudentCode() + ")";
+                table.addCell(new Cell().add(new Paragraph(studentName)));
+
+                // Class
+                table.addCell(new Cell().add(new Paragraph(consent.getStudent().getClassCode())));
+
+                // Parent name
+                String parentName = consent.getParent() != null ? consent.getParent().getFullName() : "N/A";
+                table.addCell(new Cell().add(new Paragraph(parentName)));
+
+                // Contact info
+                StringBuilder contactInfo = new StringBuilder();
+                if (consent.getParent() != null) {
+                    if (consent.getParent().getEmail() != null && !consent.getParent().getEmail().isEmpty()) {
+                        contactInfo.append(consent.getParent().getEmail()).append("\n");
+                    }
+                    if (consent.getParent().getPhone() != null && !consent.getParent().getPhone().isEmpty()) {
+                        contactInfo.append(consent.getParent().getPhone());
+                    }
+                }
+                String contact = contactInfo.length() > 0 ? contactInfo.toString() : "N/A";
+                table.addCell(new Cell().add(new Paragraph(contact)));
+
+                // Status
+                String status = "Chưa phản hồi";
+                if (consent.getConsentStatus() != null) {
+                    switch (consent.getConsentStatus().toString()) {
+                        case "APPROVED":
+                            status = "Đồng ý";
+                            break;
+                        case "REJECTED":
+                            status = "Từ chối";
+                            break;
+                        default:
+                            status = "Chưa phản hồi";
+                    }
+                }
+                table.addCell(new Cell().add(new Paragraph(status)));
+
+                // Response date
+                String responseDate = consent.getUpdatedAt() != null ? consent.getUpdatedAt().format(formatter) : "N/A";
+                table.addCell(new Cell().add(new Paragraph(responseDate)));
+            }
+
+            document.add(table);
+
+            // Add summary statistics
+            document.add(new Paragraph(""));
+
+            long approvedCount = consents.stream()
+                    .filter(c -> c.getConsentStatus() != null && "APPROVED".equals(c.getConsentStatus().toString()))
+                    .count();
+
+            long rejectedCount = consents.stream()
+                    .filter(c -> c.getConsentStatus() != null && "REJECTED".equals(c.getConsentStatus().toString()))
+                    .count();
+
+            long pendingCount = consents.stream()
+                    .filter(c -> c.getConsentStatus() == null || "PENDING".equals(c.getConsentStatus().toString()))
+                    .count();
+
+            Paragraph summary = new Paragraph("Tổng số: " + consents.size() + 
+                    " | Đồng ý: " + approvedCount + 
+                    " | Từ chối: " + rejectedCount + 
+                    " | Chưa phản hồi: " + pendingCount)
+                    .setFontSize(12)
+                    .setTextAlignment(TextAlignment.CENTER);
+            document.add(summary);
+
+            // Add generation timestamp
+            document.add(new Paragraph(""));
+            Paragraph timestamp = new Paragraph("Báo cáo được tạo lúc: " +
+                    java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                    .setFontSize(10)
+                    .setItalic()
+                    .setTextAlignment(TextAlignment.RIGHT);
+            document.add(timestamp);
+
+            document.close();
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            log.error("Error generating health checkup PDF for event {}: {}", eventId, e.getMessage(), e);
+            throw new RuntimeException("Failed to generate health checkup PDF", e);
         }
     }
 } 

@@ -158,7 +158,8 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
             List<CompletableFuture<Boolean>> futures = batch.stream()
                     .map(notification -> CompletableFuture.supplyAsync(() -> {
                         try {
-                            String toEmail = (String) notification.get("email");
+                            log.debug("Processing notification: {}", notification.keySet());
+                            String toEmail = (String) notification.get("toEmail");
                             String parentName = (String) notification.get("parentName");
                             String studentName = (String) notification.get("studentName");
                             String subject = (String) notification.get("subject");
@@ -167,12 +168,27 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
                             
                             if (subject != null && content != null) {
                                 emailService.sendCustomEmail(toEmail, subject, content);
+                            } else if (notification.get("eventTitle") != null) {
+                                // Health checkup email
+                                String eventTitle = (String) notification.get("eventTitle");
+                                String startDate = (String) notification.get("startDate");
+                                String endDate = (String) notification.get("endDate");
+                                String consentUrl = (String) notification.get("consentUrl");
+                                
+                                log.info("Sending health checkup email to: {} for event: {}", toEmail, eventTitle);
+                                log.debug("Health checkup email details: startDate={}, endDate={}, consentUrl={}", startDate, endDate, consentUrl);
+                                emailService.sendHealthCheckupNotification(
+                                    toEmail, parentName, studentName, eventTitle, 
+                                    startDate, endDate, consentUrl
+                                );
                             } else {
+                                // Vaccine email
                                 String vaccineName = (String) notification.get("vaccineName");
                                 String eventDate = (String) notification.get("eventDate");
                                 String eventLocation = (String) notification.get("eventLocation");
                                 String consentUrl = (String) notification.get("consentUrl");
                                 
+                                log.info("Sending vaccine email to: {} for vaccine: {}", toEmail, vaccineName);
                                 emailService.sendVaccineConsentNotification(
                                     toEmail, parentName, studentName, vaccineName, 
                                     eventDate, eventLocation, consentUrl
@@ -184,7 +200,7 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
                             return true;
                         } catch (Exception e) {
                             failureCount.incrementAndGet();
-                            log.error("Failed to send email to: {}", notification.get("email"), e);
+                            log.error("Failed to send email to: {}", notification.get("toEmail"), e);
                             return false;
                         }
                     }, emailExecutor))

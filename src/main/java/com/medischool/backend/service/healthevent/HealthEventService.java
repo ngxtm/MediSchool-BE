@@ -17,4 +17,5 @@ public interface HealthEventService {
     void deleteHealthEvent(Long id);
     HealthEventEmailNotificationDTO sendHealthEventEmailNotifications(Long eventId);
     List<HealthEventEmailNotificationDTO> sendAllHealthEventEmailNotifications();
+    HealthEventEmailNotificationDTO sendSelectiveHealthEventEmailNotifications(Long eventId, List<Integer> studentIds);
 }
