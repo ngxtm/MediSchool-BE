@@ -26,6 +26,9 @@ import com.medischool.backend.dto.checkup.CheckupEventResponseStatsDTO;
 import com.medischool.backend.dto.checkup.CheckupStatsDTO;
 import com.medischool.backend.dto.healthevent.request.SelectiveEmailRequestDTO;
 import com.medischool.backend.model.checkup.CheckupEvent;
+import com.medischool.backend.model.checkup.CheckupEventConsent;
+import com.medischool.backend.model.enums.CheckupConsentStatus;
+import com.medischool.backend.repository.checkup.CheckupConsentRepository;
 import com.medischool.backend.service.PdfExportService;
 import com.medischool.backend.service.checkup.CheckupEventService;
 
@@ -40,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CheckupEventController {
     private final CheckupEventService checkupEventService;
     private final PdfExportService pdfExportService;
+    private final CheckupConsentRepository checkupConsentRepository;
 
     @GetMapping("/stats")
     public ResponseEntity<CheckupStatsDTO> getRequestStats() {
@@ -166,6 +170,44 @@ public class CheckupEventController {
                             .totalEmailsSent(0)
                             .actualCount(0)
                             .build());
+        }
+    }
+
+    /**
+     * Gửi email nhắc nhở cho tất cả parent chưa phản hồi consent của checkup event
+     */
+    @PostMapping("/{eventId}/send-email-notifications")
+    @Operation(summary = "Send email notifications to all parents who have not responded to checkup consent")
+    public ResponseEntity<EmailNotificationResponseDTO> sendEmailNotificationsToAllPending(
+            @PathVariable Long eventId) {
+        try {
+            // Lấy tất cả consentId đang PENDING của event
+            List<Long> pendingConsentIds = checkupConsentRepository
+                .findByEventIdAndConsentStatus(eventId, CheckupConsentStatus.PENDING)
+                .stream().map(CheckupEventConsent::getId).toList();
+
+            if (pendingConsentIds.isEmpty()) {
+                return ResponseEntity.ok(EmailNotificationResponseDTO.builder()
+                    .success(true)
+                    .message("No pending consents to send email")
+                    .totalEmailsSent(0)
+                    .actualCount(0)
+                    .build());
+            }
+
+            // Gọi service gửi email
+            EmailNotificationResponseDTO result = checkupEventService.sendSelectiveHealthCheckupEmailNotifications(
+                eventId, pendingConsentIds, null);
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(EmailNotificationResponseDTO.builder()
+                    .success(false)
+                    .message("Failed to send emails: " + e.getMessage())
+                    .totalEmailsSent(0)
+                    .actualCount(0)
+                    .build());
         }
     }
 

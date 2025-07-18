@@ -34,7 +34,9 @@ import com.medischool.backend.repository.checkup.CheckupCategoryRepository;
 import com.medischool.backend.repository.checkup.CheckupConsentRepository;
 import com.medischool.backend.repository.checkup.CheckupEventCategoryRepository;
 import com.medischool.backend.repository.checkup.CheckupEventRepository;
+import com.medischool.backend.repository.ParentStudentLinkRepository;
 import com.medischool.backend.service.AsyncEmailService;
+import com.medischool.backend.service.EmailService;
 import com.medischool.backend.service.PdfExportService;
 import com.medischool.backend.service.checkup.CheckupEventService;
 
@@ -51,6 +53,8 @@ public class CheckupEventServiceImpl implements CheckupEventService {
     private final UserProfileRepository userProfileRepository;
     private final CheckupConsentRepository checkupConsentRepository;
     private final StudentRepository studentRepository;
+    private final ParentStudentLinkRepository parentStudentLinkRepository;
+    private final EmailService emailService;
     private final AsyncEmailService asyncEmailService;
     private final PdfExportService pdfExportService;
     
@@ -216,92 +220,79 @@ public class CheckupEventServiceImpl implements CheckupEventService {
 
             // Prepare email notifications
             List<Map<String, Object>> emailNotifications = new ArrayList<>();
+            int emailsSent = 0;
+            int emailsFailed = 0;
 
             for (CheckupEventConsent consent : consentsToEmail) {
-                // Get student and parent information
-                String parentEmail = consent.getParent() != null ? consent.getParent().getEmail() : null;
-                String parentName = consent.getParent() != null ? consent.getParent().getFullName() : null;
+                // Lấy parentId từ ParentStudentLink
+                List<com.medischool.backend.model.parentstudent.ParentStudentLink> parentLinks = parentStudentLinkRepository.findByStudentId(consent.getStudent().getStudentId());
+                if (parentLinks.isEmpty()) {
+                    log.warn("No parent found for studentId {} (consentId {})", consent.getStudent().getStudentId(), consent.getId());
+                    emailsFailed++;
+                    continue;
+                }
+                UUID parentId = parentLinks.get(0).getParentId();
+                UserProfile parent = userProfileRepository.findById(parentId).orElse(null);
+                if (parent == null || parent.getEmail() == null || parent.getEmail().isEmpty()) {
+                    log.warn("No parent email found for studentId {} (consentId {})", consent.getStudent().getStudentId(), consent.getId());
+                    emailsFailed++;
+                    continue;
+                }
+                String parentEmail = parent.getEmail();
+                String parentName = parent.getFullName();
                 String studentName = consent.getStudent().getFullName();
 
-                log.info("Processing consent ID: {}, Student: {}, Parent: {}, Email: {}", 
-                        consent.getId(), studentName, parentName, parentEmail);
-
-                if (parentEmail != null && !parentEmail.isEmpty()) {
-                    Map<String, Object> emailData = new HashMap<>();
-                    emailData.put("toEmail", parentEmail);
-                    emailData.put("parentName", parentName);
-                    emailData.put("studentName", studentName);
-                    emailData.put("eventTitle", checkupEvent.getEventTitle());
-                    emailData.put("startDate", checkupEvent.getStartDate().toString());
-                    emailData.put("endDate", checkupEvent.getEndDate().toString());
-                    emailData.put("consentId", consent.getId());
-                    
-                    // Generate consent URL for the frontend
-                    String consentUrl = frontendUrl + "/parent/health-checkups/consent/" + consent.getId();
-                    emailData.put("consentUrl", consentUrl);
-                    
-                    log.info("Prepared email data for consent ID {}: toEmail={}, eventTitle={}, consentUrl={}", 
-                            consent.getId(), parentEmail, checkupEvent.getEventTitle(), consentUrl);
-
-                    // Add custom message if provided in the request
-                    if (request != null && request.getCustomMessage() != null && !request.getCustomMessage().isEmpty()) {
-                        emailData.put("customMessage", request.getCustomMessage());
-                    }
-
-                    // Add PDF attachment if available
-                    if (pdfContent != null) {
-                        emailData.put("attachmentContent", pdfContent);
-                        emailData.put("attachmentName", "health-checkup-consent-" + eventId + ".pdf");
-                        emailData.put("attachmentType", "application/pdf");
-                    }
-
-                    emailNotifications.add(emailData);
+                Map<String, Object> emailData = new HashMap<>();
+                emailData.put("toEmail", parentEmail);
+                emailData.put("parentName", parentName);
+                emailData.put("studentName", studentName);
+                emailData.put("eventTitle", checkupEvent.getEventTitle());
+                emailData.put("startDate", checkupEvent.getStartDate().toString());
+                emailData.put("endDate", checkupEvent.getEndDate().toString());
+                emailData.put("consentId", consent.getId());
+                String consentUrl = frontendUrl + "/parent/consent?type=checkup&consentId=" + consent.getId();
+                emailData.put("consentUrl", consentUrl);
+                if (request != null && request.getCustomMessage() != null && !request.getCustomMessage().isEmpty()) {
+                    emailData.put("customMessage", request.getCustomMessage());
+                }
+                if (pdfContent != null) {
+                    emailData.put("attachmentContent", pdfContent);
+                    emailData.put("attachmentName", "health-checkup-consent-" + eventId + ".pdf");
+                    emailData.put("attachmentType", "application/pdf");
+                }
+                try {
+                    // Gửi email đồng bộ với nội dung là một nút bấm và thông tin event, học sinh
+                    String emailHtml = "<div style='font-family:sans-serif;font-size:15px;'>"
+                        + "<p>Kính gửi Quý phụ huynh,</p>"
+                        + "<p>Nhà trường kính mời quý phụ huynh phản hồi phiếu đồng thuận cho học sinh <b>" + studentName + "</b> tham gia sự kiện kiểm tra sức khỏe.</p>"
+                        + "<ul style='margin-bottom:16px;'>"
+                        + "<li><b>Sự kiện:</b> " + checkupEvent.getEventTitle() + "</li>"
+                        + "<li><b>Năm học:</b> " + checkupEvent.getSchoolYear() + "</li>"
+                        + "<li><b>Lớp:</b> " + (consent.getStudent().getClassCode() != null ? consent.getStudent().getClassCode() : "") + "</li>"
+                        + "<li><b>Ngày bắt đầu:</b> " + checkupEvent.getStartDate() + "</li>"
+                        + "<li><b>Ngày kết thúc:</b> " + checkupEvent.getEndDate() + "</li>"
+                        + "</ul>"
+                        + "<a href='" + consentUrl + "' style='display:inline-block;padding:12px 28px;background:#1976d2;color:#fff;text-decoration:none;border-radius:4px;font-weight:bold;margin-top:18px;font-size:16px;'>Phản hồi consent</a>"
+                        + "<p style='margin-top:24px;color:#888;font-size:13px;'>Nếu nút không hoạt động, hãy copy link sau và dán vào trình duyệt: <br>"
+                        + "<span style='color:#1976d2'>" + consentUrl + "</span></p>"
+                        + "</div>";
+                    emailService.sendCustomEmail(parentEmail, checkupEvent.getEventTitle(), emailHtml);
+                    emailsSent++;
+                } catch (Exception e) {
+                    log.error("Failed to send email to {}: {}", parentEmail, e.getMessage());
+                    emailsFailed++;
                 }
             }
 
-            log.info("Prepared {} email notifications", emailNotifications.size());
-
-            if (emailNotifications.isEmpty()) {
-                log.warn("No parent email addresses found for selected consents");
-                return EmailNotificationResponseDTO.builder()
-                        .success(true)
-                        .message("No parent email addresses found for selected consents")
-                        .totalEmailsSent(0)
-                        .actualCount(0)
-                        .build();
-            }
-
-            // Determine which email template to use
-            String templateType = "HEALTH_CHECKUP";
-            if (request != null && request.getTemplateType() != null && !request.getTemplateType().isEmpty()) {
-                templateType = request.getTemplateType();
-            }
-
-            // Send emails asynchronously
-            log.info("Starting to send {} emails asynchronously", emailNotifications.size());
-            CompletableFuture<Integer> emailResult = asyncEmailService
-                    .sendBulkEmailsAsyncWithResult(emailNotifications);
-            Integer successfulEmails = emailResult.get(30, TimeUnit.SECONDS); // Wait up to 30 seconds
-            log.info("Successfully sent {} emails out of {} attempted", successfulEmails, emailNotifications.size());
+            log.info("Đã gửi xong email: thành công {}, thất bại {}", emailsSent, emailsFailed);
 
             return EmailNotificationResponseDTO.builder()
-                    .success(true)
-                    .message(pdfContent != null
-                            ? "Selective emails sent successfully with PDF attachment"
-                            : "Selective emails sent successfully")
-                    .totalEmailsSent(successfulEmails)
-                    .actualCount(successfulEmails)
-                    .hasPdfAttachment(pdfContent != null)
+                    .success(emailsFailed == 0)
+                    .message("Đã gửi xong email: thành công " + emailsSent + ", thất bại " + emailsFailed)
+                    .totalEmailsSent(emailsSent)
+                    .actualCount(emailsSent)
                     .build();
 
-        } catch (TimeoutException e) {
-            log.error("Timeout while sending selective health checkup emails for event ID: {}", eventId, e);
-            return EmailNotificationResponseDTO.builder()
-                    .success(false)
-                    .message("Email sending timed out. Some emails may still be processing.")
-                    .totalEmailsSent(0)
-                    .actualCount(0)
-                    .build();
         } catch (Exception e) {
             log.error("Error sending selective health checkup emails for event ID: {}", eventId, e);
             return EmailNotificationResponseDTO.builder()

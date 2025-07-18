@@ -19,4 +19,5 @@ public interface CheckupConsentRepository extends JpaRepository<CheckupEventCons
     int countByEvent_IdAndConsentStatus(Long eventId, CheckupConsentStatus status);
     List<CheckupEventConsent> findByEventIdAndIdInAndConsentStatusIsNull(Long eventId, List<Long> consentIds);
     List<CheckupEventConsent> findByEventIdAndIdInAndConsentStatus(Long eventId, List<Long> consentIds, CheckupConsentStatus status);
+    List<CheckupEventConsent> findByEventIdAndConsentStatus(Long eventId, CheckupConsentStatus status);
 }
