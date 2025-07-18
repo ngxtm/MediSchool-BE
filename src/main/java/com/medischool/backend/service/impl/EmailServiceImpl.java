@@ -589,6 +589,36 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    public void sendRawHtmlEmail(String toEmail, String subject, String htmlContent) {
+        int maxRetries = 3;
+        int retryCount = 0;
+        while (retryCount < maxRetries) {
+            try {
+                MimeMessage mimeMessage = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+                helper.setFrom(fromEmail);
+                helper.setTo(toEmail);
+                helper.setSubject(subject);
+                helper.setText(htmlContent, true);
+                ClassPathResource image = new ClassPathResource("static/logo.png");
+                helper.addInline("logoImage", image);
+
+                mailSender.send(mimeMessage);
+                log.info("Raw HTML email sent successfully to: {} (attempt {})", toEmail, retryCount + 1);
+                return;
+            } catch (Exception e) {
+                retryCount++;
+                log.warn("Failed to send raw HTML email to: {} (attempt {}/{}): {}", toEmail, retryCount, maxRetries, e.getMessage());
+                if (retryCount >= maxRetries) {
+                    log.error("Failed to send raw HTML email to: {} after {} attempts", toEmail, maxRetries, e);
+                    throw new RuntimeException("Failed to send email after " + maxRetries + " attempts: " + e.getMessage());
+                }
+                try { Thread.sleep(2000 * retryCount); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); throw new RuntimeException("Email sending interrupted", ie); }
+            }
+        }
+    }
+
     // Phương thức để shutdown thread pool khi ứng dụng dừng
     public void shutdown() {
         emailExecutor.shutdown();

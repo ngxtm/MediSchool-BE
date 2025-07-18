@@ -261,22 +261,54 @@ public class CheckupEventServiceImpl implements CheckupEventService {
                     emailData.put("attachmentType", "application/pdf");
                 }
                 try {
-                    // Gửi email đồng bộ với nội dung là một nút bấm và thông tin event, học sinh
-                    String emailHtml = "<div style='font-family:sans-serif;font-size:15px;'>"
-                        + "<p>Kính gửi Quý phụ huynh,</p>"
-                        + "<p>Nhà trường kính mời quý phụ huynh phản hồi phiếu đồng thuận cho học sinh <b>" + studentName + "</b> tham gia sự kiện kiểm tra sức khỏe.</p>"
-                        + "<ul style='margin-bottom:16px;'>"
-                        + "<li><b>Sự kiện:</b> " + checkupEvent.getEventTitle() + "</li>"
-                        + "<li><b>Năm học:</b> " + checkupEvent.getSchoolYear() + "</li>"
-                        + "<li><b>Lớp:</b> " + (consent.getStudent().getClassCode() != null ? consent.getStudent().getClassCode() : "") + "</li>"
-                        + "<li><b>Ngày bắt đầu:</b> " + checkupEvent.getStartDate() + "</li>"
-                        + "<li><b>Ngày kết thúc:</b> " + checkupEvent.getEndDate() + "</li>"
-                        + "</ul>"
-                        + "<a href='" + consentUrl + "' style='display:inline-block;padding:12px 28px;background:#1976d2;color:#fff;text-decoration:none;border-radius:4px;font-weight:bold;margin-top:18px;font-size:16px;'>Phản hồi consent</a>"
-                        + "<p style='margin-top:24px;color:#888;font-size:13px;'>Nếu nút không hoạt động, hãy copy link sau và dán vào trình duyệt: <br>"
-                        + "<span style='color:#1976d2'>" + consentUrl + "</span></p>"
-                        + "</div>";
-                    emailService.sendCustomEmail(parentEmail, checkupEvent.getEventTitle(), emailHtml);
+                    // Gửi email đồng bộ với format giống hình mẫu
+                    String emailHtml = String.format(
+                        """
+                        <div style='max-width:600px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.07);overflow:hidden;font-family:sans-serif;'>
+                          <div style='background:linear-gradient(90deg,#023E73 0%%,#1976d2 100%%);color:#fff;text-align:center;padding:32px 24px;'>
+                            <img src='cid:logoImage' alt='Logo' style='width:80px;height:80px;object-fit:contain;border-radius:50%%;background:#fff;margin-bottom:12px;' />
+                            <h1 style='margin:0;font-size:24px;font-weight:700;letter-spacing:0.5px;'>HỆ THỐNG QUẢN LÝ SỨC KHỎE HỌC SINH</h1>
+                            <p style='margin:8px 0 0;font-size:14px;opacity:0.9;'>Chăm sóc sức khỏe toàn diện cho học sinh</p>
+                          </div>
+                          <div style='background:linear-gradient(90deg,#4facfe 0%%,#00f2fe 100%%);padding:16px 24px;text-align:center;'>
+                            <p style='margin:0;color:white;font-size:16px;font-weight:600;'>💉 THÔNG BÁO KHÁM SỨC KHỎE ĐỊNH KỲ</p>
+                          </div>
+                          <div style='padding:32px 24px;'>
+                            <h2 style='color:#023E73;font-size:20px;margin:0 0 16px 0;font-weight:600;'>Kính chào Quý phụ huynh!</h2>
+                            <div style='color:#222;font-size:15px;line-height:1.7;'>
+                              <p>Nhà trường kính mời quý phụ huynh phản hồi phiếu đồng thuận cho học sinh <b>%s</b> tham gia sự kiện kiểm tra sức khỏe.</p>
+                              <ul style='margin-bottom:16px;padding-left:18px;'>
+                                <li><b>Sự kiện:</b> %s</li>
+                                <li><b>Năm học:</b> %s</li>
+                                <li><b>Lớp:</b> %s</li>
+                                <li><b>Ngày bắt đầu:</b> %s</li>
+                                <li><b>Ngày kết thúc:</b> %s</li>
+                              </ul>
+                            </div>
+                            <div style='text-align:center;margin:32px 0;'>
+                              <a href='%s' style='background:#1976d2;color:#fff;padding:16px 32px;font-size:16px;border-radius:50px;text-decoration:none;font-weight:600;display:inline-block;box-shadow:0 4px 15px rgba(25,118,210,0.15);transition:all 0.3s;'>✔️ PHẢN HỒI CONSENT</a>
+                            </div>
+                            <div style='background:#fffbe6;border:1px solid #ffe58f;border-radius:8px;padding:16px;margin-bottom:24px;'>
+                              <p style='margin:0;color:#ad8b00;font-size:13px;line-height:1.5;'>
+                                <strong>⚠️ Lưu ý quan trọng:</strong> Vui lòng phản hồi trước ngày kết thúc sự kiện. Nếu có thắc mắc, liên hệ nhà trường để được hỗ trợ.
+                              </p>
+                            </div>
+                          </div>
+                          <div style='background:#f6f8fa;color:#888;text-align:center;padding:18px 24px;font-size:13px;'>
+                            <div>Liên hệ hỗ trợ: <a href='mailto:medischool@gmail.com' style='color:#1976d2;text-decoration:none;'>medischool@gmail.com</a> | Hotline: 19009999</div>
+                            <div style='margin-top:6px;'>© 2024 MediSchool. Email này được gửi tự động, vui lòng không phản hồi.</div>
+                          </div>
+                        </div>
+                        """,
+                        studentName,
+                        checkupEvent.getEventTitle(),
+                        checkupEvent.getSchoolYear(),
+                        (consent.getStudent().getClassCode() != null ? consent.getStudent().getClassCode() : ""),
+                        checkupEvent.getStartDate(),
+                        checkupEvent.getEndDate(),
+                        consentUrl
+                    );
+                    emailService.sendRawHtmlEmail(parentEmail, checkupEvent.getEventTitle(), emailHtml);
                     emailsSent++;
                 } catch (Exception e) {
                     log.error("Failed to send email to {}: {}", parentEmail, e.getMessage());

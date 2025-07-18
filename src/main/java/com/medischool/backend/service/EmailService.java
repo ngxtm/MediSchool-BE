@@ -19,4 +19,6 @@ public interface EmailService {
     void sendHealthCheckupNotification(String toEmail, String parentName, String studentName,
                                       String eventTitle, String startDate, String endDate, 
                                       String consentUrl);
+
+    void sendRawHtmlEmail(String toEmail, String subject, String htmlContent);
 } 
