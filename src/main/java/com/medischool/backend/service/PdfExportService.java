@@ -233,7 +233,10 @@ public class PdfExportService {
             document.add(title);
 
             // Add student info
-            Paragraph studentInfo = new Paragraph("Mã Học Sinh: " + studentId)
+            String studentCode = studentRepository.findById(studentId)
+                .map(student -> student.getStudentCode())
+                .orElse("");
+            Paragraph studentInfo = new Paragraph("Mã Học Sinh: " + studentCode)
                     .setFontSize(12)
                     .setTextAlignment(TextAlignment.CENTER);
             document.add(studentInfo);

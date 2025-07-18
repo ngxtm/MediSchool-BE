@@ -316,7 +316,8 @@ public class VaccineEventService {
                         "vaccineName", event.getVaccine().getName(),
                         "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                         "eventLocation", event.getLocation(),
-                        "consentUrl", consentUrl
+                        "consentUrl", consentUrl,
+                        "eventTitle", event.getEventTitle()
                 );
 
                 notifications.add(notification);
@@ -404,7 +405,8 @@ public class VaccineEventService {
                         "vaccineName", event.getVaccine().getName(),
                         "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                         "eventLocation", event.getLocation(),
-                        "consentUrl", consentUrl
+                        "consentUrl", consentUrl,
+                        "eventTitle", event.getEventTitle()
                 );
 
                 notifications.add(notification);
@@ -464,7 +466,8 @@ public class VaccineEventService {
                         "vaccineName", event.getVaccine().getName(),
                         "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                         "eventLocation", event.getLocation(),
-                        "consentUrl", consentUrl
+                        "consentUrl", consentUrl,
+                        "eventTitle", event.getEventTitle()
                 );
                 notifications.add(notification);
             } catch (Exception e) {
@@ -581,7 +584,8 @@ public class VaccineEventService {
                         "vaccineName", event.getVaccine().getName(),
                         "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                         "eventLocation", event.getLocation(),
-                        "consentUrl", consentUrl
+                        "consentUrl", consentUrl,
+                        "eventTitle", event.getEventTitle()
                 );
 
                 notifications.add(notification);
@@ -748,7 +752,8 @@ public class VaccineEventService {
                         "vaccineName", event.getVaccine().getName(),
                         "eventDate", event.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                         "eventLocation", event.getLocation(),
-                        "consentUrl", consentUrl
+                        "consentUrl", consentUrl,
+                        "eventTitle", event.getEventTitle()
                 );
 
                 notifications.add(notification);

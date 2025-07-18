@@ -71,10 +71,11 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
                                 String eventDate = (String) notification.get("eventDate");
                                 String eventLocation = (String) notification.get("eventLocation");
                                 String consentUrl = (String) notification.get("consentUrl");
+                                String eventTitle = (String) notification.get("eventTitle");
                                 
                                 emailService.sendVaccineConsentNotification(
                                     toEmail, parentName, studentName, vaccineName, 
-                                    eventDate, eventLocation, consentUrl
+                                    eventDate, eventLocation, consentUrl, eventTitle
                                 );
                             }
                             
@@ -123,10 +124,11 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
                 String eventDate = (String) notification.get("eventDate");
                 String eventLocation = (String) notification.get("eventLocation");
                 String consentUrl = (String) notification.get("consentUrl");
+                String eventTitle = (String) notification.get("eventTitle");
                 
                 emailService.sendVaccineConsentNotification(
                     toEmail, parentName, studentName, vaccineName, 
-                    eventDate, eventLocation, consentUrl
+                    eventDate, eventLocation, consentUrl, eventTitle
                 );
             }
             
@@ -187,11 +189,12 @@ public class AsyncEmailServiceImpl implements AsyncEmailService {
                                 String eventDate = (String) notification.get("eventDate");
                                 String eventLocation = (String) notification.get("eventLocation");
                                 String consentUrl = (String) notification.get("consentUrl");
+                                String eventTitle = (String) notification.get("eventTitle");
                                 
                                 log.info("Sending vaccine email to: {} for vaccine: {}", toEmail, vaccineName);
                                 emailService.sendVaccineConsentNotification(
                                     toEmail, parentName, studentName, vaccineName, 
-                                    eventDate, eventLocation, consentUrl
+                                    eventDate, eventLocation, consentUrl, eventTitle
                                 );
                             }
                             
