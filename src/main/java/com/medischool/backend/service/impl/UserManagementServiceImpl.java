@@ -331,7 +331,7 @@ public class UserManagementServiceImpl implements UserManagementService {
                     <li>Mật khẩu này chỉ có hiệu lực tạm thời</li>
                     <li>Để bảo mật, hãy sử dụng mật khẩu mạnh khi thay đổi</li>
                 </ul>
-                <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với quản trị viên hệ thống.</p>
+                <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với quản trị viên hệ thống qua email: <a href="mailto:medischoolvn@gmail.com">medischoolvn@gmail.com</a>.</p>
                 <p>Trân trọng,<br>Đội ngũ MediSchool</p>
             </body>
             </html>

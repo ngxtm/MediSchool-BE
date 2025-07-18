@@ -295,7 +295,7 @@ public class CheckupEventServiceImpl implements CheckupEventService {
                             </div>
                           </div>
                           <div style='background:#f6f8fa;color:#888;text-align:center;padding:18px 24px;font-size:13px;'>
-                            <div>Liên hệ hỗ trợ: <a href='mailto:medischool@gmail.com' style='color:#1976d2;text-decoration:none;'>medischool@gmail.com</a> | Hotline: 19009999</div>
+                            <div>Liên hệ hỗ trợ: <a href='mailto:medischoolvn@gmail.com' style='color:#1976d2;text-decoration:none;'>medischoolvn@gmail.com</a> | Hotline: 19009999</div>
                             <div style='margin-top:6px;'>© 2024 MediSchool. Email này được gửi tự động, vui lòng không phản hồi.</div>
                           </div>
                         </div>

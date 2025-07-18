@@ -183,7 +183,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
             </div>
             <div style="background:#f8f9fa;border-radius:8px;padding:14px 18px;margin-top:18px;font-size:14px;">
               <b>📞 Thông tin liên hệ hỗ trợ</b><br/>
-              Email: medischool@gmail.com<br/>
+              Email: medischoolvn@gmail.com<br/>
               Hotline: 19009999<br/>
               Thời gian hỗ trợ: 7:00 - 17:00 (Thứ 2 - Thứ 6)
             </div>
@@ -217,7 +217,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
             </div>
             <div style="background:#f8f9fa;border-radius:8px;padding:14px 18px;margin-top:18px;font-size:14px;">
               <b>📞 Thông tin liên hệ hỗ trợ</b><br/>
-              Email: medischool@gmail.com<br/>
+              Email: medischoolvn@gmail.com<br/>
               Hotline: 19009999<br/>
               Thời gian hỗ trợ: 7:00 - 17:00 (Thứ 2 - Thứ 6)
             </div>
@@ -251,7 +251,7 @@ public class EmailTemplateServiceImpl implements EmailTemplateService {
             </div>
             <div style="background:#f8f9fa;border-radius:8px;padding:14px 18px;margin-top:18px;font-size:14px;">
               <b>📞 Thông tin liên hệ hỗ trợ</b><br/>
-              Email: medischool@gmail.com<br/>
+              Email: medischoolvn@gmail.com<br/>
               Hotline: 19009999<br/>
               Thời gian hỗ trợ: 7:00 - 17:00 (Thứ 2 - Thứ 6)
             </div>
