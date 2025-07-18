@@ -6,7 +6,7 @@ import java.util.Map;
 public interface EmailService {
     void sendVaccineConsentNotification(String toEmail, String parentName, String studentName, 
                                        String vaccineName, String eventDate, String eventLocation, 
-                                       String consentUrl);
+                                       String consentUrl, String eventTitle);
     
     void sendBulkVaccineConsentNotifications(List<Map<String, Object>> parentNotifications);
     

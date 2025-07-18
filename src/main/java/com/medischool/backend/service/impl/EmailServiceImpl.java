@@ -40,7 +40,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVaccineConsentNotification(String toEmail, String parentName, String studentName,
                                                String vaccineName, String eventDate, String eventLocation,
-                                               String consentUrl) {
+                                               String consentUrl, String eventTitle) {
         int maxRetries = 3;
         int retryCount = 0;
         
@@ -51,7 +51,13 @@ public class EmailServiceImpl implements EmailService {
 
                 helper.setFrom(fromEmail);
                 helper.setTo(toEmail);
-                helper.setSubject("Thông báo về sự kiện tiêm chủng - " + vaccineName);
+                String subject;
+                if (eventTitle != null && !eventTitle.isEmpty()) {
+                    subject = "Thông báo về sự kiện tiêm chủng (" + eventTitle + ") - " + vaccineName;
+                } else {
+                    subject = "Thông báo về sự kiện tiêm chủng - " + vaccineName;
+                }
+                helper.setSubject(subject);
 
                 String htmlContent = String.format("""
                 <!DOCTYPE html>
@@ -206,9 +212,10 @@ public class EmailServiceImpl implements EmailService {
                         String eventDate = (String) notification.get("eventDate");
                         String eventLocation = (String) notification.get("eventLocation");
                         String consentUrl = (String) notification.get("consentUrl");
+                        String eventTitle = (String) notification.get("eventTitle");
                         
                         sendVaccineConsentNotification(toEmail, parentName, studentName, vaccineName, 
-                                                     eventDate, eventLocation, consentUrl);
+                                                     eventDate, eventLocation, consentUrl, eventTitle);
                     } catch (Exception e) {
                         log.error("Failed to send bulk email notification", e);
                     }
