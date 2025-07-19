@@ -250,7 +250,8 @@ public class CheckupEventServiceImpl implements CheckupEventService {
                 emailData.put("startDate", checkupEvent.getStartDate().toString());
                 emailData.put("endDate", checkupEvent.getEndDate().toString());
                 emailData.put("consentId", consent.getId());
-                String consentUrl = frontendUrl + "/parent/health-check?consentId=" + consent.getId();
+                String baseUrl = frontendUrl.endsWith("/") ? frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
+                String consentUrl = baseUrl + "/parent/health-check?consentId=" + consent.getId();
                 emailData.put("consentUrl", consentUrl);
                 if (request != null && request.getCustomMessage() != null && !request.getCustomMessage().isEmpty()) {
                     emailData.put("customMessage", request.getCustomMessage());
