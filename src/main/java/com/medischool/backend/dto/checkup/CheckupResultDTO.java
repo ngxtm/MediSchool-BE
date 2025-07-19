@@ -14,6 +14,8 @@ public class CheckupResultDTO {
     private String eventTitle;
     private String academicYear;
     private String createdDate;
+    private String startDate;
+    private String endDate;
     private String eventDate;
 
     private String studentName;

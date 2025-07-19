@@ -48,6 +48,8 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 event.getEventTitle(),
                 event.getSchoolYear(),
                 event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                event.getStartDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                event.getEndDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                 result.getEventDate() != null ? result.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "/",
 
                 // Student info
@@ -82,6 +84,8 @@ public class CheckupResultServiceImpl implements CheckupResultService {
                 event.getEventTitle(),
                 event.getSchoolYear(),
                 event.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                event.getStartDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                event.getEndDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                 result.getEventDate() != null ? result.getEventDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "/",
 
                 student.getFullName(),
