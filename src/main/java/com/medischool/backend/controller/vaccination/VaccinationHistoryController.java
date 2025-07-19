@@ -19,6 +19,7 @@ import com.medischool.backend.dto.vaccination.VaccinationHistoryBulkUpdateDTO;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryBulkUpdateResponseDTO;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryRequestDTO;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryUpdateDTO;
+import com.medischool.backend.dto.vaccination.VaccinationHistoryWithConsentDTO;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryWithStudentDTO;
 import com.medischool.backend.model.vaccine.VaccinationHistory;
 import com.medischool.backend.service.PdfExportService;
@@ -68,14 +69,15 @@ public class VaccinationHistoryController {
 
     @GetMapping("/{historyId}")
     @Operation(summary = "Get a vaccination history record by ID")
-    public ResponseEntity<VaccinationHistory> getHistoryById(@PathVariable Integer historyId) {
+    public ResponseEntity<VaccinationHistoryWithConsentDTO> getHistoryById(@PathVariable Integer historyId) {
         Optional<VaccinationHistory> history = vaccinationHistoryService.findById(historyId);
         
         if (history.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         
-        return ResponseEntity.ok(history.get());
+        VaccinationHistoryWithConsentDTO dto = vaccinationHistoryService.toDTO(history.get());
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/event/{eventId}")

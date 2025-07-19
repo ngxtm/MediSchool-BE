@@ -14,9 +14,11 @@ import com.medischool.backend.dto.vaccination.VaccinationHistoryBulkUpdateDTO;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryBulkUpdateResponseDTO;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryRequestDTO;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryUpdateDTO;
+import com.medischool.backend.dto.vaccination.VaccinationHistoryWithConsentDTO;
 import com.medischool.backend.dto.vaccination.VaccinationHistoryWithStudentDTO;
 import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.model.vaccine.VaccinationHistory;
+import com.medischool.backend.repository.ConsentRepository;
 import com.medischool.backend.repository.StudentRepository;
 import com.medischool.backend.repository.vaccination.VaccinationHistoryRepository;
 import com.medischool.backend.repository.vaccination.VaccineCategoryRepository;
@@ -33,6 +35,7 @@ public class VaccinationHistoryService {
     private final VaccineCategoryRepository vaccineCategoryRepository;
     private final VaccineRepository vaccineRepository;
     private final StudentRepository studentRepository;
+    private final ConsentRepository consentRepository;
 
     public VaccinationHistory save(VaccinationHistoryRequestDTO dto) {
         var vaccineOpt = vaccineRepository.findById(dto.getVaccine().getVaccineId().intValue());
@@ -194,5 +197,32 @@ public class VaccinationHistoryService {
 
     public List<VaccinationHistory> findAll() {
         return vaccinationHistoryRepository.findAll();
+    }
+
+    public VaccinationHistoryWithConsentDTO toDTO(VaccinationHistory history) {
+        Long consentId = null;
+        // Lấy consentId theo studentId + eventId (lấy consent đầu tiên nếu có nhiều)
+        var consents = consentRepository.findAllByStudentId(history.getStudentId());
+        for (var c : consents) {
+            if (c.getEventId().equals(history.getEventId())) {
+                consentId = c.getId();
+                break;
+            }
+        }
+        return new VaccinationHistoryWithConsentDTO(
+            history.getHistoryId(),
+            history.getStudentId(),
+            history.getEventId(),
+            history.getVaccine(),
+            history.getDoseNumber(),
+            history.getVaccinationDate(),
+            history.getLocation(),
+            history.getNote(),
+            history.getAbnormal(),
+            history.getFollowUpNote(),
+            history.getCreatedBy(),
+            history.getCreatedAt(),
+            consentId
+        );
     }
 }
