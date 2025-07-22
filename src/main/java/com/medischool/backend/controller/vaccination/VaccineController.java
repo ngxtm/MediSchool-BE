@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import javax.swing.text.html.Option;
+
 @RestController
 @RequestMapping("/api/vaccines")
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class VaccineController {
 
     private final VaccineService vaccineService;
-    
+
     @Autowired
     private VaccineCategoryRepository categoryRepository;
 
@@ -116,5 +118,12 @@ public class VaccineController {
         category.setCategoryName(update.getCategoryName());
         category.setDoseRequired(update.getDoseRequired());
         return categoryRepository.save(category);
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public VaccineCategory getCategoryById(@PathVariable Integer categoryId) {
+        Optional<VaccineCategory> opt = categoryRepository.findById(categoryId);
+        if (opt.isEmpty()) throw new RuntimeException("Category not found");
+        return opt.get();
     }
 }

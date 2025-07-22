@@ -569,18 +569,18 @@ public class AdminController {
     }
 
     @GetMapping("/students/import/template")
-    @Operation(summary = "Download Excel file of all students in database")
-    @ApiResponse(responseCode = "200", description = "Excel file of all students downloaded successfully")
-    public ResponseEntity<byte[]> downloadStudentListExcel() {
+    @Operation(summary = "Download Excel template for student import")
+    @ApiResponse(responseCode = "200", description = "Excel template downloaded successfully")
+    public ResponseEntity<byte[]> downloadStudentImportTemplate() {
         try {
-            List<com.medischool.backend.model.parentstudent.Student> students = studentRepository.findAll();
-            byte[] excelBytes = excelImportService.generateStudentListExcel(students);
+            byte[] templateBytes = excelImportService.generateStudentImportTemplate();
             return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=student_list.xlsx")
+                    .header("Content-Disposition", "attachment; filename=student_import_template.xlsx")
                     .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    .body(excelBytes);
+                    .body(templateBytes);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            log.error("Error downloading student import template: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).build();
         }
     }
 

@@ -55,4 +55,10 @@ public interface ExcelImportService {
      * @return Byte array of Excel file
      */
     byte[] generateStudentListExcel(List<Student> students);
+
+    /**
+     * Generate Excel template for student import with proper format and examples
+     * @return Byte array of Excel template file
+     */
+    byte[] generateStudentImportTemplate();
 } 
