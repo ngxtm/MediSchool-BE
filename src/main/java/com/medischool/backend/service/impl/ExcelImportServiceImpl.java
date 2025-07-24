@@ -35,17 +35,17 @@ import com.medischool.backend.dto.student.StudentImportDTO;
 import com.medischool.backend.dto.student.StudentImportResponseDTO;
 import com.medischool.backend.model.UserProfile;
 import com.medischool.backend.model.enums.Gender;
+import com.medischool.backend.model.enums.Relationship;
 import com.medischool.backend.model.enums.StudentStatus;
-import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.model.parentstudent.Parent;
 import com.medischool.backend.model.parentstudent.ParentStudentLink;
-import com.medischool.backend.repository.UserProfileRepository;
-import com.medischool.backend.repository.StudentRepository;
+import com.medischool.backend.model.parentstudent.Student;
 import com.medischool.backend.repository.ParentRepository;
 import com.medischool.backend.repository.ParentStudentLinkRepository;
+import com.medischool.backend.repository.StudentRepository;
+import com.medischool.backend.repository.UserProfileRepository;
 import com.medischool.backend.service.ExcelImportService;
 import com.medischool.backend.service.SupabaseAuthService;
-import com.medischool.backend.model.enums.Relationship;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -854,6 +854,44 @@ public class ExcelImportServiceImpl implements ExcelImportService {
     }
 
     @Override
+    public byte[] generateStudentImportTemplate() {
+        try (Workbook workbook = new XSSFWorkbook();
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Student Import Template");
+            
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle instructionStyle = createInstructionStyle(workbook);
+            
+            String[] headers = {
+                "Student Code*", "Full Name*", "Class Code*", "Date of Birth*", "Address*", 
+                "Gender*", "Enrollment Date*", "Emergency Contact*", "Emergency Phone*", "Status", "Avatar",
+                "Father Name", "Father Email", "Father Phone", "Father Address", "Father DateOfBirth", 
+                "Father Gender", "Father Job", "Father JobPlace",
+                "Mother Name", "Mother Email", "Mother Phone", "Mother Address", "Mother DateOfBirth", 
+                "Mother Gender", "Mother Job", "Mother JobPlace"
+            };
+            
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+                sheet.setColumnWidth(i, 20 * 256);
+            }
+            
+            addStudentInstructions(sheet, instructionStyle);
+            
+            addStudentSampleData(sheet);
+            
+            workbook.write(outputStream);
+            outputStream.flush();
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate student import template", e);
+        }
+    }
+
+    @Override
     public byte[] generateStudentListExcel(List<Student> students) {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -942,6 +980,71 @@ public class ExcelImportServiceImpl implements ExcelImportService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Excel student list", e);
         }
+    }
+
+    private void addStudentInstructions(Sheet sheet, CellStyle instructionStyle) {
+        int rowNum = 1;
+        
+        Row instructionHeaderRow = sheet.createRow(rowNum++);
+        Cell instructionHeaderCell = instructionHeaderRow.createCell(0);
+        instructionHeaderCell.setCellValue("HƯỚNG DẪN SỬ DỤNG:");
+        instructionHeaderCell.setCellStyle(instructionStyle);
+        
+        String[] instructions = {
+            "1. Các cột có dấu * là bắt buộc phải nhập",
+            "2. Định dạng ngày tháng: DD/MM/YYYY (ví dụ: 15/03/2020)",
+            "3. Giới tính: MALE (Nam) hoặc FEMALE (Nữ)",
+            "4. Trạng thái: ACTIVE (Hoạt động) hoặc INACTIVE (Không hoạt động)",
+            "5. Thông tin bố mẹ là tùy chọn, nếu có email sẽ tự động tạo tài khoản phụ huynh",
+            "6. Nếu email phụ huynh đã tồn tại, hệ thống sẽ cập nhật thông tin",
+            "7. Mật khẩu tạm thời sẽ được gửi qua email cho phụ huynh mới"
+        };
+        
+        for (String instruction : instructions) {
+            Row row = sheet.createRow(rowNum++);
+            Cell cell = row.createCell(0);
+            cell.setCellValue(instruction);
+            cell.setCellStyle(instructionStyle);
+        }
+        
+        sheet.createRow(rowNum++);
+    }
+    
+    private void addStudentSampleData(Sheet sheet) {
+        int startRow = sheet.getLastRowNum() + 2;
+        
+        Row sampleHeaderRow = sheet.createRow(startRow++);
+        Cell sampleHeaderCell = sampleHeaderRow.createCell(0);
+        sampleHeaderCell.setCellValue("DỮ LIỆU MẪU:");
+        
+        Row sampleRow = sheet.createRow(startRow++);
+        sampleRow.createCell(0).setCellValue("HS001");
+        sampleRow.createCell(1).setCellValue("Nguyễn Văn A");
+        sampleRow.createCell(2).setCellValue("1A");
+        sampleRow.createCell(3).setCellValue("15/03/2020");
+        sampleRow.createCell(4).setCellValue("123 Đường ABC, Quận 1, TP.HCM");
+        sampleRow.createCell(5).setCellValue("MALE");
+        sampleRow.createCell(6).setCellValue("01/09/2024");
+        sampleRow.createCell(7).setCellValue("Nguyễn Văn Bố");
+        sampleRow.createCell(8).setCellValue("0901234567");
+        sampleRow.createCell(9).setCellValue("ACTIVE");
+        sampleRow.createCell(10).setCellValue("");
+        sampleRow.createCell(11).setCellValue("Nguyễn Văn Bố");
+        sampleRow.createCell(12).setCellValue("boba@gmail.com");
+        sampleRow.createCell(13).setCellValue("0901234567");
+        sampleRow.createCell(14).setCellValue("123 Đường ABC, Quận 1, TP.HCM");
+        sampleRow.createCell(15).setCellValue("15/05/1985");
+        sampleRow.createCell(16).setCellValue("MALE");
+        sampleRow.createCell(17).setCellValue("Kỹ sư");
+        sampleRow.createCell(18).setCellValue("Công ty ABC");
+        sampleRow.createCell(19).setCellValue("Trần Thị Mẹ");
+        sampleRow.createCell(20).setCellValue("meme@gmail.com");
+        sampleRow.createCell(21).setCellValue("0909876543");
+        sampleRow.createCell(22).setCellValue("123 Đường ABC, Quận 1, TP.HCM");
+        sampleRow.createCell(23).setCellValue("20/08/1988");
+        sampleRow.createCell(24).setCellValue("FEMALE");
+        sampleRow.createCell(25).setCellValue("Giáo viên");
+        sampleRow.createCell(26).setCellValue("Trường XYZ");
     }
 
     private void handleParentImport(Student student, StudentImportDTO dto, boolean isFather) {
