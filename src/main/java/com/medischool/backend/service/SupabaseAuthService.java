@@ -23,6 +23,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -173,7 +174,11 @@ public class SupabaseAuthService {
     }
 
     public void updatePassword(String newPassword) {
-        String userToken = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getCredentials() == null) {
+            throw new RuntimeException("Authentication credentials not found. Please login again.");
+        }
+        String userToken = authentication.getCredentials().toString();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("apikey", supabaseApiKey);
