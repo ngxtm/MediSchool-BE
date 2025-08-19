@@ -306,7 +306,7 @@ public class VaccineEventService {
 
 
                 String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
-                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        System.getProperty("app.frontend.url", "https://medischool.vercel.app"),
                         consent.getId());
 
                 Map<String, Object> notification = Map.of(
@@ -395,7 +395,7 @@ public class VaccineEventService {
 
 
                 String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
-                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        System.getProperty("app.frontend.url", "https://medischool.vercel.app"),
                         consent.getId());
 
                 Map<String, Object> notification = Map.of(
@@ -457,7 +457,7 @@ public class VaccineEventService {
                     studentName = "Học sinh";
                 }
                 String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
-                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        System.getProperty("app.frontend.url", "https://medischool.vercel.app"),
                         consent.getId());
                 Map<String, Object> notification = Map.of(
                         "email", parent.getEmail(),
@@ -574,7 +574,7 @@ public class VaccineEventService {
                 }
 
                 String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
-                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        System.getProperty("app.frontend.url", "https://medischool.vercel.app"),
                         consent.getId());
 
                 Map<String, Object> notification = Map.of(
@@ -742,7 +742,7 @@ public class VaccineEventService {
                 }
 
                 String consentUrl = String.format("%s/parent/vaccination?consentId=%d",
-                        System.getProperty("app.frontend.url", "http://localhost:5173"),
+                        System.getProperty("app.frontend.url", "https://medischool.vercel.app"),
                         consent.getId());
 
                 Map<String, Object> notification = Map.of(
