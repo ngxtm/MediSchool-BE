@@ -30,7 +30,7 @@ A comprehensive Spring Boot application for managing school health services, inc
 - **Database**: PostgreSQL (Supabase)
 - **Security**: Spring Security + JWT
 - **Documentation**: Swagger/OpenAPI 3
-- **Email**: Spring Mail with Gmail SMTP
+- **Email**: Spring Mail with Gmail SMTP + Supabase Mail Support
 - **PDF Generation**: iText 7
 - **Excel Processing**: Apache POI
 - **Build Tool**: Maven
